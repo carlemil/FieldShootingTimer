@@ -41,7 +41,6 @@ fun SegmentedSemiCircleWithMarkers(
             size = size
         )
 
-        // Overlay Canvas to draw markers
         Canvas(modifier = Modifier.size(size)) {
             val canvasSize = size.toPx()
             val ringThicknessPx = ringThickness.toPx()
@@ -52,34 +51,28 @@ fun SegmentedSemiCircleWithMarkers(
             val centerX = canvasSize / 2
             val centerY = canvasSize / 2
 
-            // Calculate the radius where markers should be placed
             val arcRadius = (canvasSize / 2) - totalPadding
             val markerCenterRadius = arcRadius + (ringThicknessPx / 2)
 
-            // Starting angle for the semi-circle
             val availableAngle = 360f - gapAngleDegrees
             var currentAngle = 270f - (availableAngle / 2)
 
-            // Calculate the angles where markers will be placed
             val markerAngles = sweepAngles.map { sweep ->
                 currentAngle += sweep
                 currentAngle % 360
             }
 
-            // Draw each marker with white fill and matching border
             markerAngles.forEach { angle ->
                 val angleRad = Math.toRadians(angle.toDouble())
                 val x = centerX + (markerCenterRadius) * kotlin.math.cos(angleRad).toFloat()
                 val y = centerY + (markerCenterRadius) * kotlin.math.sin(angleRad).toFloat()
 
-                // Draw white filled circle
                 drawCircle(
                     color = Color.White,
                     radius = markerRadiusPx - (borderWidthPx / 2),
                     center = Offset(x, y)
                 )
 
-                // Draw border circle
                 drawCircle(
                     color = borderColor,
                     radius = markerRadiusPx,
@@ -106,20 +99,16 @@ fun SegmentedSemiCircleWithMarkersPreview() {
             )
         )
         val gapAngleDegrees = 30f
-        val timeInSecondsForEachSegment = listOf(6f, 5f, 40f, 90f, 10f, 80f)
-        val totalTime = timeInSecondsForEachSegment.sum()
+        val secondsForSegment = listOf(6f, 5f, 40f, 90f, 10f, 80f)
+        val totalTime = secondsForSegment.sum()
         val availableAngle = 360f - gapAngleDegrees
 
         require(totalTime > 0) {
             "Total time must be greater than 0."
         }
 
-        // Compute scaling factor to stretch the segments to fit the available angle
         val scalingFactor = availableAngle / totalTime
-
-        // Scale each segment's sweep angle
-        val scaledSweepAngles = timeInSecondsForEachSegment.map { it * scalingFactor }
-
+        val scaledSecondsForSegment = secondsForSegment.map { it * scalingFactor }
 
         Box(
             contentAlignment = Alignment.Center,
@@ -127,7 +116,7 @@ fun SegmentedSemiCircleWithMarkersPreview() {
         ) {
             SegmentedSemiCircleWithMarkers(
                 semiCircleColors = semiCircleColors,
-                sweepAngles = scaledSweepAngles,
+                sweepAngles = scaledSecondsForSegment,
                 gapAngleDegrees = gapAngleDegrees,
                 ringThickness = 30.dp,
                 borderColor = Color.Black,
