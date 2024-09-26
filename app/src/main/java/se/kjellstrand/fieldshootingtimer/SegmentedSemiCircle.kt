@@ -29,11 +29,7 @@ fun SegmentedSemiCircle(
     borderWidth: Dp = 2.dp,
     size: Dp = 200.dp
 ) {
-    val totalSweep = sweepAngles.sum()
     val availableAngle = 360f - gapAngleDegrees
-    require(totalSweep <= availableAngle) {
-        "Sum of sweepAngles ($totalSweep) exceeds available angle ($availableAngle)."
-    }
 
     Canvas(
         modifier = Modifier
@@ -118,7 +114,7 @@ fun SegmentedSemiCirclePreview() {
                 Color.Red,Color.Blue,Color.Green
             )
         )
-        val sweepAngles = listOf(60f, 50f, 40f, 90F, 10F,80F)
+        val sweepAngles = listOf(6f, 5f, 40f, 9F, 1F,8F)
 
         Box(
             contentAlignment = Alignment.Center,

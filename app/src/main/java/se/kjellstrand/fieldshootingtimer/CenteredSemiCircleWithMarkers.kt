@@ -23,7 +23,20 @@ fun CenteredSemiCircleWithMarkers() {
             Color.Green
         )
     )
-    val sweepAngles = listOf(60f, 50f, 40f, 90f, 10f, 80f)
+    val gapAngleDegrees = 30
+    val timeInSecondsForEachSegment = listOf(6f, 5f, 40f, 90f, 10f, 80f)
+    val totalTime = timeInSecondsForEachSegment.sum()
+    val availableAngle = 360f - gapAngleDegrees
+
+    require(totalTime > 0) {
+        "Total time must be greater than 0."
+    }
+
+    // Compute scaling factor to stretch the segments to fit the available angle
+    val scalingFactor = availableAngle / totalTime
+
+    // Scale each segment's sweep angle
+    val scaledSweepAngles = timeInSecondsForEachSegment.map { it * scalingFactor }
 
     Box(
         contentAlignment = Alignment.Center,
@@ -31,7 +44,7 @@ fun CenteredSemiCircleWithMarkers() {
     ) {
         SegmentedSemiCircleWithMarkers(
             semiCircleColors = semiCircleColors,
-            sweepAngles = sweepAngles,
+            sweepAngles = scaledSweepAngles,
             gapAngleDegrees = 30f,
             ringThickness = 20.dp,
             borderColor = Color.Black,
