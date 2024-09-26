@@ -1,7 +1,5 @@
 package se.kjellstrand.fieldshootingtimer
 
-
-import android.content.res.Resources
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +29,6 @@ fun SegmentedSemiCircle(
     borderWidth: Dp = 2.dp,
     size: Dp = 200.dp
 ) {
-    // Validate that the sum of sweepAngles does not exceed 180 - gapAngleDegrees
     val totalSweep = sweepAngles.sum()
     val availableAngle = 360f - gapAngleDegrees
     require(totalSweep <= availableAngle) {
@@ -58,7 +55,6 @@ fun SegmentedSemiCircle(
 
         var startAngle = 270f - (availableAngle / 2)
 
-        // Draw each segment with its respective sweep angle
         sweepAngles.forEachIndexed { index, sweepAngle ->
             val color = semiCircleColors.segmentColors.getOrNull(index) ?: Color.Gray
             drawArc(
@@ -73,7 +69,6 @@ fun SegmentedSemiCircle(
             startAngle += sweepAngle
         }
 
-        // Draw the border around the semi-circle
         val outerBorderRect = Rect(
             left = rect.left - (ringThicknessPx / 2) - (borderWidthPx / 2),
             top = rect.top - (ringThicknessPx / 2) - (borderWidthPx / 2),
