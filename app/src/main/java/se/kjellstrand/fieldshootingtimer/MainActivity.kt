@@ -43,9 +43,11 @@ fun CenteredSemiCircle() {
         segmentColors = listOf(
             MaterialTheme.colorScheme.primary,
             MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+            Color.Red,Color.Blue,Color.Green
         )
     )
+    val sweepAngles = listOf(60f, 50f, 40f, 90F, 10F,80F)
 
     Box(
         contentAlignment = Alignment.Center,
@@ -53,9 +55,9 @@ fun CenteredSemiCircle() {
     ) {
         SegmentedSemiCircle(
             semiCircleColors = semiCircleColors,
-            numberOfSegments = 5,
+            sweepAngles = sweepAngles,
             gapAngleDegrees = 30f,
-            ringThickness = 30.dp,
+            ringThickness = 20.dp,
             borderColor = Color.Black,
             borderWidth = 2.dp,
             size = 200.dp
