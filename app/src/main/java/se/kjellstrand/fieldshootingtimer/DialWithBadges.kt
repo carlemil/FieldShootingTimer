@@ -30,7 +30,10 @@ fun DialWithBadges(
     size: Dp = 200.dp,
     badgeRadius: Dp = 10.dp
 ) {
-    Box(modifier = modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.size(size)
+    ) {
         Dial(
             dialColors = dialColors,
             sweepAngles = sweepAngles,

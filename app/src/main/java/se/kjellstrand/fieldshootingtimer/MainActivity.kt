@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    CenteredSemiCircle()
+                    Timer()
                 }
             }
         }
@@ -34,31 +34,39 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun CenteredSemiCircle() {
-    // Define the segment colors from the theme
-    val semiCircleColors = DialColors(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-            Color.Red,Color.Blue,Color.Green
-        )
-    )
-    val sweepAngles = listOf(60f, 50f, 40f, 90F, 10F,80F)
+fun Timer() {
+    FieldShootingTimerTheme {
+        val timeInSecondsForEachSegment = listOf(6f, 25f, 40f, 90f, 10f, 80f)
+        val totalTime = timeInSecondsForEachSegment.sum()
+        val currentTime = totalTime / 3
 
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Dial(
-            dialColors = semiCircleColors,
-            sweepAngles = sweepAngles,
-            gapAngleDegrees = 30f,
-            ringThickness = 20.dp,
-            borderColor = Color.Black,
-            borderWidth = 2.dp,
-            size = 200.dp
-        )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Timer(
+                currentTime = currentTime,
+                dialColors = DialColors(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                        Color.Red,
+                        Color.Blue,
+                        Color.Green
+                    )
+                ),
+                gapAngleDegrees = 30f,
+                timesForSegments = timeInSecondsForEachSegment,
+                ringThickness = 30.dp,
+                borderColor = Color.Black,
+                borderWidth = 2.dp,
+                size = 300.dp,
+                badgeRadius = 15.dp,
+                handColor = Color.White,
+                handThickness = 4.dp
+            )
+        }
     }
 }
 
@@ -66,6 +74,6 @@ fun CenteredSemiCircle() {
 @Composable
 fun CenteredSemiCirclePreview() {
     FieldShootingTimerTheme {
-        CenteredSemiCircle()
+        Timer()
     }
 }

@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -8,18 +7,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Composable
-fun DialWithHand(
+fun Timer(
     modifier: Modifier = Modifier,
     currentTime: Float = 0f,
     dialColors: DialColors = DialColors(
@@ -39,8 +34,8 @@ fun DialWithHand(
     borderWidth: Dp = 2.dp,
     size: Dp = 200.dp,
     badgeRadius: Dp = 10.dp,
-    handColor: Color = Color.Black,
-    handThickness: Dp = 3.dp
+    handColor: Color = Color.White,
+    handThickness: Dp = 8.dp
 ) {
     val totalSeconds = timesForSegments.sum()
     val availableAngle = 360f - gapAngleDegrees
@@ -54,9 +49,8 @@ fun DialWithHand(
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier
+        modifier = modifier.size(size)
     ) {
-        // Draw the segmented semi-circle with markers
         DialWithBadges(
             dialColors = dialColors,
             sweepAngles = sweepAngles,
@@ -68,38 +62,19 @@ fun DialWithHand(
             badgeRadius = badgeRadius
         )
 
-        // Draw the hand
-        Canvas(modifier = Modifier.size(size)) {
-            val canvasSize = size.toPx()
-            val ringThicknessPx = ringThickness.toPx()
-            val borderWidthPx = borderWidth.toPx()
-            val totalPadding = (ringThicknessPx / 2) + (borderWidthPx / 2)
-
-            val centerX = canvasSize / 2
-            val centerY = canvasSize / 2
-
-            val arcRadius = (canvasSize / 2) - totalPadding
-            val badgeCenterRadius = arcRadius + (ringThicknessPx / 2)
-
-            val startAngle = 270f - (availableAngle / 2)
-            val anglePerSecond = availableAngle / totalSeconds
-
-            val clampedCurrentTime = currentTime.coerceIn(0f, totalSeconds)
-            val handAngle = startAngle + (clampedCurrentTime * anglePerSecond)
-            val angleRad = Math.toRadians(handAngle.toDouble())
-            val handLength = badgeCenterRadius
-
-            val handX = centerX + (handLength * cos(angleRad)).toFloat()
-            val handY = centerY + (handLength * sin(angleRad)).toFloat()
-
-            drawLine(
-                color = handColor,
-                start = Offset(centerX, centerY),
-                end = Offset(handX, handY),
-                strokeWidth = handThickness.toPx(),
-                cap = Stroke.DefaultCap
-            )
-        }
+        DialHand(
+            currentTime = currentTime,
+            totalTime = totalSeconds,
+            availableAngle = availableAngle,
+            gapAngleDegrees = gapAngleDegrees,
+            size = size,
+            ringThickness = ringThickness,
+            borderWidth = borderWidth,
+            handColor = handColor,
+            borderColor = borderColor,
+            handThickness = handThickness,
+            overshootPercent = 0.1f // 10% overshoot
+        )
     }
 }
 
@@ -107,15 +82,14 @@ fun DialWithHand(
 @Composable
 fun DialWithHandPreview() {
     FieldShootingTimerTheme {
-        val timeInSecondsForEachSegment = listOf(6f, 5f, 40f, 90f, 10f, 80f)
-        val totalTime = timeInSecondsForEachSegment.sum()
-        val currentTime = totalTime / 4
+        val timeInSecondsForEachSegment = listOf(5f, 25f, 20f, 60f, 10f, 80f)
+        val currentTime = 00f
 
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            DialWithHand(
+            Timer(
                 currentTime = currentTime,
                 dialColors = DialColors(
                     colors = listOf(
@@ -134,7 +108,7 @@ fun DialWithHandPreview() {
                 borderWidth = 2.dp,
                 size = 300.dp,
                 badgeRadius = 15.dp,
-                handColor = Color.Black,
+                handColor = Color.White,
                 handThickness = 4.dp
             )
         }
