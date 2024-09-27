@@ -36,8 +36,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun CenteredSemiCircle() {
     // Define the segment colors from the theme
-    val semiCircleColors = SemiCircleColors(
-        segmentColors = listOf(
+    val semiCircleColors = DialColors(
+        colors = listOf(
             MaterialTheme.colorScheme.primary,
             MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
             MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
@@ -50,8 +50,8 @@ fun CenteredSemiCircle() {
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        SegmentedSemiCircle(
-            semiCircleColors = semiCircleColors,
+        Dial(
+            dialColors = semiCircleColors,
             sweepAngles = sweepAngles,
             gapAngleDegrees = 30f,
             ringThickness = 20.dp,

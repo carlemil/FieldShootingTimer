@@ -19,9 +19,9 @@ import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 
 @Composable
-fun SegmentedSemiCircle(
+fun Dial(
     modifier: Modifier = Modifier,
-    semiCircleColors: SemiCircleColors,
+    dialColors: DialColors,
     sweepAngles: List<Float>,
     gapAngleDegrees: Float = 30f,
     ringThickness: Dp = 20.dp,
@@ -52,7 +52,7 @@ fun SegmentedSemiCircle(
         var startAngle = 270f - (availableAngle / 2)
 
         sweepAngles.forEachIndexed { index, sweepAngle ->
-            val color = semiCircleColors.segmentColors.getOrNull(index) ?: Color.Gray
+            val color = dialColors.colors.getOrNull(index) ?: Color.Gray
             drawArc(
                 color = color,
                 startAngle = startAngle,
@@ -106,8 +106,8 @@ fun SegmentedSemiCircle(
 @Composable
 fun SegmentedSemiCirclePreview() {
     FieldShootingTimerTheme {
-        val semiCircleColors = SemiCircleColors(
-            segmentColors = listOf(
+        val semiCircleColors = DialColors(
+            colors = listOf(
                 MaterialTheme.colorScheme.primary,
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
@@ -120,8 +120,8 @@ fun SegmentedSemiCirclePreview() {
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            SegmentedSemiCircle(
-                semiCircleColors = semiCircleColors,
+            Dial(
+                dialColors = semiCircleColors,
                 sweepAngles = sweepAngles,
                 gapAngleDegrees = 30f,
                 ringThickness = 20.dp,

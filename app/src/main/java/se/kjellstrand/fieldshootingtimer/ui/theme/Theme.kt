@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,7 +9,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import se.kjellstrand.fieldshootingtimer.SemiCircleColors
+import se.kjellstrand.fieldshootingtimer.DialColors
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -34,7 +33,7 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
-lateinit var semiCircleColors : SemiCircleColors
+lateinit var semiCircleColors : DialColors
 
 @Composable
 fun FieldShootingTimerTheme(
@@ -53,8 +52,8 @@ fun FieldShootingTimerTheme(
         else -> LightColorScheme
     }
 
-    semiCircleColors = SemiCircleColors(
-        segmentColors = listOf(
+    semiCircleColors = DialColors(
+        colors = listOf(
             colorScheme.primary,
             colorScheme.primary.copy(alpha = 0.7f),
             colorScheme.primary.copy(alpha = 0.4f)
