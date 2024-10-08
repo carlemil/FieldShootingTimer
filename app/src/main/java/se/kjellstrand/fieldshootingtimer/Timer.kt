@@ -55,6 +55,7 @@ fun Timer(
             dialColors = dialColors,
             sweepAngles = sweepAngles,
             gapAngleDegrees = gapAngleDegrees,
+            timesForSegments = timesForSegments,
             ringThickness = ringThickness,
             borderColor = borderColor,
             borderWidth = borderWidth,
