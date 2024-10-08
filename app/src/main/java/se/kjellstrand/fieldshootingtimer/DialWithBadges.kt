@@ -17,8 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
-import kotlin.math.PI
-import kotlin.math.asin
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -26,8 +24,8 @@ import kotlin.math.sin
 fun DialWithBadges(
     modifier: Modifier = Modifier,
     dialColors: DialColors,
-    sweepAngles: List<Float>,
     timesForSegments: List<Float>,
+    availableAngle: Float,
     gapAngleDegrees: Float = 30f,
     ringThickness: Dp = 20.dp,
     borderColor: Color = Color.Black,
@@ -39,6 +37,10 @@ fun DialWithBadges(
         contentAlignment = Alignment.Center,
         modifier = modifier.size(size)
     ) {
+        val totalSeconds = timesForSegments.sum()
+        val scalingFactor = availableAngle / totalSeconds
+        val sweepAngles = timesForSegments.map { it * scalingFactor }
+
         Dial(
             dialColors = dialColors,
             sweepAngles = sweepAngles,
@@ -86,11 +88,9 @@ fun Badges(
         val arcRadius = (canvasSize / 2) - totalPadding
         val markerCenterRadius = arcRadius + (ringThicknessPx / 2)
 
-        val adjustedMarkers = calculateAdjustedMarkerAngles(
+        val adjustedMarkers = centerOnSegmentMarkerAngles(
             sweepAngles = sweepAngles,
-            gapAngleDegrees = gapAngleDegrees,
-            badgeRadiusPx = markerRadiusPx,
-            markerCenterRadius = markerCenterRadius
+            gapAngleDegrees = gapAngleDegrees
         )
 
         adjustedMarkers.zip(timesForSegments).forEach { (angle, time) ->
@@ -110,44 +110,20 @@ fun Badges(
     }
 }
 
-fun calculateAdjustedMarkerAngles(
+fun centerOnSegmentMarkerAngles(
     sweepAngles: List<Float>,
-    gapAngleDegrees: Float,
-    badgeRadiusPx: Float,
-    markerCenterRadius: Float
+    gapAngleDegrees: Float
 ): List<Float> {
     val availableAngle = 360f - gapAngleDegrees
     var currentAngle = 270f - (availableAngle / 2)
 
-    val initialMarkerAngles = sweepAngles.map { sweep ->
+    val markerAngles = sweepAngles.map { sweep ->
         currentAngle += sweep / 2
         val markerAngle = currentAngle % 360
         currentAngle += sweep / 2
         markerAngle
     }
-
-    val minAngleBetweenMarkersRadians = 2 * asin(badgeRadiusPx / markerCenterRadius)
-    val minAngleBetweenMarkers = minAngleBetweenMarkersRadians * (180f / PI.toFloat())
-
-    val sortedMarkers = initialMarkerAngles.sorted()
-    val adjustedMarkers = mutableListOf<Float>()
-    var previousAngle = sortedMarkers.first() - 360f
-
-    for (angle in sortedMarkers) {
-        var adjustedAngle = angle
-        var angleDifference = (adjustedAngle - previousAngle) % 360f
-        if (angleDifference < 0) angleDifference += 360f
-
-        if (angleDifference < minAngleBetweenMarkers) {
-            adjustedAngle = previousAngle + minAngleBetweenMarkers
-            if (adjustedAngle >= 360f) adjustedAngle -= 360f
-        }
-
-        adjustedMarkers.add(adjustedAngle)
-        previousAngle = adjustedAngle
-    }
-
-    return adjustedMarkers
+    return markerAngles
 }
 
 fun DrawScope.drawBadge(
@@ -210,16 +186,12 @@ fun SegmentedSemiCircleWithMarkersPreview() {
             )
         )
         val gapAngleDegrees = 30f
-        val secondsForSegment = listOf(6f, 5f, 7f, 9f, 10f, 1f)
+        val secondsForSegment = listOf(2f, 3f, 17f, 19f, 10f, 1f)
         val totalTime = secondsForSegment.sum()
-        val availableAngle = 360f - gapAngleDegrees
 
         require(totalTime > 0) {
             "Total time must be greater than 0."
         }
-
-        val scalingFactor = availableAngle / totalTime
-        val scaledSecondsForSegment = secondsForSegment.map { it * scalingFactor }
 
         Box(
             contentAlignment = Alignment.Center,
@@ -227,9 +199,9 @@ fun SegmentedSemiCircleWithMarkersPreview() {
         ) {
             DialWithBadges(
                 dialColors = semiCircleColors,
-                sweepAngles = scaledSecondsForSegment,
                 gapAngleDegrees = gapAngleDegrees,
-                timesForSegments = listOf(6f, 5f, 40f, 90f, 10f, 80f),
+                timesForSegments = secondsForSegment,
+                availableAngle = 330f,
                 ringThickness = 30.dp,
                 borderColor = Color.Black,
                 borderWidth = 2.dp,

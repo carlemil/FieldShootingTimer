@@ -28,7 +28,7 @@ fun Timer(
         )
     ),
     gapAngleDegrees: Float = 30f,
-    timesForSegments: List<Float> = listOf(6f, 5f, 40f, 90f, 10f, 80f),
+    timesForSegments: List<Float> = listOf(),
     ringThickness: Dp = 20.dp,
     borderColor: Color = Color.Black,
     borderWidth: Dp = 2.dp,
@@ -44,18 +44,15 @@ fun Timer(
         "Total time must be greater than 0."
     }
 
-    val scalingFactor = availableAngle / totalSeconds
-    val sweepAngles = timesForSegments.map { it * scalingFactor }
-
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier.size(size)
     ) {
         DialWithBadges(
             dialColors = dialColors,
-            sweepAngles = sweepAngles,
             gapAngleDegrees = gapAngleDegrees,
             timesForSegments = timesForSegments,
+            availableAngle = availableAngle,
             ringThickness = ringThickness,
             borderColor = borderColor,
             borderWidth = borderWidth,
