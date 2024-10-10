@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -41,7 +42,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Timer()
+                    MainScreen()
                 }
             }
         }
@@ -49,14 +50,17 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Timer() {
+fun MainScreen() {
     FieldShootingTimerTheme {
-        val timeInSecondsForEachSegment = listOf(3f, 10f, 8f, 3f)
+        // Example: total 25 seconds shooting time
+        val timeInSecondsForEachSegment = listOf(7f, 3f, 8f, 3f, 3f, 1f)
         val totalTime = timeInSecondsForEachSegment.sum()
 
         var isRunning by remember { mutableStateOf(false) }
         var currentTime by remember { mutableFloatStateOf(0f) }
+        var isFinished by remember { mutableStateOf(false) }
 
+        // Update currentTime based on isRunning state
         LaunchedEffect(isRunning) {
             if (isRunning) {
                 val startTimeMillis = withFrameMillis { it }
@@ -68,6 +72,7 @@ fun Timer() {
                     if (currentTime >= totalTime) {
                         currentTime = totalTime
                         isRunning = false
+                        isFinished = true // Timer has finished
                         break
                     }
                     lastFrameTimeMillis = frameTimeMillis
@@ -88,8 +93,10 @@ fun Timer() {
                     dialColors = DialColors(
                         colors = listOf(
                             Color.LightGray,
-                            Color.Yellow,
+                            Color.LightGray,
                             Color.Green,
+                            Color.Green,
+                            Color.Yellow,
                             Color.Red
                         )
                     ),
@@ -107,15 +114,45 @@ fun Timer() {
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Button(onClick = { isRunning = !isRunning }) {
-                if (isRunning) {
-                    Icon(imageVector = Icons.Default.Call, contentDescription = "Pause")
-                } else {
-                    Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Play")
+            ControlButton(
+                isRunning = isRunning,
+                isFinished = isFinished,
+                onPlayPauseResetClicked = {
+                    when {
+                        isFinished -> {
+                            // Reset the timer
+                            currentTime = 0f
+                            isFinished = false
+                        }
+                        else -> {
+                            isRunning = !isRunning
+                        }
+                    }
                 }
-            }
+            )
 
             Spacer(modifier = Modifier.weight(3f))
+        }
+    }
+}
+
+@Composable
+fun ControlButton(
+    isRunning: Boolean,
+    isFinished: Boolean,
+    onPlayPauseResetClicked: () -> Unit
+) {
+    Button(onClick = { onPlayPauseResetClicked() }) {
+        when {
+            isFinished -> {
+                Icon(imageVector = Icons.Default.Done, contentDescription = "Reset")
+            }
+            isRunning -> {
+                Icon(imageVector = Icons.Default.Call, contentDescription = "Pause")
+            }
+            else -> {
+                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Play")
+            }
         }
     }
 }
