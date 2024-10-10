@@ -7,12 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,8 +27,11 @@ import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
@@ -57,6 +59,7 @@ fun MainScreen() {
         // Example: total 25 seconds shooting time
         val timeInSecondsForEachSegment = listOf(7f, 3f, 8f, 3f, 3f, 1f)
         val totalTime = timeInSecondsForEachSegment.sum()
+        val timerSize = 300.dp
 
         var isRunning by remember { mutableStateOf(false) }
         var currentTime by remember { mutableFloatStateOf(0f) }
@@ -126,7 +129,7 @@ fun MainScreen() {
                 }
             }
         }
-        
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
@@ -152,7 +155,7 @@ fun MainScreen() {
                     ringThickness = 30.dp,
                     borderColor = Color.Black,
                     borderWidth = 2.dp,
-                    size = 300.dp,
+                    size = timerSize,
                     badgeRadius = 15.dp,
                     handColor = Color.White,
                     handThickness = 4.dp
@@ -164,6 +167,7 @@ fun MainScreen() {
             ControlButton(
                 isRunning = isRunning,
                 isFinished = isFinished,
+                buttonSize = timerSize/2,
                 onPlayPauseResetClicked = {
                     when {
                         isFinished -> {
@@ -188,20 +192,36 @@ fun MainScreen() {
 fun ControlButton(
     isRunning: Boolean,
     isFinished: Boolean,
-    onPlayPauseResetClicked: () -> Unit
+    onPlayPauseResetClicked: () -> Unit,
+    buttonSize: Dp = 56.dp
 ) {
-    Button(onClick = { onPlayPauseResetClicked() }) {
+    Button(
+        onClick = { onPlayPauseResetClicked() },
+        modifier = Modifier.size(buttonSize),
+        shape = CircleShape,
+        contentPadding = PaddingValues(0.dp),  // Remove default padding
+    ) {
         when {
             isFinished -> {
-                Icon(imageVector = Icons.Default.Done, contentDescription = "Reset")
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.skip_previous),
+                    contentDescription = "Reset",
+                    modifier = Modifier.size(buttonSize * 0.6f)
+                )
             }
-
             isRunning -> {
-                Icon(imageVector = Icons.Default.Call, contentDescription = "Pause")
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.pause),
+                    contentDescription = "Pause",
+                    modifier = Modifier.size(buttonSize * 0.6f)
+                )
             }
-
             else -> {
-                Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Play")
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.play_arrow),
+                    contentDescription = "Play",
+                    modifier = Modifier.size(buttonSize * 0.6f)
+                )
             }
         }
     }
