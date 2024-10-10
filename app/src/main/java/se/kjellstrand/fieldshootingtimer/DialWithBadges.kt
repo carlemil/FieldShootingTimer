@@ -51,6 +51,15 @@ fun DialWithBadges(
             size = size
         )
 
+        Dividers(
+            size = size,
+            sweepAngles = sweepAngles,
+            gapAngleDegrees = gapAngleDegrees,
+            ringThickness = ringThickness,
+            borderWidth = borderWidth,
+            borderColor = borderColor
+        )
+
         Badges(
             size = size,
             sweepAngles = sweepAngles,
@@ -105,6 +114,50 @@ fun Badges(
                 borderWidthPx = borderWidthPx,
                 borderColor = borderColor,
                 timeText = time.toInt().toString()
+            )
+        }
+    }
+}
+
+@Composable
+fun Dividers(
+    size: Dp,
+    sweepAngles: List<Float>,
+    gapAngleDegrees: Float,
+    ringThickness: Dp,
+    borderWidth: Dp,
+    borderColor: Color
+) {
+    Canvas(modifier = Modifier.size(size)) {
+        val canvasSize = size.toPx()
+        val ringThicknessPx = ringThickness.toPx()
+        val borderWidthPx = borderWidth.toPx()
+
+        val centerX = canvasSize / 2
+        val centerY = canvasSize / 2
+
+        val innerRadius = (canvasSize / 2) - ringThicknessPx - borderWidthPx
+        val outerRadius = (canvasSize / 2)
+
+        val segmentAngles = calculateSegmentAngles(
+            sweepAngles = sweepAngles,
+            gapAngleDegrees = gapAngleDegrees
+        )
+
+        segmentAngles.forEach { angle ->
+            val angleRad = Math.toRadians(angle.toDouble())
+
+            val startX = centerX + innerRadius * cos(angleRad).toFloat()
+            val startY = centerY + innerRadius * sin(angleRad).toFloat()
+
+            val endX = centerX + outerRadius * cos(angleRad).toFloat()
+            val endY = centerY + outerRadius * sin(angleRad).toFloat()
+
+            drawLine(
+                color = borderColor,
+                start = Offset(startX, startY),
+                end = Offset(endX, endY),
+                strokeWidth = borderWidthPx
             )
         }
     }
@@ -169,6 +222,26 @@ fun DrawScope.drawBadge(
             paint
         )
     }
+}
+
+fun calculateSegmentAngles(
+    sweepAngles: List<Float>,
+    gapAngleDegrees: Float
+): List<Float> {
+    val availableAngle = 360f - gapAngleDegrees
+    var currentAngle = 270f - (availableAngle / 2)
+    val segmentAngles = mutableListOf<Float>()
+
+    sweepAngles.forEach { sweep ->
+        // Add the starting angle of the segment
+        segmentAngles.add(currentAngle % 360)
+        currentAngle += sweep
+    }
+
+    // Add the end angle (which is the same as the starting angle due to wrapping)
+    segmentAngles.add((currentAngle % 360))
+
+    return segmentAngles
 }
 
 @Preview(showBackground = true)
