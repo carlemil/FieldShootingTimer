@@ -66,7 +66,6 @@ fun Timer(
             availableAngle = availableAngle,
             gapAngleDegrees = gapAngleDegrees,
             size = size,
-            ringThickness = ringThickness,
             borderWidth = borderWidth,
             handColor = handColor,
             borderColor = borderColor,
@@ -101,13 +100,13 @@ fun DialWithHandPreview() {
                 ),
                 gapAngleDegrees = 30f,
                 timesForSegments = timeInSecondsForEachSegment,
-                ringThickness = 30.dp,
+                ringThickness = 40.dp,
                 borderColor = Color.Black,
                 borderWidth = 2.dp,
                 size = 300.dp,
                 badgeRadius = 15.dp,
                 handColor = Color.White,
-                handThickness = 4.dp
+                handThickness = 8.dp
             )
         }
     }

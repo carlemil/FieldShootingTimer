@@ -24,21 +24,19 @@ fun DialHand(
     availableAngle: Float,
     gapAngleDegrees: Float = 30f,
     size: Dp,
-    ringThickness: Dp,
     borderWidth: Dp = 2.dp,
     handColor: Color = Color.White,
     borderColor: Color = Color.Black,
     handThickness: Dp = 4.dp,
-    overshootPercent: Float = 0.1f
+    overshootPercent: Float = 0.5f
 ) {
     Canvas(modifier = Modifier.size(size)) {
         val sizePx = size.toPx()
-        val ringThicknessPx = ringThickness.toPx()
         val borderWidthPx = borderWidth.toPx()
         val handThicknessPx = handThickness.toPx()
 
         val center = Offset(sizePx / 2, sizePx / 2)
-        val radius = (sizePx - ringThicknessPx) / 2
+        val radius = sizePx / 2
 
         val startAngle = 270f + (gapAngleDegrees / 2)
 
@@ -94,12 +92,11 @@ fun DialHandPreview() {
             totalTime = 100f,
             availableAngle = 270f,
             size = 200.dp,
-            ringThickness = 20.dp,
             borderWidth = 4.dp,
             handColor = Color.White,
             borderColor = Color.Black,
             handThickness = 8.dp,
-            overshootPercent = 0.1f
+            overshootPercent = 0.0f
         )
     }
 }

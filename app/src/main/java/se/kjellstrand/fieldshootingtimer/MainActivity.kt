@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -57,14 +58,14 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     FieldShootingTimerTheme {
         // Example: total 25 seconds shooting time
-        val timeInSecondsForEachSegment = listOf(7f, 3f, 8f, 3f, 3f, 1f)
+        val timeInSecondsForEachSegment = listOf(7f, 3f, 8f, 3f, 1f)
         val totalTime = timeInSecondsForEachSegment.sum()
         val timerSize = 300.dp
 
         var isRunning by remember { mutableStateOf(false) }
         var currentTime by remember { mutableFloatStateOf(0f) }
         var isFinished by remember { mutableStateOf(false) }
-        val playedAudioIndices = remember { mutableSetOf<Int>() } // Moved outside LaunchedEffect
+        val playedAudioIndices = remember { mutableSetOf<Int>() }
 
         val context = LocalContext.current
 
@@ -83,8 +84,7 @@ fun MainScreen() {
             AudioCue(time = segmentStartTimes[1], resId = R.raw.beep_1),
             AudioCue(time = segmentStartTimes[2], resId = R.raw.beep_1),
             AudioCue(time = segmentStartTimes[3], resId = R.raw.beep_1),
-            AudioCue(time = segmentStartTimes[4], resId = R.raw.beep_1),
-            AudioCue(time = segmentStartTimes[5], resId = R.raw.beep_1)
+            AudioCue(time = segmentStartTimes[4], resId = R.raw.beep_1)
         )
 
         LaunchedEffect(isRunning) {
@@ -133,6 +133,7 @@ fun MainScreen() {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
+                .background(Color.Gray)
         ) {
             Box(
                 contentAlignment = Alignment.Center,
@@ -145,20 +146,19 @@ fun MainScreen() {
                             Color.LightGray,
                             Color.LightGray,
                             Color.Green,
-                            Color.Green,
                             Color.Yellow,
                             Color.Red
                         )
                     ),
                     gapAngleDegrees = 30f,
                     timesForSegments = timeInSecondsForEachSegment,
-                    ringThickness = 30.dp,
+                    ringThickness = 40.dp,
                     borderColor = Color.Black,
                     borderWidth = 2.dp,
                     size = timerSize,
                     badgeRadius = 15.dp,
                     handColor = Color.White,
-                    handThickness = 4.dp
+                    handThickness = 6.dp
                 )
             }
 
