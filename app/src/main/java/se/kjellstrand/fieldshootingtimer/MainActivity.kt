@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -205,6 +206,13 @@ fun MainScreen() {
                     isFinished = false
                     playedAudioIndices.clear()
                 },
+                colors = SliderDefaults.colors(
+                    thumbColor = Color.Green,
+                    activeTrackColor = Color.Green,
+                    inactiveTrackColor = Color.Green.copy(alpha = 0.3f),
+                    activeTickColor = Color.Yellow,
+                    inactiveTickColor = Color.Green.copy(alpha = 0.3f)
+                ),
                 valueRange = 1f..30f,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
