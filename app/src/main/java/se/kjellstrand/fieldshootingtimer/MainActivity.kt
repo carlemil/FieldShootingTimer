@@ -70,8 +70,7 @@ fun MainScreen() {
     val context = LocalContext.current
 
     var sliderValue by remember { mutableFloatStateOf(8f) }
-
-    val timeInSecondsForEachSegment = listOf(7f, 3f, sliderValue.roundToInt().toFloat(), 3f, 1f)
+    val timeInSecondsForEachSegment = listOf(7f, 3f, sliderValue.toInt().toFloat(), 3f, 1f)
     val totalTime = timeInSecondsForEachSegment.sum()
     val timerSize = 300.dp
 
@@ -86,9 +85,13 @@ fun MainScreen() {
     }
 
     val audioCues = remember(timeInSecondsForEachSegment) {
-        List(timeInSecondsForEachSegment.size) { index ->
-            AudioCue(time = segmentStartTimes[index], resId = R.raw.beep_1)
-        }
+        listOf(
+            AudioCue(time = segmentStartTimes[0], resId = R.raw.tio_sekunder_kvar_cut),
+            AudioCue(time = segmentStartTimes[1], resId = R.raw.fardiga_cut),
+            AudioCue(time = segmentStartTimes[2], resId = R.raw.eld_cut),
+            AudioCue(time = segmentStartTimes[3], resId = R.raw.eld_upp_hor_cut),
+            AudioCue(time = segmentStartTimes[4], resId = R.raw.patron_ur_proppa_vapen_cut)
+        )
     }
 
     LaunchedEffect(isRunning, timeInSecondsForEachSegment) {
