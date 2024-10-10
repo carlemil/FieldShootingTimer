@@ -1,5 +1,6 @@
 package se.kjellstrand.fieldshootingtimer
 
+import android.media.MediaPlayer
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,6 +28,7 @@ import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.isActive
@@ -59,27 +61,72 @@ fun MainScreen() {
         var isRunning by remember { mutableStateOf(false) }
         var currentTime by remember { mutableFloatStateOf(0f) }
         var isFinished by remember { mutableStateOf(false) }
+        val playedAudioIndices = remember { mutableSetOf<Int>() } // Moved outside LaunchedEffect
 
-        // Update currentTime based on isRunning state
+        val context = LocalContext.current
+
+        val segmentStartTimes = remember {
+            val startTimesList = mutableListOf<Float>()
+            var cumulativeTime = 0f
+            for (time in timeInSecondsForEachSegment) {
+                startTimesList.add(cumulativeTime)
+                cumulativeTime += time
+            }
+            startTimesList
+        }
+
+        val audioCues = listOf(
+            AudioCue(time = segmentStartTimes[0], resId = R.raw.beep_1),
+            AudioCue(time = segmentStartTimes[1], resId = R.raw.beep_1),
+            AudioCue(time = segmentStartTimes[2], resId = R.raw.beep_1),
+            AudioCue(time = segmentStartTimes[3], resId = R.raw.beep_1),
+            AudioCue(time = segmentStartTimes[4], resId = R.raw.beep_1),
+            AudioCue(time = segmentStartTimes[5], resId = R.raw.beep_1)
+        )
+
         LaunchedEffect(isRunning) {
             if (isRunning) {
+                for ((index, audioCue) in audioCues.withIndex()) {
+                    if (currentTime >= audioCue.time && !playedAudioIndices.contains(index)) {
+                        val mediaPlayer = MediaPlayer.create(context, audioCue.resId)
+                        mediaPlayer.start()
+                        mediaPlayer.setOnCompletionListener {
+                            mediaPlayer.release()
+                        }
+                        playedAudioIndices.add(index)
+                    }
+                }
+
                 val startTimeMillis = withFrameMillis { it }
                 var lastFrameTimeMillis = startTimeMillis
+
                 while (currentTime < totalTime && isActive) {
                     val frameTimeMillis = withFrameMillis { it }
                     val deltaTime = (frameTimeMillis - lastFrameTimeMillis) / 1000f
                     currentTime += deltaTime
+
+                    for ((index, audioCue) in audioCues.withIndex()) {
+                        if (currentTime >= audioCue.time && !playedAudioIndices.contains(index)) {
+                            val mediaPlayer = MediaPlayer.create(context, audioCue.resId)
+                            mediaPlayer.start()
+                            mediaPlayer.setOnCompletionListener {
+                                mediaPlayer.release()
+                            }
+                            playedAudioIndices.add(index)
+                        }
+                    }
+
                     if (currentTime >= totalTime) {
                         currentTime = totalTime
                         isRunning = false
-                        isFinished = true // Timer has finished
+                        isFinished = true
                         break
                     }
                     lastFrameTimeMillis = frameTimeMillis
                 }
             }
         }
-
+        
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxSize()
@@ -124,6 +171,7 @@ fun MainScreen() {
                             currentTime = 0f
                             isFinished = false
                         }
+
                         else -> {
                             isRunning = !isRunning
                         }
@@ -147,9 +195,11 @@ fun ControlButton(
             isFinished -> {
                 Icon(imageVector = Icons.Default.Done, contentDescription = "Reset")
             }
+
             isRunning -> {
                 Icon(imageVector = Icons.Default.Call, contentDescription = "Pause")
             }
+
             else -> {
                 Icon(imageVector = Icons.Default.PlayArrow, contentDescription = "Play")
             }
