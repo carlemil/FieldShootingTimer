@@ -8,15 +8,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -33,15 +28,11 @@ import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
-import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -185,9 +176,13 @@ fun MainScreen() {
                         currentTime = 0f
                         isFinished = false
                     }
-
+                    !isRunning ->{
+                        isRunning = true
+                    }
                     else -> {
-                        isRunning = !isRunning
+                        isRunning = false
+                        currentTime = 0f
+                        isFinished = false
                     }
                 }
             }
@@ -222,47 +217,6 @@ fun MainScreen() {
         }
 
         Spacer(modifier = Modifier.weight(3f))
-    }
-}
-
-@Composable
-fun ControlButton(
-    isRunning: Boolean,
-    isFinished: Boolean,
-    onPlayPauseResetClicked: () -> Unit,
-    buttonSize: Dp = 56.dp
-) {
-    Button(
-        onClick = { onPlayPauseResetClicked() },
-        modifier = Modifier.size(buttonSize),
-        shape = CircleShape,
-        contentPadding = PaddingValues(0.dp),  // Remove default padding
-    ) {
-        when {
-            isFinished -> {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.skip_previous),
-                    contentDescription = "Reset",
-                    modifier = Modifier.size(buttonSize * 0.6f)
-                )
-            }
-
-            isRunning -> {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.pause),
-                    contentDescription = "Pause",
-                    modifier = Modifier.size(buttonSize * 0.6f)
-                )
-            }
-
-            else -> {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.play_arrow),
-                    contentDescription = "Play",
-                    modifier = Modifier.size(buttonSize * 0.6f)
-                )
-            }
-        }
     }
 }
 
