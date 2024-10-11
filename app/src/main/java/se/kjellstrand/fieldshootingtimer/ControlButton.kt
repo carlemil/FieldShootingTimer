@@ -16,11 +16,11 @@ import androidx.compose.ui.unit.dp
 fun ControlButton(
     isRunning: Boolean,
     isFinished: Boolean,
-    onPlayPauseResetClicked: () -> Unit,
+    onPlayStopResetClicked: () -> Unit,
     buttonSize: Dp = 56.dp
 ) {
     Button(
-        onClick = { onPlayPauseResetClicked() },
+        onClick = { onPlayStopResetClicked() },
         modifier = Modifier.size(buttonSize),
         shape = CircleShape,
         contentPadding = PaddingValues(0.dp),

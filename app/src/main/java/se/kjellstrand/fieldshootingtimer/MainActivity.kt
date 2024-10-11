@@ -56,16 +56,16 @@ fun MainScreen() {
     var isRunning by remember { mutableStateOf(false) }
     var currentTime by remember { mutableFloatStateOf(0f) }
     var isFinished by remember { mutableStateOf(false) }
-    val playedAudioIndices = remember { mutableSetOf<Int>() }
-
-    val context = LocalContext.current
-
+    val playedAudioIndices = remember(isRunning) { mutableSetOf<Int>() }
     var sliderValue by remember { mutableFloatStateOf(8f) }
+
     val timeInSecondsForEachSegment = listOf(7f, 3f, sliderValue.toInt().toFloat(), 3f, 1f)
     val totalTime = timeInSecondsForEachSegment.sum()
+
+    val context = LocalContext.current
     val timerSize = 300.dp
 
-    val segmentStartTimes = remember {
+    val segmentStartTimes = remember(timeInSecondsForEachSegment) {
         val startTimesList = mutableListOf<Float>()
         var cumulativeTime = 0f
         for (time in timeInSecondsForEachSegment) {
@@ -74,7 +74,6 @@ fun MainScreen() {
         }
         startTimesList
     }
-
     val audioCues = remember(timeInSecondsForEachSegment) {
         listOf(
             AudioCue(time = segmentStartTimes[0], resId = R.raw.tio_sekunder_kvar_cut),
@@ -85,7 +84,7 @@ fun MainScreen() {
         )
     }
 
-    LaunchedEffect(isRunning, timeInSecondsForEachSegment) {
+    LaunchedEffect(isRunning) {
         if (isRunning) {
             for ((index, audioCue) in audioCues.withIndex()) {
                 if (currentTime >= audioCue.time && !playedAudioIndices.contains(index)) {
@@ -170,15 +169,17 @@ fun MainScreen() {
             isRunning = isRunning,
             isFinished = isFinished,
             buttonSize = timerSize / 2f,
-            onPlayPauseResetClicked = {
+            onPlayStopResetClicked = {
                 when {
                     isFinished -> {
                         currentTime = 0f
                         isFinished = false
                     }
-                    !isRunning ->{
+
+                    !isRunning -> {
                         isRunning = true
                     }
+
                     else -> {
                         isRunning = false
                         currentTime = 0f
@@ -194,7 +195,7 @@ fun MainScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Adjust Time: ${sliderValue.toInt()} sec")
+            Text(text = "Adjust Time: ${sliderValue.toInt() + 3} sec")
             Slider(
                 value = sliderValue,
                 onValueChange = { newValue ->
