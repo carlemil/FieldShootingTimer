@@ -2,10 +2,18 @@ package se.kjellstrand.fieldshootingtimer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Misc
+val HandBackgroundColor = Color(0xFFFFFFFF)
+val TimerBordersColor = Color(0xFF000000)
+val BackgroundColor = Color(0xFF777777)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Dial Segments colors
+val PrepareSegmentColor = Color(0xFFaaaaaa)
+val ShootSegmentColor = Color(0xFF44dd44)
+val CeaseFireSegmentColor = Color(0xFFdddd44)
+val PlugWeaponSegmentColor = Color(0xFFdd4444)
+
+// Slider colors
+val SliderThumbColor = Color(0xFF44dd44)
+val SliderActiveTrackColor = Color(0xFF44dd44)
+val SliderInactiveTrackColor = Color(0x3344dd44)

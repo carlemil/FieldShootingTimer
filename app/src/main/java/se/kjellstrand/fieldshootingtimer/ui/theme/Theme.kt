@@ -12,15 +12,15 @@ import androidx.compose.ui.platform.LocalContext
 import se.kjellstrand.fieldshootingtimer.DialColors
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = PrepareSegmentColor,
+    secondary = ShootSegmentColor,
+    tertiary = CeaseFireSegmentColor
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = PrepareSegmentColor,
+    secondary = ShootSegmentColor,
+    tertiary = CeaseFireSegmentColor
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -32,8 +32,6 @@ private val LightColorScheme = lightColorScheme(
     onSurface = Color(0xFF1C1B1F),
     */
 )
-
-lateinit var semiCircleColors : DialColors
 
 @Composable
 fun FieldShootingTimerTheme(
@@ -51,15 +49,6 @@ fun FieldShootingTimerTheme(
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
-
-    semiCircleColors = DialColors(
-        colors = listOf(
-            colorScheme.primary,
-            colorScheme.primary.copy(alpha = 0.7f),
-            colorScheme.primary.copy(alpha = 0.4f)
-            // Add more colors if you increase the number of segments
-        )
-    )
 
     MaterialTheme(
         colorScheme = colorScheme,

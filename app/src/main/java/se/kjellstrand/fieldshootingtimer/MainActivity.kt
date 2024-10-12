@@ -27,12 +27,24 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
+import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.CeaseFireSegmentColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import se.kjellstrand.fieldshootingtimer.ui.theme.HandBackgroundColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.PlugWeaponSegmentColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.PrepareSegmentColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.ShootSegmentColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,9 +69,10 @@ fun MainScreen() {
     var currentTime by remember { mutableFloatStateOf(0f) }
     var isFinished by remember { mutableStateOf(false) }
     val playedAudioIndices = remember(isRunning) { mutableSetOf<Int>() }
-    var sliderValue by remember { mutableFloatStateOf(7f) }
-
-    val timeInSecondsForEachSegment = listOf(7f, 3f, sliderValue.toInt().toFloat(), 3f, 1f)
+    var sliderValue by remember { mutableFloatStateOf(5f) }
+    val ceaseFireTime = 3f
+    val timeInSecondsForEachSegment =
+        listOf(7f, 3f, sliderValue.toInt().toFloat(), ceaseFireTime, 1f)
     val totalTime = timeInSecondsForEachSegment.sum()
 
     val context = LocalContext.current
@@ -131,7 +144,7 @@ fun MainScreen() {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Gray)
+            .background(BackgroundColor)
     ) {
 
         Spacer(modifier = Modifier.weight(2f))
@@ -144,21 +157,21 @@ fun MainScreen() {
                 currentTime = currentTime,
                 dialColors = DialColors(
                     colors = listOf(
-                        Color.LightGray,
-                        Color.LightGray,
-                        Color.Green,
-                        Color.Yellow,
-                        Color.Red
+                        PrepareSegmentColor,
+                        PrepareSegmentColor,
+                        ShootSegmentColor,
+                        CeaseFireSegmentColor,
+                        PlugWeaponSegmentColor
                     )
                 ),
                 gapAngleDegrees = 30f,
                 timesForSegments = timeInSecondsForEachSegment,
                 ringThickness = 40.dp,
-                borderColor = Color.Black,
+                borderColor = TimerBordersColor,
                 borderWidth = 2.dp,
                 size = timerSize,
                 badgeRadius = 15.dp,
-                handColor = Color.White,
+                handColor = HandBackgroundColor,
                 handThickness = 6.dp
             )
         }
@@ -195,7 +208,14 @@ fun MainScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Adjust Time: ${sliderValue.toInt() + 3} sec")
+            Text(
+                text = stringResource(
+                    R.string.shooting_time,
+                    (sliderValue + ceaseFireTime).toInt()
+                ),
+                fontWeight = FontWeight.Bold,
+                fontSize = 24.sp
+            )
             Slider(
                 value = sliderValue,
                 enabled = !isRunning,
@@ -207,13 +227,11 @@ fun MainScreen() {
                     playedAudioIndices.clear()
                 },
                 colors = SliderDefaults.colors(
-                    thumbColor = Color.Green,
-                    activeTrackColor = Color.Green,
-                    inactiveTrackColor = Color.Green.copy(alpha = 0.3f),
-                    activeTickColor = Color.Yellow,
-                    inactiveTickColor = Color.Green.copy(alpha = 0.3f)
+                    thumbColor = SliderThumbColor,
+                    activeTrackColor = SliderActiveTrackColor,
+                    inactiveTrackColor = SliderInactiveTrackColor
                 ),
-                valueRange = 1f..30f,
+                valueRange = 1f..27f,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }

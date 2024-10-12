@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">FieldShootingTimer</string>
+    <string name="shooting_time">Shooting Time: %1$d sec</string>
+
 </resources>
