@@ -57,7 +57,7 @@ fun MainScreen() {
     var currentTime by remember { mutableFloatStateOf(0f) }
     var isFinished by remember { mutableStateOf(false) }
     val playedAudioIndices = remember(isRunning) { mutableSetOf<Int>() }
-    var sliderValue by remember { mutableFloatStateOf(8f) }
+    var sliderValue by remember { mutableFloatStateOf(7f) }
 
     val timeInSecondsForEachSegment = listOf(7f, 3f, sliderValue.toInt().toFloat(), 3f, 1f)
     val totalTime = timeInSecondsForEachSegment.sum()
@@ -198,6 +198,7 @@ fun MainScreen() {
             Text(text = "Adjust Time: ${sliderValue.toInt() + 3} sec")
             Slider(
                 value = sliderValue,
+                enabled = !isRunning,
                 onValueChange = { newValue ->
                     sliderValue = newValue
                     currentTime = 0f
