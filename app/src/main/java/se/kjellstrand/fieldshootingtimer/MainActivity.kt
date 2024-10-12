@@ -211,6 +211,8 @@ fun MainScreen() {
             Text(
                 text = stringResource(
                     R.string.shooting_time,
+                    sliderValue.toInt(),
+                    ceaseFireTime.toInt(),
                     (sliderValue + ceaseFireTime).toInt()
                 ),
                 fontWeight = FontWeight.Bold,
