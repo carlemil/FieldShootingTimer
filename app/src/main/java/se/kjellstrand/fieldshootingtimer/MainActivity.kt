@@ -166,13 +166,13 @@ fun MainScreen() {
                 ),
                 gapAngleDegrees = 30f,
                 timesForSegments = timeInSecondsForEachSegment,
-                ringThickness = 40.dp,
+                ringThickness = 60.dp,
                 borderColor = TimerBordersColor,
                 borderWidth = 2.dp,
                 size = timerSize,
                 badgeRadius = 15.dp,
                 handColor = HandBackgroundColor,
-                handThickness = 6.dp
+                handThickness = 8.dp
             )
         }
 
