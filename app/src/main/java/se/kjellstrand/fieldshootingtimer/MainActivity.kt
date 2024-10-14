@@ -64,7 +64,7 @@ fun MainScreen(
     val timerUiState by timerViewModel.uiState.collectAsState()
 
     val playedAudioIndices = remember(timerUiState.timerRunningState) { mutableSetOf<Int>() }
-    var shootingDuration by remember { mutableFloatStateOf(timerUiState.shootingDuration) }
+    val shootingDuration by remember { mutableFloatStateOf(timerUiState.shootingDuration) }
     val ceaseFireDuration = 3f
     val segmentDurations =
         listOf(7f, 3f, shootingDuration.toInt().toFloat(), ceaseFireDuration, 1f)
@@ -169,56 +169,80 @@ fun MainScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = stringResource(
-                    R.string.shooting_time,
-                    shootingDuration.toInt(),
-                    ceaseFireDuration.toInt(),
-                    (shootingDuration + ceaseFireDuration).toInt()
-                ),
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            )
-            Slider(
-                value = shootingDuration,
-                enabled = timerUiState.timerRunningState == TimerState.NotStarted,
-                onValueChange = { newValue ->
-                    shootingDuration = newValue
-                    playedAudioIndices.clear()
-                },
-                colors = SliderDefaults.colors(
-                    thumbColor = SliderThumbColor,
-                    activeTrackColor = SliderActiveTrackColor,
-                    inactiveTrackColor = SliderInactiveTrackColor
-                ),
-                valueRange = 1f..27f,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
+        ShootTimeSlider(
+            shootingDuration,
+            ceaseFireDuration,
+            timerUiState.timerRunningState == TimerState.NotStarted,
+            playedAudioIndices
+        )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-        ) {
-            Checkbox(
-                checked = timerUiState.badgesVisible,
-                onCheckedChange = { checked ->
-                    timerViewModel.setBadgesVisible(checked)
-                }
-            )
-            Text(
-                text = stringResource(R.string.show_segment_times),
-                modifier = Modifier.padding(start = 8.dp)
-            )
-        }
+        ShowSegmentTimes(timerViewModel)
 
         Spacer(modifier = Modifier.weight(3f))
+    }
+}
+
+@Composable
+private fun ShootTimeSlider(
+    shootingDuration: Float,
+    ceaseFireDuration: Float,
+    enabled: Boolean,
+    playedAudioIndices: MutableSet<Int>
+) {
+    var shootingDuration1 = shootingDuration
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = stringResource(
+                R.string.shooting_time,
+                shootingDuration1.toInt(),
+                ceaseFireDuration.toInt(),
+                (shootingDuration1 + ceaseFireDuration).toInt()
+            ),
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp
+        )
+        Slider(
+            value = shootingDuration1,
+            enabled = enabled,
+            onValueChange = { newValue ->
+                shootingDuration1 = newValue
+                playedAudioIndices.clear()
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = SliderThumbColor,
+                activeTrackColor = SliderActiveTrackColor,
+                inactiveTrackColor = SliderInactiveTrackColor
+            ),
+            valueRange = 1f..27f,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun ShowSegmentTimes(
+    timerViewModel: TimerViewModel
+) {
+    val timerUiState by timerViewModel.uiState.collectAsState()
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Checkbox(
+            checked = timerUiState.badgesVisible,
+            onCheckedChange = { checked ->
+                timerViewModel.setBadgesVisible(checked)
+            }
+        )
+        Text(
+            text = stringResource(R.string.show_segment_times),
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 
