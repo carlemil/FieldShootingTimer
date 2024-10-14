@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
@@ -164,26 +165,7 @@ fun MainScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        ControlButton(
-            timerUiState = timerUiState,
-            buttonSize = timerSize / 2f,
-            onPlayStopResetClicked = {
-                when (timerUiState.timerRunningState) {
-                    TimerState.NotStarted -> {
-                        timerViewModel.setTimerState(TimerState.Running)
-                    }
-
-                    TimerState.Running -> {
-                        timerViewModel.setTimerState(TimerState.Stopped)
-                    }
-
-                    TimerState.Stopped, TimerState.Finished -> {
-                        timerViewModel.setCurrentTime(0f)
-                        timerViewModel.setTimerState(TimerState.NotStarted)
-                    }
-                }
-            }
-        )
+        PlayButton(timerUiState, timerSize, timerViewModel)
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -231,13 +213,41 @@ fun MainScreen(
                 }
             )
             Text(
-                text = "Show Badges",
+                text = stringResource(R.string.show_segment_times),
                 modifier = Modifier.padding(start = 8.dp)
             )
         }
 
         Spacer(modifier = Modifier.weight(3f))
     }
+}
+
+@Composable
+private fun PlayButton(
+    timerUiState: TimerUiState,
+    timerSize: Dp,
+    timerViewModel: TimerViewModel
+) {
+    TimerStateButton(
+        timerUiState = timerUiState,
+        buttonSize = timerSize / 2f,
+        onPlayStopResetClicked = {
+            when (timerUiState.timerRunningState) {
+                TimerState.NotStarted -> {
+                    timerViewModel.setTimerState(TimerState.Running)
+                }
+
+                TimerState.Running -> {
+                    timerViewModel.setTimerState(TimerState.Stopped)
+                }
+
+                TimerState.Stopped, TimerState.Finished -> {
+                    timerViewModel.setCurrentTime(0f)
+                    timerViewModel.setTimerState(TimerState.NotStarted)
+                }
+            }
+        }
+    )
 }
 
 private fun playAudioCue(

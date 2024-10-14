@@ -17,7 +17,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.ShootSegmentColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 
 @Composable
-fun ControlButton(
+fun TimerStateButton(
     timerUiState: TimerUiState,
     onPlayStopResetClicked: () -> Unit,
     buttonSize: Dp = 56.dp
