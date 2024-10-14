@@ -31,7 +31,8 @@ fun DialWithBadges(
     borderColor: Color = Color.Black,
     borderWidth: Dp = 2.dp,
     size: Dp = 200.dp,
-    badgeRadius: Dp = 10.dp
+    badgeRadius: Dp = 10.dp,
+    badgesVisible: Boolean = true
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -60,16 +61,18 @@ fun DialWithBadges(
             borderColor = borderColor
         )
 
-        Badges(
-            size = size,
-            sweepAngles = sweepAngles,
-            timesForSegments = timesForSegments,
-            gapAngleDegrees = gapAngleDegrees,
-            ringThickness = ringThickness,
-            borderColor = borderColor,
-            borderWidth = borderWidth,
-            badgeRadius = badgeRadius
-        )
+        if (badgesVisible) {
+            Badges(
+                size = size,
+                sweepAngles = sweepAngles,
+                timesForSegments = timesForSegments,
+                gapAngleDegrees = gapAngleDegrees,
+                ringThickness = ringThickness,
+                borderColor = borderColor,
+                borderWidth = borderWidth,
+                badgeRadius = badgeRadius
+            )
+        }
     }
 }
 
@@ -272,9 +275,9 @@ fun SegmentedSemiCircleWithMarkersPreview() {
         ) {
             DialWithBadges(
                 dialColors = semiCircleColors,
-                gapAngleDegrees = gapAngleDegrees,
                 timesForSegments = secondsForSegment,
                 availableAngle = 330f,
+                gapAngleDegrees = gapAngleDegrees,
                 ringThickness = 30.dp,
                 borderColor = Color.Black,
                 borderWidth = 2.dp,

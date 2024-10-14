@@ -19,6 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +57,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    MainScreen(TimerViewModel())
                 }
             }
         }
@@ -64,12 +65,16 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    timerViewModel: TimerViewModel
+) {
+    val timerUiState by timerViewModel.uiState.collectAsState()
+
     var isRunning by remember { mutableStateOf(false) }
     var currentTime by remember { mutableFloatStateOf(0f) }
     var isFinished by remember { mutableStateOf(false) }
     val playedAudioIndices = remember(isRunning) { mutableSetOf<Int>() }
-    var sliderValue by remember { mutableFloatStateOf(5f) }
+    var sliderValue by remember { mutableFloatStateOf(timerUiState.shootingTime) }
     val ceaseFireTime = 3f
     val timeInSecondsForEachSegment =
         listOf(7f, 3f, sliderValue.toInt().toFloat(), ceaseFireTime, 1f)
@@ -172,7 +177,8 @@ fun MainScreen() {
                 size = timerSize,
                 badgeRadius = 15.dp,
                 handColor = HandBackgroundColor,
-                handThickness = 8.dp
+                handThickness = 8.dp,
+                badgesVisible = timerUiState.badgesVisible
             )
         }
 

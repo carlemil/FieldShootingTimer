@@ -35,7 +35,8 @@ fun Timer(
     size: Dp = 200.dp,
     badgeRadius: Dp = 10.dp,
     handColor: Color = Color.White,
-    handThickness: Dp = 8.dp
+    handThickness: Dp = 8.dp,
+    badgesVisible: Boolean = true
 ) {
     val totalSeconds = timesForSegments.sum()
     val availableAngle = 360f - gapAngleDegrees
@@ -57,6 +58,7 @@ fun Timer(
             borderColor = borderColor,
             borderWidth = borderWidth,
             size = size,
+            badgesVisible = badgesVisible,
             badgeRadius = badgeRadius
         )
 
@@ -106,7 +108,8 @@ fun DialWithHandPreview() {
                 size = 300.dp,
                 badgeRadius = 15.dp,
                 handColor = Color.White,
-                handThickness = 8.dp
+                handThickness = 8.dp,
+                badgesVisible = true
             )
         }
     }
