@@ -26,7 +26,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,7 +37,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
-import se.kjellstrand.fieldshootingtimer.ui.theme.*
+import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.CeaseFireSegmentColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import se.kjellstrand.fieldshootingtimer.ui.theme.HandBackgroundColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.PlugWeaponSegmentColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.PrepareSegmentColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.ShootSegmentColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -135,33 +144,7 @@ fun MainScreen(
 
         Spacer(modifier = Modifier.weight(2f))
 
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.weight(10f)
-        ) {
-            Timer(
-                currentTime = timerUiState.currentTime,
-                dialColors = DialColors(
-                    colors = listOf(
-                        PrepareSegmentColor,
-                        PrepareSegmentColor,
-                        ShootSegmentColor,
-                        CeaseFireSegmentColor,
-                        PlugWeaponSegmentColor
-                    )
-                ),
-                gapAngleDegrees = 30f,
-                timesForSegments = segmentDurations,
-                ringThickness = 60.dp,
-                borderColor = TimerBordersColor,
-                borderWidth = 2.dp,
-                size = timerSize,
-                badgeRadius = 15.dp,
-                handColor = HandBackgroundColor,
-                handThickness = 8.dp,
-                badgesVisible = timerUiState.badgesVisible
-            )
-        }
+        ShootTimer(timerUiState, segmentDurations, timerSize)
 
         Spacer(modifier = Modifier.weight(1f))
 
@@ -179,6 +162,40 @@ fun MainScreen(
         ShowSegmentTimes(timerViewModel)
 
         Spacer(modifier = Modifier.weight(3f))
+    }
+}
+
+@Composable
+private fun ShootTimer(
+    timerUiState: TimerUiState,
+    segmentDurations: List<Float>,
+    timerSize: Dp
+) {
+    Box(
+        contentAlignment = Alignment.Center
+    ) {
+        Timer(
+            currentTime = timerUiState.currentTime,
+            dialColors = DialColors(
+                colors = listOf(
+                    PrepareSegmentColor,
+                    PrepareSegmentColor,
+                    ShootSegmentColor,
+                    CeaseFireSegmentColor,
+                    PlugWeaponSegmentColor
+                )
+            ),
+            gapAngleDegrees = 30f,
+            timesForSegments = segmentDurations,
+            ringThickness = 60.dp,
+            borderColor = TimerBordersColor,
+            borderWidth = 2.dp,
+            size = timerSize,
+            badgeRadius = 15.dp,
+            handColor = HandBackgroundColor,
+            handThickness = 8.dp,
+            badgesVisible = timerUiState.badgesVisible
+        )
     }
 }
 
