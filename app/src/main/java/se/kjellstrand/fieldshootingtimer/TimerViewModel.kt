@@ -17,13 +17,25 @@ open class TimerViewModel : ViewModel() {
 
     fun setShootingTime(shootingTime: Float) {
         _uiState.update { currentState ->
-            currentState.copy(shootingTime = shootingTime)
+            currentState.copy(shootingDuration = shootingTime)
         }
     }
 
     fun setBadgesVisible(badgesVisible: Boolean) {
         _uiState.update { currentState ->
             currentState.copy(badgesVisible = badgesVisible)
+        }
+    }
+
+    fun setTimerState(timerState: TimerState) {
+        _uiState.update { currentState ->
+            currentState.copy(timerRunningState = timerState)
+        }
+    }
+
+    fun setCurrentTime(currentTime: Float) {
+        _uiState.update { currentState ->
+            currentState.copy(currentTime = currentTime)
         }
     }
 }

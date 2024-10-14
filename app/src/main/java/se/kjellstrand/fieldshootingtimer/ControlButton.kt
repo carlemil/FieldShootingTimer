@@ -18,8 +18,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 
 @Composable
 fun ControlButton(
-    isRunning: Boolean,
-    isFinished: Boolean,
+    timerUiState: TimerUiState,
     onPlayStopResetClicked: () -> Unit,
     buttonSize: Dp = 56.dp
 ) {
@@ -33,27 +32,25 @@ fun ControlButton(
             containerColor = ShootSegmentColor
         )
     ) {
-        when {
-            isFinished -> {
+        when(timerUiState.timerRunningState) {
+            TimerState.NotStarted -> {
                 Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.skip_previous),
-                    contentDescription = "Reset",
+                    imageVector = ImageVector.vectorResource(id = R.drawable.play_arrow),
+                    contentDescription = "Play",
                     modifier = Modifier.size(buttonSize * 0.8f)
                 )
             }
-
-            isRunning -> {
+            TimerState.Running -> {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.stop),
                     contentDescription = "Stop",
                     modifier = Modifier.size(buttonSize * 0.8f)
                 )
             }
-
-            else -> {
+            TimerState.Finished, TimerState.Stopped -> {
                 Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.play_arrow),
-                    contentDescription = "Play",
+                    imageVector = ImageVector.vectorResource(id = R.drawable.skip_previous),
+                    contentDescription = "Reset",
                     modifier = Modifier.size(buttonSize * 0.8f)
                 )
             }
