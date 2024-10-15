@@ -15,9 +15,9 @@ open class TimerViewModel : ViewModel() {
         _uiState.value = TimerUiState()
     }
 
-    fun setShootingTime(shootingTime: Float) {
+    fun setShootingTime(shootingDuration: Float) {
         _uiState.update { currentState ->
-            currentState.copy(shootingDuration = shootingTime)
+            currentState.copy(shootingDuration = shootingDuration)
         }
     }
 
