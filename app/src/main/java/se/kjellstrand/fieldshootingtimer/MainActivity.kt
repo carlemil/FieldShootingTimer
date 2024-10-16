@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.res.Configuration
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
@@ -50,6 +50,8 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
+
+private const val TAG = "ShootingTimer"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,6 +85,8 @@ fun MainScreen(
     val context = LocalContext.current
     val timerSize = 300.dp
 
+    val audioManager = remember { AudioManager(context) }
+
     val audioCueStartTimes = remember(segmentDurations) {
         val startTimes = mutableListOf<Float>()
         var cumulativeTime = 0f
@@ -104,12 +108,7 @@ fun MainScreen(
 
     LaunchedEffect(timerUiState.timerRunningState) {
         if (timerUiState.timerRunningState == TimerState.Running) {
-            for ((index, audioCue) in audioCues.withIndex()) {
-                if (timerUiState.currentTime >= audioCue.time && !playedAudioIndices.contains(index)) {
-                    playAudioCue(context, audioCue)
-                    playedAudioIndices.add(index)
-                }
-            }
+            playAudioCue(audioCues, timerUiState, playedAudioIndices, audioManager)
 
             val startTimeMillis = withFrameMillis { it }
             var lastFrameTimeMillis = startTimeMillis
@@ -117,14 +116,7 @@ fun MainScreen(
                 val frameTimeMillis = withFrameMillis { it }
                 val deltaTime = (frameTimeMillis - lastFrameTimeMillis) / 1000f
                 timerViewModel.setCurrentTime(timerUiState.currentTime + deltaTime)
-                for ((index, audioCue) in audioCues.withIndex()) {
-                    if (timerUiState.currentTime >= audioCue.time &&
-                        !playedAudioIndices.contains(index)
-                    ) {
-                        playAudioCue(context, audioCue)
-                        playedAudioIndices.add(index)
-                    }
-                }
+                playAudioCue(audioCues, timerUiState, playedAudioIndices, audioManager)
 
                 if (timerUiState.currentTime >= totalDuration) {
                     timerViewModel.setCurrentTime(totalDuration)
@@ -341,13 +333,18 @@ private fun PlayButton(
 }
 
 private fun playAudioCue(
-    context: Context,
-    audioCue: AudioCue
+    audioCues: List<AudioCue>,
+    timerUiState: TimerUiState,
+    playedAudioIndices: MutableSet<Int>,
+    audioManager: AudioManager
 ) {
-    val mediaPlayer = MediaPlayer.create(context, audioCue.resId)
-    mediaPlayer.start()
-    mediaPlayer.setOnCompletionListener {
-        mediaPlayer.release()
+    for ((index, audioCue) in audioCues.withIndex()) {
+        if (timerUiState.currentTime >= audioCue.time &&
+            !playedAudioIndices.contains(index)
+        ) {
+            audioManager.playSound(audioCue.resId)
+            playedAudioIndices.add(index)
+        }
     }
 }
 
