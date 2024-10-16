@@ -5,14 +5,12 @@ import android.media.SoundPool
 import android.util.Log
 
 class AudioManager(context: Context) {
-    val TAG = "AudioManager"
-    private val soundPool: SoundPool
+    private val soundPool: SoundPool = SoundPool.Builder()
+        .setMaxStreams(5)
+        .build()
     private val soundMap: MutableMap<Int, Int> = mutableMapOf()
 
     init {
-        soundPool = SoundPool.Builder()
-            .setMaxStreams(5)
-            .build()
 
         // Load sounds into the SoundPool
         soundMap[R.raw.tio_sekunder_kvar_cut] = soundPool.load(context, R.raw.tio_sekunder_kvar_cut, 1)
@@ -27,11 +25,15 @@ class AudioManager(context: Context) {
         if (soundId != null) {
             soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
         } else {
-            Log.e(TAG, "Sound not loaded for resource ID: $resId")
+            Log.e(Companion.TAG, "Sound not loaded for resource ID: $resId")
         }
     }
 
     fun release() {
         soundPool.release()
+    }
+
+    companion object {
+        private const val TAG = "AudioManager"
     }
 }

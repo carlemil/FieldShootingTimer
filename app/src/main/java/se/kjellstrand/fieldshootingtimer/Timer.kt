@@ -81,7 +81,7 @@ fun Timer(
 @Composable
 fun DialWithHandPreview() {
     FieldShootingTimerTheme {
-        val timeInSecondsForEachSegment = listOf(5f, 25f, 20f, 60f, 10f, 80f)
+        val timeInSecondsForEachSegment = listOf(7f, 3f, 2f, 3f, 1f)
         val currentTime = 00f
 
         Box(
