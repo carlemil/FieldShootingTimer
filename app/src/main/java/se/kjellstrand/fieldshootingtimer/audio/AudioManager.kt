@@ -3,6 +3,7 @@ package se.kjellstrand.fieldshootingtimer.audio
 import android.content.Context
 import android.media.SoundPool
 import android.util.Log
+import se.kjellstrand.fieldshootingtimer.ui.TimerUiState
 
 class AudioManager(context: Context) {
     private val soundPool: SoundPool = SoundPool.Builder()
@@ -18,17 +19,32 @@ class AudioManager(context: Context) {
         }
     }
 
-    fun playSound(audioCueType: AudioCueType) {
+    fun release() {
+        soundPool.release()
+    }
+
+    fun playAudioCue(
+        audioCues: List<AudioCue>,
+        timerUiState: TimerUiState,
+        playedAudioIndices: MutableSet<Int>
+    ) {
+        for ((index, audioCue) in audioCues.withIndex()) {
+            if (timerUiState.currentTime >= audioCue.time &&
+                !playedAudioIndices.contains(index)
+            ) {
+                playSound(audioCue.cueType)
+                playedAudioIndices.add(index)
+            }
+        }
+    }
+
+    private fun playSound(audioCueType: AudioCueType) {
         val soundId = soundMap[audioCueType]
         if (soundId != null) {
             soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
         } else {
             Log.e(TAG, "Sound not loaded for audio cue: $audioCueType")
         }
-    }
-
-    fun release() {
-        soundPool.release()
     }
 
     companion object {

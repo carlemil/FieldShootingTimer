@@ -46,6 +46,10 @@ import se.kjellstrand.fieldshootingtimer.audio.AudioCue
 import se.kjellstrand.fieldshootingtimer.audio.AudioCueType
 import se.kjellstrand.fieldshootingtimer.audio.AudioManager
 import se.kjellstrand.fieldshootingtimer.ui.DialColors
+import se.kjellstrand.fieldshootingtimer.ui.PlayButton
+import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
+import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
+import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
 import se.kjellstrand.fieldshootingtimer.ui.Timer
 import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerStateButton
@@ -63,7 +67,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 
-private const     val CEASE_FIRE_DURATION = 3f
+const     val CEASE_FIRE_DURATION = 3f
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,28 +101,31 @@ fun MainScreen(
 
     val audioManager = remember { AudioManager(context) }
 
-    val audioCueStartTimes = remember(segmentDurations) {
-        val startTimes = mutableListOf<Float>()
-        var cumulativeTime = 0f
-        for (time in segmentDurations) {
-            startTimes.add(cumulativeTime)
-            cumulativeTime += time
-        }
-        startTimes
+    val audioCueTypes = listOf(
+        AudioCueType.TenSecondsLeft,
+        AudioCueType.Ready,
+        AudioCueType.Fire,
+        AudioCueType.CeaseFire,
+        AudioCueType.UnloadWeapon
+    )
+    require(segmentDurations.size == audioCueTypes.size) {
+        "segmentDurations and audioCueTypes must have the same size"
     }
-    val audioCues = remember(audioCueStartTimes) {
-        listOf(
-            AudioCue(time = audioCueStartTimes[0], cueType = AudioCueType.TenSecondsLeft),
-            AudioCue(time = audioCueStartTimes[1], cueType = AudioCueType.Ready),
-            AudioCue(time = audioCueStartTimes[2], cueType = AudioCueType.Fire),
-            AudioCue(time = audioCueStartTimes[3], cueType = AudioCueType.CeaseFire),
-            AudioCue(time = audioCueStartTimes[4], cueType = AudioCueType.UnloadWeapon)
-        )
+    val audioCues = remember(segmentDurations) {
+        val cues = mutableListOf<AudioCue>()
+        var cumulativeTime = 0f
+        for (i in segmentDurations.indices) {
+            val time = cumulativeTime
+            val cueType = audioCueTypes[i]
+            cues.add(AudioCue(time = time, cueType = cueType))
+            cumulativeTime += segmentDurations[i]
+        }
+        cues
     }
 
     LaunchedEffect(timerUiState.timerRunningState) {
         if (timerUiState.timerRunningState == TimerState.Running) {
-            playAudioCue(audioCues, timerUiState, playedAudioIndices, audioManager)
+            audioManager.playAudioCue(audioCues, timerUiState, playedAudioIndices)
 
             val startTimeMillis = withFrameMillis { it }
             var lastFrameTimeMillis = startTimeMillis
@@ -126,7 +133,7 @@ fun MainScreen(
                 val frameTimeMillis = withFrameMillis { it }
                 val deltaTime = (frameTimeMillis - lastFrameTimeMillis) / 1000f
                 timerViewModel.setCurrentTime(timerUiState.currentTime + deltaTime)
-                playAudioCue(audioCues, timerUiState, playedAudioIndices, audioManager)
+                audioManager.playAudioCue(audioCues, timerUiState, playedAudioIndices)
 
                 if (timerUiState.currentTime >= totalDuration) {
                     timerViewModel.setCurrentTime(totalDuration)
@@ -144,9 +151,7 @@ fun MainScreen(
         }
     }
 
-    val configuration = LocalConfiguration.current
-
-    when (configuration.orientation) {
+    when (LocalConfiguration.current.orientation) {
         Configuration.ORIENTATION_PORTRAIT -> {
             PortraitUI(
                 timerViewModel,
@@ -238,145 +243,6 @@ fun PortraitUI(
         )
         ShowSegmentTimes(timerViewModel)
         Spacer(modifier = Modifier.weight(3f))
-    }
-}
-
-@Composable
-private fun ShootTimer(
-    timerUiState: TimerUiState,
-    segmentDurations: List<Float>,
-    timerSize: Dp
-) {
-    Box(
-        contentAlignment = Alignment.Center
-    ) {
-        Timer(
-            currentTime = timerUiState.currentTime,
-            dialColors = DialColors(
-                colors = listOf(
-                    PrepareSegmentColor,
-                    PrepareSegmentColor,
-                    ShootSegmentColor,
-                    CeaseFireSegmentColor,
-                    PlugWeaponSegmentColor
-                )
-            ),
-            gapAngleDegrees = 30f,
-            timesForSegments = segmentDurations,
-            ringThickness = 60.dp,
-            borderColor = TimerBordersColor,
-            borderWidth = 2.dp,
-            size = timerSize,
-            badgeRadius = 15.dp,
-            handColor = HandBackgroundColor,
-            handThickness = 8.dp,
-            badgesVisible = timerUiState.badgesVisible
-        )
-    }
-}
-
-@Composable
-private fun ShootTimeSlider(
-    timerViewModel: TimerViewModel,
-    playedAudioIndices: MutableSet<Int>
-) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
-    val shootingDuration = timerUiState.shootingDuration
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(
-            text = stringResource(
-                R.string.shooting_time,
-                (shootingDuration + CEASE_FIRE_DURATION).toInt()
-            ),
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp
-        )
-        Slider(
-            value = shootingDuration,
-            enabled = timerUiState.timerRunningState == TimerState.NotStarted,
-            onValueChange = { newShootingDuration ->
-                timerViewModel.setShootingTime(newShootingDuration)
-                playedAudioIndices.clear()
-            },
-            colors = SliderDefaults.colors(
-                thumbColor = SliderThumbColor,
-                activeTrackColor = SliderActiveTrackColor,
-                inactiveTrackColor = SliderInactiveTrackColor
-            ),
-            valueRange = 1f..27f,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
-}
-
-@Composable
-private fun ShowSegmentTimes(
-    timerViewModel: TimerViewModel
-) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-    ) {
-        Checkbox(
-            checked = timerUiState.badgesVisible,
-            onCheckedChange = { checked ->
-                timerViewModel.setBadgesVisible(checked)
-            }
-        )
-        Text(
-            text = stringResource(R.string.show_segment_times),
-            modifier = Modifier.padding(start = 8.dp)
-        )
-    }
-}
-
-@Composable
-private fun PlayButton(
-    timerViewModel: TimerViewModel,
-    timerSize: Dp
-) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
-    TimerStateButton(
-        timerUiState = timerUiState,
-        buttonSize = timerSize / 2f,
-        onPlayStopResetClicked = {
-            when (timerUiState.timerRunningState) {
-                TimerState.NotStarted -> {
-                    timerViewModel.setTimerState(TimerState.Running)
-                }
-
-                TimerState.Running -> {
-                    timerViewModel.setTimerState(TimerState.Stopped)
-                }
-
-                TimerState.Stopped, TimerState.Finished -> {
-                    timerViewModel.setCurrentTime(0f)
-                    timerViewModel.setTimerState(TimerState.NotStarted)
-                }
-            }
-        }
-    )
-}
-
-private fun playAudioCue(
-    audioCues: List<AudioCue>,
-    timerUiState: TimerUiState,
-    playedAudioIndices: MutableSet<Int>,
-    audioManager: AudioManager
-) {
-    for ((index, audioCue) in audioCues.withIndex()) {
-        if (timerUiState.currentTime >= audioCue.time &&
-            !playedAudioIndices.contains(index)
-        ) {
-            audioManager.playSound(audioCue.cueType)
-            playedAudioIndices.add(index)
-        }
     }
 }
 
