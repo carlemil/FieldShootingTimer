@@ -63,7 +63,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 
-private const val TAG = "ShootingTimer"
+private const     val CEASE_FIRE_DURATION = 3f
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,9 +89,8 @@ fun MainScreen(
     val timerUiState by timerViewModel.uiState.collectAsState()
 
     val playedAudioIndices = remember(timerUiState.timerRunningState) { mutableSetOf<Int>() }
-    val ceaseFireDuration = 3f
     val segmentDurations =
-        listOf(7f, 3f, timerUiState.shootingDuration.toInt().toFloat(), ceaseFireDuration, 1f)
+        listOf(7f, 3f, timerUiState.shootingDuration.toInt().toFloat(), CEASE_FIRE_DURATION, 1f)
     val totalDuration = segmentDurations.sum()
 
     val context = LocalContext.current
@@ -153,8 +152,7 @@ fun MainScreen(
                 timerViewModel,
                 segmentDurations,
                 playedAudioIndices,
-                300.dp,
-                ceaseFireDuration
+                300.dp
             )
         }
 
@@ -163,8 +161,7 @@ fun MainScreen(
                 timerViewModel,
                 segmentDurations,
                 playedAudioIndices,
-                250.dp,
-                ceaseFireDuration
+                250.dp
             )
         }
     }
@@ -175,8 +172,7 @@ fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
     playedAudioIndices: MutableSet<Int>,
-    timerSize: Dp = 300.dp,
-    ceaseFireDuration: Float
+    timerSize: Dp = 300.dp
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
     Row(
@@ -208,7 +204,6 @@ fun LandscapeUI(
             Spacer(modifier = Modifier.height(16.dp))
             ShootTimeSlider(
                 timerViewModel,
-                ceaseFireDuration,
                 playedAudioIndices
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -223,8 +218,7 @@ fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
     playedAudioIndices: MutableSet<Int>,
-    timerSize: Dp,
-    ceaseFireDuration: Float
+    timerSize: Dp
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
     Column(
@@ -240,7 +234,6 @@ fun PortraitUI(
         Spacer(modifier = Modifier.weight(1f))
         ShootTimeSlider(
             timerViewModel,
-            ceaseFireDuration,
             playedAudioIndices
         )
         ShowSegmentTimes(timerViewModel)
@@ -285,7 +278,6 @@ private fun ShootTimer(
 @Composable
 private fun ShootTimeSlider(
     timerViewModel: TimerViewModel,
-    ceaseFireDuration: Float,
     playedAudioIndices: MutableSet<Int>
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
@@ -297,9 +289,7 @@ private fun ShootTimeSlider(
         Text(
             text = stringResource(
                 R.string.shooting_time,
-                shootingDuration.toInt(),
-                ceaseFireDuration.toInt(),
-                (shootingDuration + ceaseFireDuration).toInt()
+                (shootingDuration + CEASE_FIRE_DURATION).toInt()
             ),
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp
