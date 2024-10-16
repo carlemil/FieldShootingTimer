@@ -97,13 +97,13 @@ fun MainScreen(
         }
         startTimes
     }
-    val audioCues = remember(segmentDurations) {
+    val audioCues = remember(audioCueStartTimes) {
         listOf(
-            AudioCue(time = audioCueStartTimes[0], resId = R.raw.tio_sekunder_kvar_cut),
-            AudioCue(time = audioCueStartTimes[1], resId = R.raw.fardiga_cut),
-            AudioCue(time = audioCueStartTimes[2], resId = R.raw.eld_cut),
-            AudioCue(time = audioCueStartTimes[3], resId = R.raw.eld_upp_hor_cut),
-            AudioCue(time = audioCueStartTimes[4], resId = R.raw.patron_ur_proppa_vapen_cut)
+            AudioCue(time = audioCueStartTimes[0], cueType = AudioCueType.TenSecondsLeft),
+            AudioCue(time = audioCueStartTimes[1], cueType = AudioCueType.Ready),
+            AudioCue(time = audioCueStartTimes[2], cueType = AudioCueType.Fire),
+            AudioCue(time = audioCueStartTimes[3], cueType = AudioCueType.CeaseFire),
+            AudioCue(time = audioCueStartTimes[4], cueType = AudioCueType.UnloadWeapon)
         )
     }
 
@@ -349,7 +349,7 @@ private fun playAudioCue(
         if (timerUiState.currentTime >= audioCue.time &&
             !playedAudioIndices.contains(index)
         ) {
-            audioManager.playSound(audioCue.resId)
+            audioManager.playSound(audioCue.cueType)
             playedAudioIndices.add(index)
         }
     }
