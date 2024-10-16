@@ -7,23 +7,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -35,41 +29,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.audio.AudioCue
 import se.kjellstrand.fieldshootingtimer.audio.AudioCueType
 import se.kjellstrand.fieldshootingtimer.audio.AudioManager
-import se.kjellstrand.fieldshootingtimer.ui.DialColors
 import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
 import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
 import se.kjellstrand.fieldshootingtimer.ui.Timer
 import se.kjellstrand.fieldshootingtimer.ui.TimerState
-import se.kjellstrand.fieldshootingtimer.ui.TimerStateButton
-import se.kjellstrand.fieldshootingtimer.ui.TimerUiState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.CeaseFireSegmentColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
-import se.kjellstrand.fieldshootingtimer.ui.theme.HandBackgroundColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.PlugWeaponSegmentColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.PrepareSegmentColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.ShootSegmentColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 
-const     val CEASE_FIRE_DURATION = 3f
+const val CEASE_FIRE_DURATION = 3f
 
-class MainActivity : ComponentActivity() {
+class MainScreen : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

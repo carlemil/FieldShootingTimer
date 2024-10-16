@@ -21,14 +21,13 @@ fun Timer(
         colors = listOf(
             MaterialTheme.colorScheme.primary,
             MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
             Color.Red,
             Color.Blue,
             Color.Green
         )
     ),
     gapAngleDegrees: Float = 30f,
-    timesForSegments: List<Float> = listOf(),
+    timesForSegments: List<Float> = listOf(7f, 3f, 1f, 3f, 1f),
     ringThickness: Dp = 20.dp,
     borderColor: Color = Color.Black,
     borderWidth: Dp = 2.dp,
