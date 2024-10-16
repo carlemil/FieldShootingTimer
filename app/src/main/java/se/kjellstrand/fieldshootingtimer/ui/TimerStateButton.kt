@@ -1,4 +1,4 @@
-package se.kjellstrand.fieldshootingtimer
+package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.ShootSegmentColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 

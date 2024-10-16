@@ -1,4 +1,4 @@
-package se.kjellstrand.fieldshootingtimer
+package se.kjellstrand.fieldshootingtimer.ui
 
 data class TimerUiState(
     val shootingDuration: Float = 5f,

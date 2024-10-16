@@ -1,4 +1,4 @@
-package se.kjellstrand.fieldshootingtimer
+package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.ui.graphics.Color
 
