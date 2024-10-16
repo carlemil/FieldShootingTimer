@@ -1,4 +1,4 @@
-package se.kjellstrand.fieldshootingtimer
+package se.kjellstrand.fieldshootingtimer.audio
 
 import android.content.Context
 import android.media.SoundPool

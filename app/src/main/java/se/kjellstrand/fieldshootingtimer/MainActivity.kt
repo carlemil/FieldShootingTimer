@@ -1,10 +1,7 @@
 package se.kjellstrand.fieldshootingtimer
 
-import android.content.Context
 import android.content.res.Configuration
-import android.media.MediaPlayer
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -40,6 +37,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
+import se.kjellstrand.fieldshootingtimer.audio.AudioCue
+import se.kjellstrand.fieldshootingtimer.audio.AudioCueType
+import se.kjellstrand.fieldshootingtimer.audio.AudioManager
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.CeaseFireSegmentColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme

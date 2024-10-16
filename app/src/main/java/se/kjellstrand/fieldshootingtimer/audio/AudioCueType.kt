@@ -1,4 +1,6 @@
-package se.kjellstrand.fieldshootingtimer
+package se.kjellstrand.fieldshootingtimer.audio
+
+import se.kjellstrand.fieldshootingtimer.R
 
 enum class AudioCueType(val resId: Int) {
     TenSecondsLeft(R.raw.tio_sekunder_kvar_cut),
