@@ -1,6 +1,16 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+}
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -20,15 +30,23 @@ android {
         }
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+    signingConfigs {
+        create("release") {
+            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
         }
     }
+
+    buildTypes {
+        getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = false  // Set to true if you have ProGuard/R8 rules
+            // Other release configurations
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
