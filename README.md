@@ -4,6 +4,8 @@ Enhance your shooting practice with the Field Shooting Timer—a precise and cus
 
 https://play.google.com/store/apps/details?id=se.kjellstrand.fieldshootingtimer
 
+https://www.youtube.com/watch?v=E-AQSUt9uac&ab_channel=Carl-EmilKjellstrand
+
 Key Features:
 
 Audible Commands: The app plays five critical commands at specific intervals to simulate real shooting scenarios:
