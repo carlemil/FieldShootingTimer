@@ -9,11 +9,11 @@ val BackgroundColor = Color(0xFF777777)
 
 // Dial Segments colors
 val PrepareSegmentColor = Color(0xFFaaaaaa)
-val ShootSegmentColor = Color(0xFF44dd44)
+val ShootSegmentColor = Color(0xFF4fdd44)
 val CeaseFireSegmentColor = Color(0xFFdddd44)
 val PlugWeaponSegmentColor = Color(0xFFdd4444)
 
 // Slider colors
-val SliderThumbColor = Color(0xFF44dd44)
-val SliderActiveTrackColor = Color(0xFF44dd44)
-val SliderInactiveTrackColor = Color(0x3344dd44)
+val SliderThumbColor = Color(0xFF4fdd44)
+val SliderActiveTrackColor = Color(0xFF4fdd44)
+val SliderInactiveTrackColor = Color(0x334fdd44)
