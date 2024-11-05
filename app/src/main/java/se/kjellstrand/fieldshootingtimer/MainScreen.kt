@@ -8,11 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -41,7 +43,6 @@ import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
 import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
-import se.kjellstrand.fieldshootingtimer.ui.Timer
 import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
@@ -161,7 +162,7 @@ fun MainScreen(
                 timerViewModel,
                 segmentDurations,
                 playedAudioIndices,
-                250.dp
+                280.dp
             )
         }
     }
@@ -172,7 +173,7 @@ fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
     playedAudioIndices: MutableSet<Int>,
-    timerSize: Dp = 300.dp
+    timerSize: Dp
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
     Row(
@@ -185,22 +186,28 @@ fun LandscapeUI(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .weight(1f)
+                .weight(9f)
                 .fillMaxHeight()
                 .padding(16.dp)
+                .navigationBarsPadding()
         ) {
-            ShootTimer(timerUiState, segmentDurations, timerSize)
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                ShootTimer(timerUiState, segmentDurations, timerSize)
+                PlayButton(timerViewModel, timerSize)
+            }
+
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .weight(1f)
+                .weight(9f)
                 .fillMaxHeight()
                 .padding(16.dp)
                 .navigationBarsPadding()
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            PlayButton(timerViewModel, timerSize)
             Spacer(modifier = Modifier.height(16.dp))
             ShootTimeSlider(
                 timerViewModel,
@@ -228,10 +235,17 @@ fun PortraitUI(
             .background(BackgroundColor)
     ) {
         Spacer(modifier = Modifier.weight(2f))
-        ShootTimer(timerUiState, segmentDurations, timerSize)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            ShootTimer(timerUiState, segmentDurations, timerSize)
+            PlayButton(timerViewModel, timerSize)
+        }
+
         Spacer(modifier = Modifier.weight(1f))
-        PlayButton(timerViewModel, timerSize)
-        Spacer(modifier = Modifier.weight(1f))
+
         ShootTimeSlider(
             timerViewModel,
             playedAudioIndices
@@ -243,8 +257,46 @@ fun PortraitUI(
 
 @Preview(showBackground = true)
 @Composable
-fun CenteredSemiCirclePreview() {
-    FieldShootingTimerTheme {
-        Timer()
-    }
+fun PortraitUIPreview() {
+    val tvm = TimerViewModel()
+    tvm.setShootingTime(5f)
+    tvm.setCurrentTime(0f)
+    tvm.setTimerState(TimerState.NotStarted)
+
+    val segmentDurations = listOf(
+        TEN_SECONDS_LEFT_DURATION,
+        READY_DURATION,
+        5f,
+        CEASE_FIRE_DURATION,
+        SILENCE_DURATION,
+        UNLOAD_WEAPON_DURATION,
+        VISITATION_DURATION
+    )
+    PortraitUI(tvm, segmentDurations, mutableSetOf(), 300.dp)
+}
+
+@Preview(
+    uiMode = android.content.res.Configuration.UI_MODE_TYPE_NORMAL,
+    widthDp = 640,
+    heightDp = 360,
+    showBackground = true,
+    name = "Landscape Preview"
+)
+@Composable
+fun LandscapeUIPreview() {
+    val tvm = TimerViewModel()
+    tvm.setShootingTime(5f)
+    tvm.setCurrentTime(0f)
+    tvm.setTimerState(TimerState.NotStarted)
+
+    val segmentDurations = listOf(
+        TEN_SECONDS_LEFT_DURATION,
+        READY_DURATION,
+        5f,
+        CEASE_FIRE_DURATION,
+        SILENCE_DURATION,
+        UNLOAD_WEAPON_DURATION,
+        VISITATION_DURATION
+    )
+    LandscapeUI(tvm, segmentDurations, mutableSetOf(), 280.dp)
 }
