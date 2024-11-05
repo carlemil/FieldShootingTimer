@@ -29,8 +29,10 @@ fun ShootTimer(
                     PrepareSegmentColor,
                     ShootSegmentColor,
                     CeaseFireSegmentColor,
-                    PlugWeaponSegmentColor
-                )
+                    PlugWeaponSegmentColor,
+                    PrepareSegmentColor,
+                    PrepareSegmentColor
+                    )
             ),
             gapAngleDegrees = 30f,
             timesForSegments = segmentDurations,

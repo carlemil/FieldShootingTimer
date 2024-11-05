@@ -47,7 +47,12 @@ import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 
+const val TEN_SECONDS_LEFT_DURATION = 7f
+const val READY_DURATION = 3f
 const val CEASE_FIRE_DURATION = 3f
+const val SILENCE_DURATION = 2f
+const val UNLOAD_WEAPON_DURATION = 3f
+const val VISITATION_DURATION = 2f
 
 class MainScreen : ComponentActivity() {
 
@@ -76,33 +81,40 @@ fun MainScreen(
     val timerUiState by timerViewModel.uiState.collectAsState()
 
     val playedAudioIndices = remember(timerUiState.timerRunningState) { mutableSetOf<Int>() }
-    val segmentDurations =
-        listOf(7f, 3f, timerUiState.shootingDuration.toInt().toFloat(), CEASE_FIRE_DURATION, 1f)
+    val segmentDurations = listOf(
+        TEN_SECONDS_LEFT_DURATION,
+        READY_DURATION,
+        timerUiState.shootingDuration.toInt().toFloat(),
+        CEASE_FIRE_DURATION,
+        SILENCE_DURATION,
+        UNLOAD_WEAPON_DURATION,
+        VISITATION_DURATION
+    )
     val totalDuration = segmentDurations.sum()
 
     val context = LocalContext.current
 
     val audioManager = remember { AudioManager(context) }
 
-    val audioCueTypes = listOf(
-        AudioCueType.TenSecondsLeft,
-        AudioCueType.Ready,
-        AudioCueType.Fire,
-        AudioCueType.CeaseFire,
-        AudioCueType.UnloadWeapon
-    )
-    require(segmentDurations.size == audioCueTypes.size) {
-        "segmentDurations and audioCueTypes must have the same size"
-    }
-    val audioCues = remember(segmentDurations) {
+    val audioCues = remember(timerUiState.timerRunningState) {
         val cues = mutableListOf<AudioCue>()
-        var cumulativeTime = 0f
-        for (i in segmentDurations.indices) {
-            val time = cumulativeTime
-            val cueType = audioCueTypes[i]
-            cues.add(AudioCue(time = time, cueType = cueType))
-            cumulativeTime += segmentDurations[i]
-        }
+        var time = 0f
+        cues.add(AudioCue(time, AudioCueType.TenSecondsLeft))
+        time += TEN_SECONDS_LEFT_DURATION
+
+        cues.add(AudioCue(time, AudioCueType.Ready))
+        time += READY_DURATION
+
+        cues.add(AudioCue(time, AudioCueType.Fire))
+        time += timerUiState.shootingDuration.toInt().toFloat()
+
+        cues.add(AudioCue(time, AudioCueType.CeaseFire))
+        time += CEASE_FIRE_DURATION + SILENCE_DURATION
+
+        cues.add(AudioCue(time, AudioCueType.UnloadWeapon))
+        time += UNLOAD_WEAPON_DURATION
+
+        cues.add(AudioCue(time, AudioCueType.Visitation))
         cues
     }
 

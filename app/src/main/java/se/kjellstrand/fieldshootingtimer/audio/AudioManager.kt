@@ -13,7 +13,7 @@ class AudioManager(context: Context) {
     private val soundMap: MutableMap<AudioCueType, Int> = mutableMapOf()
 
     init {
-        AudioCueType.values().forEach { audioCueType ->
+        AudioCueType.entries.forEach { audioCueType ->
             val soundId = soundPool.load(context, audioCueType.resId, 1)
             soundMap[audioCueType] = soundId
         }
