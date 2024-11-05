@@ -82,16 +82,18 @@ fun MainScreen(
     val timerUiState by timerViewModel.uiState.collectAsState()
 
     val playedAudioIndices = remember(timerUiState.timerRunningState) { mutableSetOf<Int>() }
-    val segmentDurations = listOf(
-        TEN_SECONDS_LEFT_DURATION,
-        READY_DURATION,
-        timerUiState.shootingDuration.toInt().toFloat(),
-        CEASE_FIRE_DURATION,
-        SILENCE_DURATION,
-        UNLOAD_WEAPON_DURATION,
-        VISITATION_DURATION
-    )
-    val totalDuration = segmentDurations.sum()
+    val segmentDurations = remember(timerUiState.shootingDuration) {
+        listOf(
+            TEN_SECONDS_LEFT_DURATION,
+            READY_DURATION,
+            timerUiState.shootingDuration.toInt().toFloat(),
+            CEASE_FIRE_DURATION,
+            SILENCE_DURATION,
+            UNLOAD_WEAPON_DURATION,
+            VISITATION_DURATION
+        )
+    }
+    val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
 
     val context = LocalContext.current
 
@@ -276,7 +278,7 @@ fun PortraitUIPreview() {
 }
 
 @Preview(
-    uiMode = android.content.res.Configuration.UI_MODE_TYPE_NORMAL,
+    uiMode = Configuration.UI_MODE_TYPE_NORMAL,
     widthDp = 640,
     heightDp = 360,
     showBackground = true,
