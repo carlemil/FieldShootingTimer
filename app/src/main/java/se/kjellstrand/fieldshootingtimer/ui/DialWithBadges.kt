@@ -24,7 +24,8 @@ import kotlin.math.sin
 fun DialWithBadges(
     modifier: Modifier = Modifier,
     dialColors: DialColors,
-    timesForSegments: List<Float>,
+    segments: List<Float>,
+    ticks: List<Int>,
     availableAngle: Float,
     gapAngleDegrees: Float = 30f,
     ringThickness: Dp = 20.dp,
@@ -38,9 +39,9 @@ fun DialWithBadges(
         contentAlignment = Alignment.Center,
         modifier = modifier.size(size)
     ) {
-        val totalSeconds = timesForSegments.sum()
-        val scalingFactor = availableAngle / totalSeconds
-        val sweepAngles = timesForSegments.map { it * scalingFactor }
+        val sumOfSegments = segments.sum()
+        val scalingFactor = availableAngle / sumOfSegments
+        val sweepAngles = segments.map { it * scalingFactor }
 
         Dial(
             dialColors = dialColors,
@@ -61,11 +62,21 @@ fun DialWithBadges(
             borderColor = borderColor
         )
 
+        TickMarks(
+            size = size,
+            ticks = ticks,
+            ticksMax = sumOfSegments.toInt(),
+            gapAngleDegrees = gapAngleDegrees,
+            ringThickness = ringThickness,
+            borderWidth = borderWidth,
+            borderColor = borderColor
+        )
+
         if (badgesVisible) {
             Badges(
                 size = size,
                 sweepAngles = sweepAngles,
-                timesForSegments = timesForSegments,
+                timesForSegments = segments,
                 gapAngleDegrees = gapAngleDegrees,
                 ringThickness = ringThickness,
                 borderColor = borderColor,
@@ -166,6 +177,50 @@ fun Dividers(
     }
 }
 
+@Composable
+fun TickMarks(
+    size: Dp,
+    ticks: List<Int>,
+    ticksMax: Int,
+    gapAngleDegrees: Float,
+    ringThickness: Dp,
+    borderWidth: Dp,
+    borderColor: Color
+) {
+    Canvas(modifier = Modifier.size(size)) {
+        val canvasSize = size.toPx()
+        val ringThicknessPx = ringThickness.toPx()
+        val borderWidthPx = borderWidth.toPx()
+
+        val centerX = canvasSize / 2
+        val centerY = canvasSize / 2
+
+        val innerRadius = (canvasSize / 2) - ringThicknessPx - borderWidthPx
+        val outerRadius = (canvasSize / 2) - (ringThicknessPx / 2)
+
+        val adjustedTicks = ticks.map { tick ->
+            270f - (360f - gapAngleDegrees) / 2 + (tick.toFloat() / ticksMax) * (360f - gapAngleDegrees)
+        }
+
+        adjustedTicks.forEach { angle ->
+            val angleRad = Math.toRadians(angle.toDouble())
+
+            val startX = centerX + innerRadius * cos(angleRad).toFloat()
+            val startY = centerY + innerRadius * sin(angleRad).toFloat()
+
+            val endX = centerX + outerRadius * cos(angleRad).toFloat()
+            val endY = centerY + outerRadius * sin(angleRad).toFloat()
+
+            drawLine(
+                color = borderColor,
+                start = Offset(startX, startY),
+                end = Offset(endX, endY),
+                strokeWidth = borderWidthPx / 2 // Make ticks thinner
+            )
+        }
+    }
+}
+
 fun centerOnSegmentMarkerAngles(
     sweepAngles: List<Float>,
     gapAngleDegrees: Float
@@ -261,13 +316,6 @@ fun SegmentedSemiCircleWithMarkersPreview() {
                 Color.Green
             )
         )
-        val gapAngleDegrees = 30f
-        val secondsForSegment = listOf(2f, 3f, 17f, 19f, 10f, 1f)
-        val totalTime = secondsForSegment.sum()
-
-        require(totalTime > 0) {
-            "Total time must be greater than 0."
-        }
 
         Box(
             contentAlignment = Alignment.Center,
@@ -275,14 +323,15 @@ fun SegmentedSemiCircleWithMarkersPreview() {
         ) {
             DialWithBadges(
                 dialColors = semiCircleColors,
-                timesForSegments = secondsForSegment,
+                segments = listOf(7f, 3f, 6f, 2f, 3f, 1f),
                 availableAngle = 330f,
-                gapAngleDegrees = gapAngleDegrees,
+                gapAngleDegrees = 30f,
                 ringThickness = 30.dp,
                 borderColor = Color.Black,
                 borderWidth = 2.dp,
                 size = 300.dp,
-                badgeRadius = 15.dp
+                badgeRadius = 15.dp,
+                ticks = listOf(1, 2, 3, 4, 7, 8, 9)
             )
         }
     }

@@ -95,6 +95,8 @@ fun MainScreen(
     }
     val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
 
+    val ticks = listOf(8, 9, 10, 11, 12, 13)
+
     val context = LocalContext.current
 
     val audioManager = remember { AudioManager(context) }
@@ -102,6 +104,7 @@ fun MainScreen(
     val audioCues = remember(timerUiState.timerRunningState) {
         val cues = mutableListOf<AudioCue>()
         var time = 0f
+
         cues.add(AudioCue(time, AudioCueType.TenSecondsLeft))
         time += TEN_SECONDS_LEFT_DURATION
 
@@ -154,6 +157,7 @@ fun MainScreen(
             PortraitUI(
                 timerViewModel,
                 segmentDurations,
+                ticks,
                 playedAudioIndices,
                 300.dp
             )
@@ -163,6 +167,7 @@ fun MainScreen(
             LandscapeUI(
                 timerViewModel,
                 segmentDurations,
+                ticks,
                 playedAudioIndices,
                 280.dp
             )
@@ -174,6 +179,7 @@ fun MainScreen(
 fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
+    ticks: List<Int>,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
@@ -196,7 +202,7 @@ fun LandscapeUI(
             Box(
                 contentAlignment = Alignment.Center
             ) {
-                ShootTimer(timerUiState, segmentDurations, timerSize)
+                ShootTimer(timerUiState, segmentDurations, ticks, timerSize)
                 PlayButton(timerViewModel, timerSize)
             }
 
@@ -226,6 +232,7 @@ fun LandscapeUI(
 fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
+    ticks: List<Int>,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
@@ -242,7 +249,7 @@ fun PortraitUI(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            ShootTimer(timerUiState, segmentDurations, timerSize)
+            ShootTimer(timerUiState, segmentDurations, ticks, timerSize)
             PlayButton(timerViewModel, timerSize)
         }
 
@@ -274,7 +281,8 @@ fun PortraitUIPreview() {
         UNLOAD_WEAPON_DURATION,
         VISITATION_DURATION
     )
-    PortraitUI(tvm, segmentDurations, mutableSetOf(), 300.dp)
+    val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16)
+    PortraitUI(tvm, segmentDurations, ticks, mutableSetOf(), 300.dp)
 }
 
 @Preview(
@@ -300,5 +308,6 @@ fun LandscapeUIPreview() {
         UNLOAD_WEAPON_DURATION,
         VISITATION_DURATION
     )
-    LandscapeUI(tvm, segmentDurations, mutableSetOf(), 280.dp)
+    val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17)
+    LandscapeUI(tvm, segmentDurations, ticks, mutableSetOf(), 280.dp)
 }

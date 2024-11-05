@@ -16,6 +16,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
 fun ShootTimer(
     timerUiState: TimerUiState,
     segmentDurations: List<Float>,
+    ticks: List<Int>,
     timerSize: Dp
 ) {
     Box(
@@ -36,6 +37,7 @@ fun ShootTimer(
             ),
             gapAngleDegrees = 30f,
             timesForSegments = segmentDurations,
+            ticks = ticks,
             ringThickness = 60.dp,
             borderColor = TimerBordersColor,
             borderWidth = 2.dp,

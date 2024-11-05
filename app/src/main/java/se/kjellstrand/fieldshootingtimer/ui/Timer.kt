@@ -28,6 +28,7 @@ fun Timer(
     ),
     gapAngleDegrees: Float = 30f,
     timesForSegments: List<Float> = listOf(7f, 3f, 1f, 3f, 1f),
+    ticks: List<Int>,
     ringThickness: Dp = 20.dp,
     borderColor: Color = Color.Black,
     borderWidth: Dp = 2.dp,
@@ -51,7 +52,8 @@ fun Timer(
         DialWithBadges(
             dialColors = dialColors,
             gapAngleDegrees = gapAngleDegrees,
-            timesForSegments = timesForSegments,
+            segments = timesForSegments,
+            ticks = ticks,
             availableAngle = availableAngle,
             ringThickness = ringThickness,
             borderColor = borderColor,
@@ -91,9 +93,9 @@ fun DialWithHandPreview() {
                 currentTime = currentTime,
                 dialColors = DialColors(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                        Color.Red,
+                        Color.Green.copy(alpha = 0.7f),
+                        Color.Blue.copy(alpha = 0.4f),
                         Color.Red,
                         Color.Blue,
                         Color.Green
@@ -108,7 +110,8 @@ fun DialWithHandPreview() {
                 badgeRadius = 15.dp,
                 handColor = Color.White,
                 handThickness = 8.dp,
-                badgesVisible = true
+                badgesVisible = true,
+                ticks = listOf(11,12, 13)
             )
         }
     }
