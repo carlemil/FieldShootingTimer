@@ -195,8 +195,8 @@ fun TickMarks(
         val centerX = canvasSize / 2
         val centerY = canvasSize / 2
 
-        val innerRadius = (canvasSize / 2) - ringThicknessPx - borderWidthPx
-        val outerRadius = (canvasSize / 2) - (ringThicknessPx / 2)
+        val innerRadius = (canvasSize / 2) - ringThicknessPx / 3 * 2
+        val outerRadius = (canvasSize / 2)
 
         val adjustedTicks = ticks.map { tick ->
             270f - (360f - gapAngleDegrees) / 2 + (tick.toFloat() / ticksMax) * (360f - gapAngleDegrees)
@@ -215,7 +215,7 @@ fun TickMarks(
                 color = borderColor,
                 start = Offset(startX, startY),
                 end = Offset(endX, endY),
-                strokeWidth = borderWidthPx / 2 // Make ticks thinner
+                strokeWidth = borderWidthPx
             )
         }
     }

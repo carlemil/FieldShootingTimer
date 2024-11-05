@@ -308,6 +308,6 @@ fun LandscapeUIPreview() {
         UNLOAD_WEAPON_DURATION,
         VISITATION_DURATION
     )
-    val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17)
+    val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16)
     LandscapeUI(tvm, segmentDurations, ticks, mutableSetOf(), 280.dp)
 }
