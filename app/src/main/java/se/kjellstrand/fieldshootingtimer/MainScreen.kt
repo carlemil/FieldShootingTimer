@@ -39,6 +39,7 @@ import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.audio.AudioCue
 import se.kjellstrand.fieldshootingtimer.audio.AudioCueType
 import se.kjellstrand.fieldshootingtimer.audio.AudioManager
+import se.kjellstrand.fieldshootingtimer.ui.MultiThumbSlider
 import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
@@ -96,6 +97,9 @@ fun MainScreen(
     val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
 
     val ticks = listOf(8, 9, 10, 11, 12, 13)
+    LaunchedEffect(Unit) {
+        timerViewModel.setThumbValues(listOf())
+    }
 
     val context = LocalContext.current
 
@@ -237,6 +241,7 @@ fun PortraitUI(
     timerSize: Dp
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -259,8 +264,16 @@ fun PortraitUI(
             timerViewModel,
             playedAudioIndices
         )
+        Spacer(modifier = Modifier.weight(1f))
+
         ShowSegmentTimes(timerViewModel)
-        Spacer(modifier = Modifier.weight(3f))
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        MultiThumbSlider(timerViewModel)
+
+        Spacer(modifier = Modifier.weight(1f))
+
     }
 }
 
