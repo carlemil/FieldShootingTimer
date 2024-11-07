@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @Composable
@@ -25,7 +26,7 @@ fun DialWithBadges(
     modifier: Modifier = Modifier,
     dialColors: DialColors,
     segments: List<Float>,
-    ticks: List<Int>,
+    ticks: List<Float>,
     availableAngle: Float,
     gapAngleDegrees: Float = 30f,
     ringThickness: Dp = 20.dp,
@@ -180,7 +181,7 @@ fun Dividers(
 @Composable
 fun TickMarks(
     size: Dp,
-    ticks: List<Int>,
+    ticks: List<Float>,
     ticksMax: Int,
     gapAngleDegrees: Float,
     ringThickness: Dp,
@@ -199,7 +200,7 @@ fun TickMarks(
         val outerRadius = (canvasSize / 2)
 
         val adjustedTicks = ticks.map { tick ->
-            270f - (360f - gapAngleDegrees) / 2 + (tick.toFloat() / ticksMax) * (360f - gapAngleDegrees)
+            270f - (360f - gapAngleDegrees) / 2 + (tick / ticksMax) * (360f - gapAngleDegrees)
         }
 
         adjustedTicks.forEach { angle ->
@@ -331,7 +332,7 @@ fun SegmentedSemiCircleWithMarkersPreview() {
                 borderWidth = 2.dp,
                 size = 300.dp,
                 badgeRadius = 15.dp,
-                ticks = listOf(1, 2, 3, 4, 7, 8, 9)
+                ticks = listOf(1f, 2f, 3f, 4f, 7f, 8f, 9f)
             )
         }
     }

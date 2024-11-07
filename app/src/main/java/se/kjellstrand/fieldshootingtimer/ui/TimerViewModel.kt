@@ -40,15 +40,6 @@ open class TimerViewModel : ViewModel() {
     }
 
     fun setThumbValues(updatedValues: List<Float>) {
-            println("setThumbValues thumbValues: $updatedValues")
-        _uiState.value = _uiState.value.copy(thumbValues = updatedValues)
-        println("setThumbValues thumbValues: ${_uiState.value.thumbValues}")
-
-//        _uiState.update { currentState ->
-//            println("setThumbValues thumbValues: $thumbValues")
-//            val a =  currentState.copy(thumbValues = thumbValues)
-//            println("uiState setThumbValues thumbValues: ${uiState.value.thumbValues}")
-//            a
-//        }
+        _uiState.value = _uiState.value.copy(thumbValues = updatedValues.toSet().toList().sorted())
     }
 }

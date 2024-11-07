@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -94,17 +96,10 @@ fun MainScreen(
             VISITATION_DURATION
         )
     }
-    val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
-
-    val ticks = listOf(8, 9, 10, 11, 12, 13)
-    LaunchedEffect(Unit) {
-        timerViewModel.setThumbValues(listOf())
-    }
 
     val context = LocalContext.current
 
     val audioManager = remember { AudioManager(context) }
-
     val audioCues = remember(timerUiState.timerRunningState) {
         val cues = mutableListOf<AudioCue>()
         var time = 0f
@@ -127,6 +122,8 @@ fun MainScreen(
         cues.add(AudioCue(time, AudioCueType.Visitation))
         cues
     }
+
+    val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
 
     LaunchedEffect(timerUiState.timerRunningState) {
         if (timerUiState.timerRunningState == TimerState.Running) {
@@ -161,7 +158,6 @@ fun MainScreen(
             PortraitUI(
                 timerViewModel,
                 segmentDurations,
-                ticks,
                 playedAudioIndices,
                 300.dp
             )
@@ -171,7 +167,6 @@ fun MainScreen(
             LandscapeUI(
                 timerViewModel,
                 segmentDurations,
-                ticks,
                 playedAudioIndices,
                 280.dp
             )
@@ -183,7 +178,6 @@ fun MainScreen(
 fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
-    ticks: List<Int>,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
@@ -206,7 +200,7 @@ fun LandscapeUI(
             Box(
                 contentAlignment = Alignment.Center
             ) {
-                ShootTimer(timerUiState, segmentDurations, ticks, timerSize)
+                ShootTimer(timerUiState, segmentDurations, timerSize)
                 PlayButton(timerViewModel, timerSize)
             }
 
@@ -236,7 +230,6 @@ fun LandscapeUI(
 fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
-    ticks: List<Int>,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
@@ -254,7 +247,7 @@ fun PortraitUI(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            ShootTimer(timerUiState, segmentDurations, ticks, timerSize)
+            ShootTimer(timerUiState, segmentDurations, timerSize)
             PlayButton(timerViewModel, timerSize)
         }
 
@@ -270,11 +263,50 @@ fun PortraitUI(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        MultiThumbSlider(timerViewModel)
+        val rangeOffset = TEN_SECONDS_LEFT_DURATION + READY_DURATION
+        val range = remember(timerUiState.shootingDuration) {
+            IntRange(
+                (rangeOffset + 1).toInt(),
+                (timerUiState.shootingDuration + rangeOffset + CEASE_FIRE_DURATION - 1).toInt()
+            )
+        }
+        MultiThumbSlider(timerViewModel, range)
+
+        Button(onClick = {
+            if (timerUiState.thumbValues.size < (range.last - range.first) / 2 + 1) {
+                timerViewModel.setThumbValues(
+                    timerUiState.thumbValues + findNextFreeThumbSpot(
+                        range,
+                        timerUiState.thumbValues
+                    )
+                )
+            }
+        }) { Text("+") }
+        Button(onClick = {
+            timerViewModel.setThumbValues(timerUiState.thumbValues.dropLast(1))
+        }) { Text("-") }
 
         Spacer(modifier = Modifier.weight(1f))
 
     }
+}
+
+fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
+    val center = (range.first + range.last) / 2
+    val maxDistance = (range.last - range.first) / 2
+
+    for (distance in 0..maxDistance) {
+        val forward = center + distance
+        val backward = center - distance
+
+//        if (forward in range && !takenSpots.contains(forward)) {
+//            return forward.toFloat()
+//        }
+//        if (backward in range && backward !in takenSpots) {
+//            return backward.toFloat()
+//        }
+    }
+    return center.toFloat()
 }
 
 @Preview(showBackground = true)
@@ -295,7 +327,7 @@ fun PortraitUIPreview() {
         VISITATION_DURATION
     )
     val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16)
-    PortraitUI(tvm, segmentDurations, ticks, mutableSetOf(), 300.dp)
+    PortraitUI(tvm, segmentDurations, mutableSetOf(), 300.dp)
 }
 
 @Preview(
@@ -322,5 +354,5 @@ fun LandscapeUIPreview() {
         VISITATION_DURATION
     )
     val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16)
-    LandscapeUI(tvm, segmentDurations, ticks, mutableSetOf(), 280.dp)
+    LandscapeUI(tvm, segmentDurations, mutableSetOf(), 280.dp)
 }

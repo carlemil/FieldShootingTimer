@@ -28,7 +28,7 @@ fun Timer(
     ),
     gapAngleDegrees: Float = 30f,
     timesForSegments: List<Float> = listOf(7f, 3f, 1f, 3f, 1f),
-    ticks: List<Int>,
+    ticks: List<Float>,
     ringThickness: Dp = 20.dp,
     borderColor: Color = Color.Black,
     borderWidth: Dp = 2.dp,
@@ -111,7 +111,7 @@ fun DialWithHandPreview() {
                 handColor = Color.White,
                 handThickness = 8.dp,
                 badgesVisible = true,
-                ticks = listOf(11,12, 13)
+                ticks = listOf(11f, 12f, 13f)
             )
         }
     }
