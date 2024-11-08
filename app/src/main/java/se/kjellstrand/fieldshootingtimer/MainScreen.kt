@@ -296,7 +296,7 @@ fun PortraitUI(
                 modifier = Modifier
                     .weight(1f)
                     .align(Alignment.CenterVertically)
-                    .padding(horizontal = 8.dp) 
+                    .padding(horizontal = 8.dp)
             )
 
             Button(onClick = {

@@ -26,7 +26,6 @@ fun DialWithBadges(
     dialColors: DialColors,
     segments: List<Float>,
     ticks: List<Float>,
-    availableAngle: Float,
     gapAngleDegrees: Float = 30f,
     ringThickness: Dp = 20.dp,
     borderColor: Color = Color.Black,
@@ -40,6 +39,7 @@ fun DialWithBadges(
         modifier = modifier.size(size)
     ) {
         val sumOfSegments = segments.sum()
+        val availableAngle = 360f - gapAngleDegrees
         val scalingFactor = availableAngle / sumOfSegments
         val sweepAngles = segments.map { it * scalingFactor }
 
@@ -322,7 +322,6 @@ fun SegmentedSemiCircleWithMarkersPreview() {
             DialWithBadges(
                 dialColors = semiCircleColors,
                 segments = listOf(7f, 3f, 6f, 2f, 3f, 1f),
-                availableAngle = 330f,
                 gapAngleDegrees = 30f,
                 ringThickness = 30.dp,
                 borderColor = Color.Black,

@@ -39,7 +39,6 @@ fun Timer(
     badgesVisible: Boolean = true
 ) {
     val totalSeconds = timesForSegments.sum()
-    val availableAngle = 360f - gapAngleDegrees
 
     require(totalSeconds > 0) {
         "Total time must be greater than 0."
@@ -54,7 +53,6 @@ fun Timer(
             gapAngleDegrees = gapAngleDegrees,
             segments = timesForSegments,
             ticks = ticks,
-            availableAngle = availableAngle,
             ringThickness = ringThickness,
             borderColor = borderColor,
             borderWidth = borderWidth,
@@ -66,7 +64,6 @@ fun Timer(
         DialHand(
             currentTime = currentTime,
             totalTime = totalSeconds,
-            availableAngle = availableAngle,
             gapAngleDegrees = gapAngleDegrees,
             size = size,
             borderWidth = borderWidth,

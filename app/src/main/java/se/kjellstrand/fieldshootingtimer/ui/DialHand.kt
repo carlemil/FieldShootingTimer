@@ -21,7 +21,6 @@ import kotlin.math.sin
 fun DialHand(
     currentTime: Float,
     totalTime: Float,
-    availableAngle: Float,
     gapAngleDegrees: Float = 30f,
     size: Dp,
     borderWidth: Dp = 2.dp,
@@ -39,6 +38,7 @@ fun DialHand(
         val radius = sizePx / 2
 
         val startAngle = 270f + (gapAngleDegrees / 2)
+        val availableAngle = 360f - gapAngleDegrees
 
         val angleDegrees = startAngle + (currentTime / totalTime) * availableAngle - 180f
         val angleRadians = Math.toRadians(angleDegrees.toDouble()).toFloat()
@@ -90,7 +90,6 @@ fun DialHandPreview() {
         DialHand(
             currentTime = 50f,
             totalTime = 100f,
-            availableAngle = 270f,
             size = 200.dp,
             borderWidth = 4.dp,
             handColor = Color.White,
