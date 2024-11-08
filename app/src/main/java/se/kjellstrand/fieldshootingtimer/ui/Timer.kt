@@ -17,14 +17,12 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 fun Timer(
     modifier: Modifier = Modifier,
     currentTime: Float = 0f,
-    dialColors: DialColors = DialColors(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-            Color.Red,
-            Color.Blue,
-            Color.Green
-        )
+    segmentColors: List<Color> = listOf(
+        MaterialTheme.colorScheme.primary,
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+        Color.Red,
+        Color.Blue,
+        Color.Green
     ),
     gapAngleDegrees: Float = 30f,
     timesForSegments: List<Float> = listOf(7f, 3f, 1f, 3f, 1f),
@@ -49,7 +47,7 @@ fun Timer(
         modifier = modifier.size(size)
     ) {
         DialWithBadges(
-            dialColors = dialColors,
+            segmentColors = segmentColors,
             gapAngleDegrees = gapAngleDegrees,
             segments = timesForSegments,
             ticks = ticks,
@@ -88,15 +86,13 @@ fun DialWithHandPreview() {
         ) {
             Timer(
                 currentTime = currentTime,
-                dialColors = DialColors(
-                    colors = listOf(
-                        Color.Red,
-                        Color.Green.copy(alpha = 0.7f),
-                        Color.Blue.copy(alpha = 0.4f),
-                        Color.Red,
-                        Color.Blue,
-                        Color.Green
-                    )
+                segmentColors = listOf(
+                    Color.Red,
+                    Color.Green.copy(alpha = 0.7f),
+                    Color.Blue.copy(alpha = 0.4f),
+                    Color.Red,
+                    Color.Blue,
+                    Color.Green
                 ),
                 gapAngleDegrees = 30f,
                 timesForSegments = timeInSecondsForEachSegment,

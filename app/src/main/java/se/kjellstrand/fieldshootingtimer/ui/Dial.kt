@@ -21,7 +21,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 @Composable
 fun Dial(
     modifier: Modifier = Modifier,
-    dialColors: DialColors,
+    segmentColors: List<Color>,
     sweepAngles: List<Float>,
     gapAngleDegrees: Float = 30f,
     ringThickness: Dp = 20.dp,
@@ -52,7 +52,7 @@ fun Dial(
         var startAngle = 270f - (availableAngle / 2)
 
         sweepAngles.forEachIndexed { index, sweepAngle ->
-            val color = dialColors.colors.getOrNull(index) ?: Color.Gray
+            val color = segmentColors.getOrNull(index) ?: Color.Gray
             drawArc(
                 color = color,
                 startAngle = startAngle,
@@ -106,22 +106,20 @@ fun Dial(
 @Composable
 fun SegmentedSemiCirclePreview() {
     FieldShootingTimerTheme {
-        val semiCircleColors = DialColors(
-            colors = listOf(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                Color.Red,Color.Blue,Color.Green
-            )
+        val semiCircleColors = listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+            Color.Red, Color.Blue, Color.Green
         )
-        val sweepAngles = listOf(6f, 5f, 40f, 9F, 1F,8F)
+        val sweepAngles = listOf(6f, 5f, 40f, 9F, 1F, 8F)
 
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
             Dial(
-                dialColors = semiCircleColors,
+                segmentColors = semiCircleColors,
                 sweepAngles = sweepAngles,
                 gapAngleDegrees = 30f,
                 ringThickness = 20.dp,

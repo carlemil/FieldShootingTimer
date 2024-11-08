@@ -23,16 +23,14 @@ fun ShootTimer(
     ) {
         Timer(
             currentTime = timerUiState.currentTime,
-            dialColors = DialColors(
-                colors = listOf(
-                    PrepareSegmentColor,
-                    PrepareSegmentColor,
-                    ShootSegmentColor,
-                    CeaseFireSegmentColor,
-                    PlugWeaponSegmentColor,
-                    PrepareSegmentColor,
-                    PrepareSegmentColor
-                )
+            segmentColors = listOf(
+                PrepareSegmentColor,
+                PrepareSegmentColor,
+                ShootSegmentColor,
+                CeaseFireSegmentColor,
+                PlugWeaponSegmentColor,
+                PrepareSegmentColor,
+                PrepareSegmentColor
             ),
             gapAngleDegrees = 30f,
             timesForSegments = segmentDurations,

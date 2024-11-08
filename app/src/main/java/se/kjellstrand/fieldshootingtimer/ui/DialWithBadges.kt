@@ -23,7 +23,7 @@ import kotlin.math.sin
 @Composable
 fun DialWithBadges(
     modifier: Modifier = Modifier,
-    dialColors: DialColors,
+    segmentColors: List<Color>,
     segments: List<Float>,
     ticks: List<Float>,
     gapAngleDegrees: Float = 30f,
@@ -44,7 +44,7 @@ fun DialWithBadges(
         val sweepAngles = segments.map { it * scalingFactor }
 
         Dial(
-            dialColors = dialColors,
+            segmentColors = segmentColors,
             sweepAngles = sweepAngles,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness,
@@ -304,15 +304,13 @@ fun calculateSegmentAngles(
 @Composable
 fun SegmentedSemiCircleWithMarkersPreview() {
     FieldShootingTimerTheme {
-        val semiCircleColors = DialColors(
-            colors = listOf(
-                MaterialTheme.colorScheme.primary,
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-                Color.Red,
-                Color.Blue,
-                Color.Green
-            )
+        val semiCircleColors = listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+            Color.Red,
+            Color.Blue,
+            Color.Green
         )
 
         Box(
@@ -320,7 +318,7 @@ fun SegmentedSemiCircleWithMarkersPreview() {
             modifier = Modifier.fillMaxSize()
         ) {
             DialWithBadges(
-                dialColors = semiCircleColors,
+                segmentColors = semiCircleColors,
                 segments = listOf(7f, 3f, 6f, 2f, 3f, 1f),
                 gapAngleDegrees = 30f,
                 ringThickness = 30.dp,
