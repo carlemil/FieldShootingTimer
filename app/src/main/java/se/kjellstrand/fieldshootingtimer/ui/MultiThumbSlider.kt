@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
-
 @Composable
 fun MultiThumbSlider(
     timerViewModel: TimerViewModel,
@@ -50,7 +49,7 @@ fun MultiThumbSlider(
     ) {
         val sliderWidth = constraints.maxWidth.toFloat()
 
-        val thumbOffsets = remember(timerUiState.thumbValues) {
+        val thumbOffsets = remember(timerUiState.thumbValues, range) {
             toThumbOffsets(timerUiState, range, sliderWidth)
         }
         Canvas(modifier = Modifier.fillMaxSize()) {
@@ -83,71 +82,46 @@ fun MultiThumbSlider(
             }
         }
 
-        /*
-
-        timerUiState.thumbValues ska innehålla värden i ~ 10-20 rangen, dvs possitioner på timern
-
-        thumbOffsets ska innehålla skärm coordinater för att rita ut cirkel för varje thumb
-
-         */
-
         timerUiState.thumbValues.forEachIndexed { index, _ ->
-            /// var accumulatedOffset = 0f
-            Box(
-                modifier = Modifier
-                    .offset(x = with(density) {
+            Box(modifier = Modifier
+                .offset(x = with(density) {
+                    val currentThumbOffset =
+                        ((timerUiState.thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
+                    currentThumbOffset.toDp()
+                } - thumbRadius)
+                .size(thumbRadius * 2)
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
+                        change.consume()
                         val currentThumbOffset =
                             ((timerUiState.thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
-                        println("timerUiState.thumbValues[index] ${timerUiState.thumbValues[index]} range.first: ${range.first} range.last: ${range.last} sliderWidth: $sliderWidth")
-                        println("(timerUiState.thumbValues[index] - range.first) / (range.last - range.first) ${(timerUiState.thumbValues[index] - range.first) / (range.last - range.first)}")
-                        currentThumbOffset.toDp()
-                    } - thumbRadius)
-                    .size(thumbRadius * 2)
-                    .pointerInput(Unit) {
-                        detectHorizontalDragGestures(
-                            onDragStart = { startPoint ->
-                                // accumulatedOffset = startPoint.x // Reset to the starting point
-                            },
-                            onHorizontalDrag = { change, dragAmount ->
-                                change.consume()
-                                // accumulatedOffset = change.position.x
-                                val currentThumbOffset =
-                                    ((timerUiState.thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
-                                val newOffset =
-                                    (currentThumbOffset + change.position.x).coerceIn(
-                                        0f,
-                                        sliderWidth
-                                    )
-                                val newValue =
-                                    (newOffset / sliderWidth) * (range.last - range.first) + range.first
-
-                                val updatedValues = timerUiState.thumbValues
-                                    .toMutableList()
-                                    .apply { this[index] = newValue }
-
-                                timerViewModel.setThumbValues(updatedValues)
-                            },
-                            onDragEnd = {
-                                timerViewModel.setThumbValues(timerUiState.thumbValues
-                                    .toMutableList()
-                                    .map { value ->
-                                        value
-                                            .roundToInt()
-                                            .toFloat()
-                                    }
-                                )
-                            }
+                        val newOffset = (currentThumbOffset + change.position.x).coerceIn(
+                            0f, sliderWidth
                         )
-                    }
-            )
+                        val newValue =
+                            (newOffset / sliderWidth) * (range.last - range.first) + range.first
+
+                        val updatedValues = timerUiState.thumbValues
+                            .toMutableList()
+                            .apply { this[index] = newValue }
+
+                        timerViewModel.setThumbValues(updatedValues)
+                    }, onDragEnd = {
+                        timerViewModel.setThumbValues(timerUiState.thumbValues
+                            .toMutableList()
+                            .map { value ->
+                                value
+                                    .roundToInt()
+                                    .toFloat()
+                            })
+                    })
+                })
         }
     }
 }
 
 private fun toThumbOffsets(
-    timerUiState: TimerUiState,
-    range: IntRange,
-    sliderWidth: Float
+    timerUiState: TimerUiState, range: IntRange, sliderWidth: Float
 ) = timerUiState.thumbValues.map { value ->
-    ((value.toFloat() - range.first) / (range.last - range.first)) * sliderWidth
+    ((value - range.first) / (range.last - range.first)) * sliderWidth
 }

@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.cos
-import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @Composable
@@ -292,12 +291,10 @@ fun calculateSegmentAngles(
     val segmentAngles = mutableListOf<Float>()
 
     sweepAngles.forEach { sweep ->
-        // Add the starting angle of the segment
         segmentAngles.add(currentAngle % 360)
         currentAngle += sweep
     }
 
-    // Add the end angle (which is the same as the starting angle due to wrapping)
     segmentAngles.add((currentAngle % 360))
 
     return segmentAngles

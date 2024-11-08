@@ -50,6 +50,7 @@ import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import kotlin.math.roundToInt
 
 const val TEN_SECONDS_LEFT_DURATION = 7f
 const val READY_DURATION = 3f
@@ -125,6 +126,15 @@ fun MainScreen(
 
     val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
 
+    val rangeOffset = TEN_SECONDS_LEFT_DURATION + READY_DURATION
+    val range = remember(timerUiState.shootingDuration) {
+        val range = IntRange(
+            (rangeOffset + 1).toInt(),
+            (timerUiState.shootingDuration + rangeOffset + CEASE_FIRE_DURATION - 1).toInt()
+        )
+        range
+    }
+
     LaunchedEffect(timerUiState.timerRunningState) {
         if (timerUiState.timerRunningState == TimerState.Running) {
             audioManager.playAudioCue(audioCues, timerUiState, playedAudioIndices)
@@ -147,6 +157,10 @@ fun MainScreen(
         }
     }
 
+    LaunchedEffect(timerUiState.shootingDuration) {
+        timerViewModel.setThumbValues(timerUiState.thumbValues.filter { it.roundToInt() in range })
+    }
+
     DisposableEffect(Unit) {
         onDispose {
             audioManager.release()
@@ -158,6 +172,7 @@ fun MainScreen(
             PortraitUI(
                 timerViewModel,
                 segmentDurations,
+                range,
                 playedAudioIndices,
                 300.dp
             )
@@ -230,6 +245,7 @@ fun LandscapeUI(
 fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
+    range: IntRange,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
@@ -263,17 +279,10 @@ fun PortraitUI(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        val rangeOffset = TEN_SECONDS_LEFT_DURATION + READY_DURATION
-        val range = remember(timerUiState.shootingDuration) {
-            IntRange(
-                (rangeOffset + 1).toInt(),
-                (timerUiState.shootingDuration + rangeOffset + CEASE_FIRE_DURATION - 1).toInt()
-            )
-        }
         MultiThumbSlider(timerViewModel, range)
 
         Button(onClick = {
-            if (timerUiState.thumbValues.size < (range.last - range.first) / 2 + 1) {
+            if (timerUiState.thumbValues.size < (range.last - range.first)) {
                 timerViewModel.setThumbValues(
                     timerUiState.thumbValues + findNextFreeThumbSpot(
                         range,
@@ -299,12 +308,12 @@ fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
         val forward = center + distance
         val backward = center - distance
 
-//        if (forward in range && !takenSpots.contains(forward)) {
-//            return forward.toFloat()
-//        }
-//        if (backward in range && backward !in takenSpots) {
-//            return backward.toFloat()
-//        }
+        if (forward in range && takenSpots.find { it.roundToInt() == forward } == null) {
+            return forward.toFloat()
+        }
+        if (backward in range && takenSpots.find { it.roundToInt() == backward } == null) {
+            return backward.toFloat()
+        }
     }
     return center.toFloat()
 }
@@ -327,7 +336,7 @@ fun PortraitUIPreview() {
         VISITATION_DURATION
     )
     val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16)
-    PortraitUI(tvm, segmentDurations, mutableSetOf(), 300.dp)
+    PortraitUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 300.dp)
 }
 
 @Preview(
