@@ -279,24 +279,32 @@ fun PortraitUI(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        MultiThumbSlider(timerViewModel, range)
-
-        Button(onClick = {
-            if (timerUiState.thumbValues.size < (range.last - range.first)) {
-                timerViewModel.setThumbValues(
-                    timerUiState.thumbValues + findNextFreeThumbSpot(
-                        range,
-                        timerUiState.thumbValues
+        Row(modifier = Modifier.padding(16.dp)) {
+            Button(onClick = {
+                if (timerUiState.thumbValues.size < (range.last - range.first)) {
+                    timerViewModel.setThumbValues(
+                        timerUiState.thumbValues + findNextFreeThumbSpot(
+                            range,
+                            timerUiState.thumbValues
+                        )
                     )
-                )
-            }
-        }) { Text("+") }
-        Button(onClick = {
-            timerViewModel.setThumbValues(timerUiState.thumbValues.dropLast(1))
-        }) { Text("-") }
+                }
+            }) { Text("+") }
+
+            MultiThumbSlider(
+                timerViewModel, range,
+                modifier = Modifier
+                    .weight(1f)
+                    .align(Alignment.CenterVertically)
+                    .padding(horizontal = 8.dp) 
+            )
+
+            Button(onClick = {
+                timerViewModel.setThumbValues(timerUiState.thumbValues.dropLast(1))
+            }) { Text("-") }
+        }
 
         Spacer(modifier = Modifier.weight(1f))
-
     }
 }
 
