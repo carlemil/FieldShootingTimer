@@ -58,7 +58,7 @@ fun DecoratedDial(
             sweepAngles = sweepAngles,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness,
-            borderWidth = borderWidth,
+            borderWidth = borderWidth / 2f,
             borderColor = borderColor
         )
 
@@ -68,7 +68,7 @@ fun DecoratedDial(
             ticksMax = sumOfSegments.toInt(),
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness,
-            borderWidth = borderWidth,
+            borderWidth = borderWidth * 1.4f,
             borderColor = borderColor
         )
 
@@ -257,7 +257,7 @@ fun Ticks(
         val centerX = canvasSize / 2
         val centerY = canvasSize / 2
 
-        val innerRadius = (canvasSize / 2) - ringThicknessPx / 3 * 2
+        val innerRadius = (canvasSize / 2) - ringThicknessPx / 4 * 3
         val outerRadius = (canvasSize / 2)
 
         val adjustedTicks = ticks.map { tick ->
