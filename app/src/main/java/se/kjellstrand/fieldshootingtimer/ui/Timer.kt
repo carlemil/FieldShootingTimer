@@ -46,7 +46,7 @@ fun Timer(
         contentAlignment = Alignment.Center,
         modifier = modifier.size(size)
     ) {
-        DialWithBadges(
+        DecoratedDial(
             segmentColors = segmentColors,
             gapAngleDegrees = gapAngleDegrees,
             segments = timesForSegments,
@@ -55,7 +55,7 @@ fun Timer(
             borderColor = borderColor,
             borderWidth = borderWidth,
             size = size,
-            badgesVisible = badgesVisible,
+            segmentBadgesVisible = badgesVisible,
             badgeRadius = badgeRadius
         )
 

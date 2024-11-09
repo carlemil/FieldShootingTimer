@@ -21,7 +21,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun DialWithBadges(
+fun DecoratedDial(
     modifier: Modifier = Modifier,
     segmentColors: List<Color>,
     segments: List<Float>,
@@ -32,7 +32,7 @@ fun DialWithBadges(
     borderWidth: Dp = 2.dp,
     size: Dp = 200.dp,
     badgeRadius: Dp = 10.dp,
-    badgesVisible: Boolean = true
+    segmentBadgesVisible: Boolean = true
 ) {
     Box(
         contentAlignment = Alignment.Center,
@@ -62,7 +62,7 @@ fun DialWithBadges(
             borderColor = borderColor
         )
 
-        TickMarks(
+        Ticks(
             size = size,
             ticks = ticks,
             ticksMax = sumOfSegments.toInt(),
@@ -72,31 +72,91 @@ fun DialWithBadges(
             borderColor = borderColor
         )
 
-        if (badgesVisible) {
-            Badges(
+        if (segmentBadgesVisible) {
+            SegmentBadges(
                 size = size,
                 sweepAngles = sweepAngles,
                 timesForSegments = segments,
+                segmentColors = segmentColors,
                 gapAngleDegrees = gapAngleDegrees,
                 ringThickness = ringThickness,
                 borderColor = borderColor,
                 borderWidth = borderWidth,
-                badgeRadius = badgeRadius
+                badgeRadius = badgeRadius / 1.2f
+            )
+        }
+
+        TickBadges(
+            size = size,
+            ticks = ticks,
+            ticksMax = sumOfSegments.toInt(),
+            gapAngleDegrees = gapAngleDegrees,
+            ringThickness = ringThickness,
+            borderColor = borderColor,
+            borderWidth = borderWidth,
+            badgeRadius = badgeRadius / 1.5f
+        )
+    }
+}
+
+@Composable
+fun TickBadges(
+    size: Dp,
+    ticks: List<Float>,
+    ticksMax: Int,
+    gapAngleDegrees: Float,
+    ringThickness: Dp,
+    borderColor: Color,
+    borderWidth: Dp,
+    badgeRadius: Dp
+) {
+    Canvas(modifier = Modifier.size(size)) {
+        val canvasSize = size.toPx()
+        val ringThicknessPx = ringThickness.toPx()
+        val borderWidthPx = borderWidth.toPx()
+        val radiusPx = badgeRadius.toPx()
+        val totalPadding = (ringThicknessPx / 2) + (borderWidthPx / 2)
+
+        val centerX = canvasSize / 2
+        val centerY = canvasSize / 2
+
+        val arcRadius = (canvasSize / 2) - totalPadding
+        val markerCenterRadius = arcRadius + (ringThicknessPx / 4 * 3)
+
+        val adjustedTicks = ticks.map { tick ->
+            270f - (360f - gapAngleDegrees) / 2 + (tick / ticksMax) * (360f - gapAngleDegrees)
+        }
+
+        adjustedTicks.zip(ticks).forEach { (angle, tick) ->
+            val angleRad = Math.toRadians(angle.toDouble())
+            val x = centerX + markerCenterRadius * cos(angleRad).toFloat()
+            val y = centerY + markerCenterRadius * sin(angleRad).toFloat()
+
+            drawBadge(
+                x = x,
+                y = y,
+                markerRadiusPx = radiusPx,
+                borderWidthPx = borderWidthPx,
+                borderColor = borderColor,
+                backgroundColor = Color.White,
+                angleRad = angleRad,
+                timeText = tick.toInt().toString()
             )
         }
     }
 }
 
 @Composable
-fun Badges(
+fun SegmentBadges(
     size: Dp,
     sweepAngles: List<Float>,
     timesForSegments: List<Float>,
+    segmentColors: List<Color>,
     gapAngleDegrees: Float,
     ringThickness: Dp,
     borderColor: Color,
     borderWidth: Dp,
-    badgeRadius: Dp
+    badgeRadius: Dp,
 ) {
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
@@ -109,14 +169,14 @@ fun Badges(
         val centerY = canvasSize / 2
 
         val arcRadius = (canvasSize / 2) - totalPadding
-        val markerCenterRadius = arcRadius + (ringThicknessPx / 2)
+        val markerCenterRadius = arcRadius + (ringThicknessPx / 4 * 3)
 
         val adjustedMarkers = centerOnSegmentMarkerAngles(
             sweepAngles = sweepAngles,
             gapAngleDegrees = gapAngleDegrees
         )
 
-        adjustedMarkers.zip(timesForSegments).forEach { (angle, time) ->
+        adjustedMarkers.zip(timesForSegments).forEachIndexed { index, (angle, time) ->
             val angleRad = Math.toRadians(angle.toDouble())
             val x = centerX + markerCenterRadius * cos(angleRad).toFloat()
             val y = centerY + markerCenterRadius * sin(angleRad).toFloat()
@@ -126,7 +186,9 @@ fun Badges(
                 y = y,
                 markerRadiusPx = markerRadiusPx,
                 borderWidthPx = borderWidthPx,
+                backgroundColor = segmentColors[index],
                 borderColor = borderColor,
+                angleRad = angleRad,
                 timeText = time.toInt().toString()
             )
         }
@@ -168,7 +230,7 @@ fun Dividers(
             val endY = centerY + outerRadius * sin(angleRad).toFloat()
 
             drawLine(
-                color = borderColor,
+                color = borderColor.copy(alpha = 0.5f),
                 start = Offset(startX, startY),
                 end = Offset(endX, endY),
                 strokeWidth = borderWidthPx
@@ -178,7 +240,7 @@ fun Dividers(
 }
 
 @Composable
-fun TickMarks(
+fun Ticks(
     size: Dp,
     ticks: List<Float>,
     ticksMax: Int,
@@ -195,7 +257,7 @@ fun TickMarks(
         val centerX = canvasSize / 2
         val centerY = canvasSize / 2
 
-        val innerRadius = (canvasSize / 2) - ringThicknessPx / 2
+        val innerRadius = (canvasSize / 2) - ringThicknessPx / 3 * 2
         val outerRadius = (canvasSize / 2)
 
         val adjustedTicks = ticks.map { tick ->
@@ -205,17 +267,30 @@ fun TickMarks(
         adjustedTicks.forEach { angle ->
             val angleRad = Math.toRadians(angle.toDouble())
 
-            val startX = centerX + innerRadius * cos(angleRad).toFloat()
-            val startY = centerY + innerRadius * sin(angleRad).toFloat()
+            val tipX = centerX + innerRadius * cos(angleRad).toFloat()
+            val tipY = centerY + innerRadius * sin(angleRad).toFloat()
 
-            val endX = centerX + outerRadius * cos(angleRad).toFloat()
-            val endY = centerY + outerRadius * sin(angleRad).toFloat()
+            val halfWidth = borderWidthPx / (Math.PI * 360) * 3
+            val leftBaseX =
+                centerX + outerRadius * cos(angleRad + halfWidth).toFloat()
+            val leftBaseY =
+                centerY + outerRadius * sin(angleRad + halfWidth).toFloat()
 
-            drawLine(
-                color = borderColor,
-                start = Offset(startX, startY),
-                end = Offset(endX, endY),
-                strokeWidth = borderWidthPx * 2
+            val rightBaseX =
+                centerX + outerRadius * cos(angleRad - halfWidth).toFloat()
+            val rightBaseY =
+                centerY + outerRadius * sin(angleRad - halfWidth).toFloat()
+
+            val trianglePath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(tipX, tipY)
+                lineTo(leftBaseX, leftBaseY)
+                lineTo(rightBaseX, rightBaseY)
+                close()
+            }
+
+            drawPath(
+                path = trianglePath,
+                color = borderColor.copy(alpha = 0.6f)
             )
         }
     }
@@ -243,16 +318,22 @@ fun DrawScope.drawBadge(
     markerRadiusPx: Float,
     borderWidthPx: Float,
     borderColor: Color,
+    backgroundColor: Color,
+    angleRad: Double,
     timeText: String
 ) {
-    // Draw the badge circle
     drawCircle(
-        color = Color.White,
+        color = backgroundColor,
         radius = markerRadiusPx - (borderWidthPx / 2),
         center = Offset(x, y)
     )
 
-    // Draw the badge border
+    drawCircle(
+        color = Color.White,
+        radius = markerRadiusPx - (borderWidthPx * 2),
+        center = Offset(x, y)
+    )
+
     drawCircle(
         color = borderColor,
         radius = markerRadiusPx,
@@ -260,7 +341,6 @@ fun DrawScope.drawBadge(
         style = Stroke(width = borderWidthPx)
     )
 
-    // Draw the text inside the badge
     drawContext.canvas.nativeCanvas.apply {
         val paint = android.graphics.Paint().apply {
             color = android.graphics.Color.BLACK
@@ -269,16 +349,24 @@ fun DrawScope.drawBadge(
             isAntiAlias = true
         }
 
+        val angleDegrees = Math.toDegrees(angleRad + Math.PI / 2).toFloat()
+
         val textBounds = android.graphics.Rect()
         paint.getTextBounds(timeText, 0, timeText.length, textBounds)
         val textHeight = textBounds.height()
 
+        save()
+
+        translate(x, y)
+        rotate(angleDegrees)
         drawText(
             timeText,
-            x,
-            y + textHeight / 2f,
+            0f,
+            textHeight / 2f,
             paint
         )
+
+        restore()
     }
 }
 
@@ -317,7 +405,7 @@ fun SegmentedSemiCircleWithMarkersPreview() {
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            DialWithBadges(
+            DecoratedDial(
                 segmentColors = semiCircleColors,
                 segments = listOf(7f, 3f, 6f, 2f, 3f, 1f),
                 gapAngleDegrees = 30f,
@@ -326,7 +414,7 @@ fun SegmentedSemiCircleWithMarkersPreview() {
                 borderWidth = 2.dp,
                 size = 300.dp,
                 badgeRadius = 15.dp,
-                ticks = listOf(1f, 2f, 3f, 4f, 7f, 8f, 9f)
+                ticks = listOf(1f, 3f, 9f, 10f, 11f, 14f, 15f, 18f, 20f, 22f)
             )
         }
     }
