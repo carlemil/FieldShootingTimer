@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 
 @Composable
@@ -35,13 +36,14 @@ fun DecoratedDial(
     segmentBadgesVisible: Boolean = true
 ) {
     Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier.size(size)
+        contentAlignment = Alignment.Center, modifier = modifier.size(size)
     ) {
         val sumOfSegments = segments.sum()
         val availableAngle = 360f - gapAngleDegrees
         val scalingFactor = availableAngle / sumOfSegments
         val sweepAngles = segments.map { it * scalingFactor }
+        val ticksMax = sumOfSegments.toInt()
+        val everySecondTicks = (1..ticksMax).map { it.toFloat() } // Generate ticks for every second
 
         Dial(
             segmentColors = segmentColors,
@@ -65,10 +67,21 @@ fun DecoratedDial(
         Ticks(
             size = size,
             ticks = ticks,
-            ticksMax = sumOfSegments.toInt(),
+            ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness,
             borderWidth = borderWidth * 1.4f,
+            borderColor = borderColor
+        )
+
+        // One tick for each second, but smaller that the regular user defined ticks.
+        Ticks(
+            size = size,
+            ticks = everySecondTicks,
+            ticksMax = ticksMax,
+            gapAngleDegrees = gapAngleDegrees,
+            ringThickness = ringThickness / 1.7f,
+            borderWidth = borderWidth / 1.4f,
             borderColor = borderColor
         )
 
@@ -140,7 +153,7 @@ fun TickBadges(
                 borderColor = borderColor,
                 backgroundColor = Color.White,
                 angleRad = angleRad,
-                timeText = tick.toInt().toString()
+                timeText = tick.roundToInt().toString()
             )
         }
     }
@@ -172,8 +185,7 @@ fun SegmentBadges(
         val markerCenterRadius = arcRadius + (ringThicknessPx / 4 * 3)
 
         val adjustedMarkers = centerOnSegmentMarkerAngles(
-            sweepAngles = sweepAngles,
-            gapAngleDegrees = gapAngleDegrees
+            sweepAngles = sweepAngles, gapAngleDegrees = gapAngleDegrees
         )
 
         adjustedMarkers.zip(timesForSegments).forEachIndexed { index, (angle, time) ->
@@ -216,8 +228,7 @@ fun Dividers(
         val outerRadius = (canvasSize / 2)
 
         val segmentAngles = calculateSegmentAngles(
-            sweepAngles = sweepAngles,
-            gapAngleDegrees = gapAngleDegrees
+            sweepAngles = sweepAngles, gapAngleDegrees = gapAngleDegrees
         )
 
         segmentAngles.forEach { angle ->
@@ -257,7 +268,7 @@ fun Ticks(
         val centerX = canvasSize / 2
         val centerY = canvasSize / 2
 
-        val innerRadius = (canvasSize / 2) - ringThicknessPx / 4 * 3
+        val innerRadius = (canvasSize / 2) - ringThicknessPx / 2
         val outerRadius = (canvasSize / 2)
 
         val adjustedTicks = ticks.map { tick ->
@@ -271,15 +282,11 @@ fun Ticks(
             val tipY = centerY + innerRadius * sin(angleRad).toFloat()
 
             val halfWidth = borderWidthPx / (Math.PI * 360) * 3
-            val leftBaseX =
-                centerX + outerRadius * cos(angleRad + halfWidth).toFloat()
-            val leftBaseY =
-                centerY + outerRadius * sin(angleRad + halfWidth).toFloat()
+            val leftBaseX = centerX + outerRadius * cos(angleRad + halfWidth).toFloat()
+            val leftBaseY = centerY + outerRadius * sin(angleRad + halfWidth).toFloat()
 
-            val rightBaseX =
-                centerX + outerRadius * cos(angleRad - halfWidth).toFloat()
-            val rightBaseY =
-                centerY + outerRadius * sin(angleRad - halfWidth).toFloat()
+            val rightBaseX = centerX + outerRadius * cos(angleRad - halfWidth).toFloat()
+            val rightBaseY = centerY + outerRadius * sin(angleRad - halfWidth).toFloat()
 
             val trianglePath = androidx.compose.ui.graphics.Path().apply {
                 moveTo(tipX, tipY)
@@ -289,16 +296,14 @@ fun Ticks(
             }
 
             drawPath(
-                path = trianglePath,
-                color = borderColor.copy(alpha = 0.6f)
+                path = trianglePath, color = borderColor.copy(alpha = 0.6f)
             )
         }
     }
 }
 
 fun centerOnSegmentMarkerAngles(
-    sweepAngles: List<Float>,
-    gapAngleDegrees: Float
+    sweepAngles: List<Float>, gapAngleDegrees: Float
 ): List<Float> {
     val availableAngle = 360f - gapAngleDegrees
     var currentAngle = 270f - (availableAngle / 2)
@@ -329,9 +334,7 @@ fun DrawScope.drawBadge(
     )
 
     drawCircle(
-        color = Color.White,
-        radius = markerRadiusPx - (borderWidthPx * 2),
-        center = Offset(x, y)
+        color = Color.White, radius = markerRadiusPx - (borderWidthPx * 2), center = Offset(x, y)
     )
 
     drawCircle(
@@ -360,10 +363,7 @@ fun DrawScope.drawBadge(
         translate(x, y)
         rotate(angleDegrees)
         drawText(
-            timeText,
-            0f,
-            textHeight / 2f,
-            paint
+            timeText, 0f, textHeight / 2f, paint
         )
 
         restore()
@@ -371,8 +371,7 @@ fun DrawScope.drawBadge(
 }
 
 fun calculateSegmentAngles(
-    sweepAngles: List<Float>,
-    gapAngleDegrees: Float
+    sweepAngles: List<Float>, gapAngleDegrees: Float
 ): List<Float> {
     val availableAngle = 360f - gapAngleDegrees
     var currentAngle = 270f - (availableAngle / 2)
@@ -402,8 +401,7 @@ fun SegmentedSemiCircleWithMarkersPreview() {
         )
 
         Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
+            contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()
         ) {
             DecoratedDial(
                 segmentColors = semiCircleColors,
