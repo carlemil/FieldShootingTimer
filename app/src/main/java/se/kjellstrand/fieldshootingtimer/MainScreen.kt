@@ -209,9 +209,8 @@ fun LandscapeUI(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
-                .weight(9f)
                 .fillMaxHeight()
-                .padding(16.dp)
+                .padding(start = 16.dp)
                 .navigationBarsPadding()
         ) {
             Box(
@@ -225,17 +224,11 @@ fun LandscapeUI(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .weight(9f)
                 .fillMaxHeight()
-                .padding(horizontal = 8.dp)
+                .padding(8.dp)
                 .navigationBarsPadding()
         ) {
-
-            Spacer(modifier = Modifier.padding(8.dp))
-
             Settings(timerViewModel, range, playedAudioIndices)
-
-            Spacer(modifier = Modifier.padding(8.dp))
         }
     }
 }
