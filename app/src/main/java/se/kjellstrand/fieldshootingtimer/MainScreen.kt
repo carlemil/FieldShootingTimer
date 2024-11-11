@@ -50,6 +50,8 @@ import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
 import kotlin.math.roundToInt
 
 const val TEN_SECONDS_LEFT_DURATION = 7f
@@ -293,12 +295,14 @@ fun PortraitUI(
 
             MultiThumbSlider(
                 timerViewModel, range,
+                trackColor = SliderInactiveTrackColor,
+                thumbColor = SliderThumbColor,
                 modifier = Modifier
                     .weight(1f)
                     .align(Alignment.CenterVertically)
                     .padding(horizontal = 8.dp)
-            )
 
+            )
             Button(onClick = {
                 timerViewModel.setThumbValues(timerUiState.thumbValues.dropLast(1))
             }) { Text("-") }

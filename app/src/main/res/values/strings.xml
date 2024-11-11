@@ -2,5 +2,14 @@
     <string name="app_name">Field Shooting Timer</string>
     <string name="shooting_time">Shooting Time: %1$ds</string>
     <string name="show_segment_times">Show segment times</string>
+    <string name="command_load">LOAD!</string>
+    <string name="command_all_ready">ALL READY?</string>
+    <string name="command_ready">READY!</string>
+    <string name="command_fire">FIRE!</string>
+    <string name="command_cease_fire">CEASE FIRE!</string>
+    <string name="command_unload">UNLOAD!</string>
+    <string name="command_secure_weapon">SECURE WEAPON!</string>
+    <string name="command_inspection">INSPECTION!</string>
+    <string name="command_mark">MARK!</string>
 
 </resources>

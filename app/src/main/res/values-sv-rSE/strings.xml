@@ -2,5 +2,13 @@
     <string name="app_name">Fältskyttetimer</string>
     <string name="shooting_time">Skjuttid: %1$ds</string>
     <string name="show_segment_times">Visa segment tider</string>
-
+    <string name="command_load">LADDA!</string>
+    <string name="command_all_ready">ALLA KLARA?</string>
+    <string name="command_ready">FÄRDIGA!</string>
+    <string name="command_fire">ELD!</string>
+    <string name="command_cease_fire">ELD UPPHÖR!</string>
+    <string name="command_unload">PATRON UR!</string>
+    <string name="command_secure_weapon">PROPPA VAPEN!</string>
+    <string name="command_inspection">VISITATION!</string>
+    <string name="command_mark">MARKERA!</string>
 </resources>

@@ -29,7 +29,6 @@ fun MultiThumbSlider(
     timerViewModel: TimerViewModel,
     range: IntRange,
     trackColor: Color = Color.Gray,
-    activeTrackColor: Color = Color.Blue,
     thumbColor: Color = Color.Blue,
     trackHeight: Dp = 8.dp,
     thumbRadius: Dp = 12.dp,
@@ -63,21 +62,13 @@ fun MultiThumbSlider(
                 cap = StrokeCap.Round
             )
 
-            thumbOffsets.zipWithNext { start, end ->
-                drawLine(
-                    color = activeTrackColor,
-                    start = Offset(start, size.height / 2),
-                    end = Offset(end, size.height / 2),
-                    strokeWidth = trackHeightPx,
-                    cap = StrokeCap.Round
-                )
-            }
-
             thumbOffsets.forEach { thumbOffset ->
-                drawCircle(
+                drawLine(
                     color = thumbColor,
-                    radius = thumbRadiusPx,
-                    center = Offset(thumbOffset, size.height / 2)
+                    start = Offset(thumbOffset, (size.height / 2) - thumbRadiusPx),
+                    end = Offset(thumbOffset, (size.height / 2) + thumbRadiusPx),
+                    strokeWidth = trackHeightPx/2f,
+                    cap = StrokeCap.Round
                 )
             }
         }
