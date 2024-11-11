@@ -29,14 +29,12 @@ fun TicksSlider(
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .padding(8.dp)
+                .padding(end = 8.dp)
                 .clickable {
                     if (timerUiState.thumbValues.size < (range.last - range.first)) {
                         timerViewModel.setThumbValues(
-                            timerUiState.thumbValues + findNextFreeThumbSpot(
-                                range,
-                                timerUiState.thumbValues
-                            )
+                            timerUiState.thumbValues +
+                                    findNextFreeThumbSpot(range, timerUiState.thumbValues)
                         )
                     }
                 }
@@ -57,13 +55,9 @@ fun TicksSlider(
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .padding(8.dp)
+                .padding(start = 8.dp)
                 .clickable {
-                    timerViewModel.setThumbValues(
-                        timerUiState.thumbValues.dropLast(
-                            1
-                        )
-                    )
+                    timerViewModel.setThumbValues(timerUiState.thumbValues.dropLast(1))
                 }
         )
     }

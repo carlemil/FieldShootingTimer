@@ -268,7 +268,7 @@ fun PortraitUI(
             PlayButton(timerViewModel, timerSize)
         }
 
-        Spacer(modifier = Modifier.padding(8.dp))
+        Spacer(modifier = Modifier.padding(24.dp))
 
         ShowSegmentTimes(timerViewModel)
 

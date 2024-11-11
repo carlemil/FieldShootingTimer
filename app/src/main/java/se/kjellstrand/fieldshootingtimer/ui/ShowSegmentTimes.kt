@@ -23,7 +23,7 @@ fun ShowSegmentTimes(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(start = 4.dp, end = 8.dp)
     ) {
         Checkbox(
             checked = timerUiState.badgesVisible,

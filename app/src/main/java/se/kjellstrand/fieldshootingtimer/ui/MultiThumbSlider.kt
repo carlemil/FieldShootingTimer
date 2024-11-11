@@ -44,7 +44,7 @@ fun MultiThumbSlider(
         modifier = modifier
             .fillMaxWidth()
             .height(thumbRadius * 2)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 8.dp)
     ) {
         val sliderWidth = constraints.maxWidth.toFloat()
 
