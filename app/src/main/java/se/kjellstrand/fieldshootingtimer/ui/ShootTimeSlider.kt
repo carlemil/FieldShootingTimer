@@ -20,6 +20,7 @@ import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
+import kotlin.math.roundToInt
 
 @Composable
 fun ShootTimeSlider(
@@ -44,9 +45,10 @@ fun ShootTimeSlider(
             value = shootingDuration,
             enabled = timerUiState.timerRunningState == TimerState.NotStarted,
             onValueChange = { newShootingDuration ->
-                timerViewModel.setShootingTime(newShootingDuration)
+                timerViewModel.setShootingTime(newShootingDuration.roundToInt().toFloat())
                 playedAudioIndices.clear()
             },
+            onValueChangeFinished = { },
             colors = SliderDefaults.colors(
                 thumbColor = SliderThumbColor,
                 activeTrackColor = SliderActiveTrackColor,

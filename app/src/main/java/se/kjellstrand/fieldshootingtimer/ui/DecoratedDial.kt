@@ -64,13 +64,14 @@ fun DecoratedDial(
             borderColor = borderColor
         )
 
+        // User defined ticks showing when to flip/drop or cervices change targets.
         Ticks(
             size = size,
             ticks = ticks,
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
-            ringThickness = ringThickness,
-            borderWidth = borderWidth * 1.4f,
+            ringThickness = ringThickness * 1.3f,
+            borderWidth = borderWidth * 1.8f,
             borderColor = borderColor
         )
 
@@ -134,7 +135,7 @@ fun TickBadges(
         val centerY = canvasSize / 2
 
         val arcRadius = (canvasSize / 2) - totalPadding
-        val markerCenterRadius = arcRadius + (ringThicknessPx / 4 * 3)
+        val markerCenterRadius = arcRadius + (ringThicknessPx / 1.6f)
 
         val adjustedTicks = ticks.map { tick ->
             270f - (360f - gapAngleDegrees) / 2 + (tick / ticksMax) * (360f - gapAngleDegrees)
@@ -182,7 +183,7 @@ fun SegmentBadges(
         val centerY = canvasSize / 2
 
         val arcRadius = (canvasSize / 2) - totalPadding
-        val markerCenterRadius = arcRadius + (ringThicknessPx / 4 * 3)
+        val markerCenterRadius = arcRadius - (ringThicknessPx / 1.6f)
 
         val adjustedMarkers = centerOnSegmentMarkerAngles(
             sweepAngles = sweepAngles, gapAngleDegrees = gapAngleDegrees
