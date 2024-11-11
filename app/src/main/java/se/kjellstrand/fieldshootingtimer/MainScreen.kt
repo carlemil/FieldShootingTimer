@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.audio.AudioCue
 import se.kjellstrand.fieldshootingtimer.audio.AudioCueType
@@ -46,6 +48,7 @@ import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
 import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
+import se.kjellstrand.fieldshootingtimer.ui.TicksSlider
 import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
@@ -281,32 +284,7 @@ fun PortraitUI(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        Row(modifier = Modifier.padding(16.dp)) {
-            Button(onClick = {
-                if (timerUiState.thumbValues.size < (range.last - range.first)) {
-                    timerViewModel.setThumbValues(
-                        timerUiState.thumbValues + findNextFreeThumbSpot(
-                            range,
-                            timerUiState.thumbValues
-                        )
-                    )
-                }
-            }) { Text("+") }
-
-            MultiThumbSlider(
-                timerViewModel, range,
-                trackColor = SliderInactiveTrackColor,
-                thumbColor = SliderThumbColor,
-                modifier = Modifier
-                    .weight(1f)
-                    .align(Alignment.CenterVertically)
-                    .padding(horizontal = 8.dp)
-
-            )
-            Button(onClick = {
-                timerViewModel.setThumbValues(timerUiState.thumbValues.dropLast(1))
-            }) { Text("-") }
-        }
+        TicksSlider(timerViewModel, range)
 
         Spacer(modifier = Modifier.weight(1f))
     }

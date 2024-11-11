@@ -1,6 +1,6 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Slider
@@ -29,18 +29,10 @@ fun ShootTimeSlider(
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
     val shootingDuration = timerUiState.shootingDuration
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Text(
-            text = stringResource(
-                R.string.shooting_time,
-                (shootingDuration + CEASE_FIRE_DURATION).toInt()
-            ),
-            fontWeight = FontWeight.Bold,
-            fontSize = 24.sp
-        )
         Slider(
             value = shootingDuration,
             enabled = timerUiState.timerRunningState == TimerState.NotStarted,
@@ -55,7 +47,19 @@ fun ShootTimeSlider(
                 inactiveTrackColor = SliderInactiveTrackColor
             ),
             valueRange = 1f..27f,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier
+                .padding(start = 16.dp, end = 16.dp)
+                .weight(1f)
+        )
+        Text(
+            text = stringResource(
+                R.string.shooting_time,
+                (shootingDuration + CEASE_FIRE_DURATION).toInt()
+            ),
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp,
+            modifier = Modifier
+                .padding(end = 16.dp)
         )
     }
 }
