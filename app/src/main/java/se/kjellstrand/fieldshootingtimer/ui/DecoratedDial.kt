@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import se.kjellstrand.fieldshootingtimer.READY_DURATION
+import se.kjellstrand.fieldshootingtimer.TEN_SECONDS_LEFT_DURATION
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -145,7 +147,7 @@ fun TickBadges(
             val angleRad = Math.toRadians(angle.toDouble())
             val x = centerX + markerCenterRadius * cos(angleRad).toFloat()
             val y = centerY + markerCenterRadius * sin(angleRad).toFloat()
-
+            val time = (tick - TEN_SECONDS_LEFT_DURATION - READY_DURATION).roundToInt().toString()
             drawBadge(
                 x = x,
                 y = y,
@@ -154,7 +156,7 @@ fun TickBadges(
                 borderColor = borderColor,
                 backgroundColor = Color.White,
                 angleRad = angleRad,
-                timeText = tick.roundToInt().toString()
+                timeText = time
             )
         }
     }
