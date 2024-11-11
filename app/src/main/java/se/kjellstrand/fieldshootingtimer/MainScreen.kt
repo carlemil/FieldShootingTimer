@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -183,6 +182,7 @@ fun MainScreen(
             LandscapeUI(
                 timerViewModel,
                 segmentDurations,
+                range,
                 playedAudioIndices,
                 280.dp
             )
@@ -194,6 +194,7 @@ fun MainScreen(
 fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
+    range: IntRange,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
@@ -226,18 +227,15 @@ fun LandscapeUI(
             modifier = Modifier
                 .weight(9f)
                 .fillMaxHeight()
-                .padding(16.dp)
+                .padding(horizontal = 8.dp)
                 .navigationBarsPadding()
         ) {
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(16.dp))
-            ShootTimeSlider(
-                timerViewModel,
-                playedAudioIndices
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            ShowSegmentTimes(timerViewModel)
-            Spacer(modifier = Modifier.weight(1f))
+
+            Spacer(modifier = Modifier.padding(8.dp))
+
+            Settings(timerViewModel, range, playedAudioIndices)
+
+            Spacer(modifier = Modifier.padding(8.dp))
         }
     }
 }
@@ -270,21 +268,30 @@ fun PortraitUI(
 
         Spacer(modifier = Modifier.padding(24.dp))
 
-        ShowSegmentTimes(timerViewModel)
-
-        Spacer(modifier = Modifier.padding(8.dp))
-
-        ShootTimeSlider(
-            timerViewModel,
-            playedAudioIndices
-        )
-
-        Spacer(modifier = Modifier.padding(8.dp))
-
-        TicksSlider(timerViewModel, range)
+        Settings(timerViewModel, range, playedAudioIndices)
 
         Spacer(modifier = Modifier.padding(8.dp))
     }
+}
+
+@Composable
+fun Settings(
+    timerViewModel: TimerViewModel,
+    range: IntRange,
+    playedAudioIndices: MutableSet<Int>
+) {
+    ShowSegmentTimes(timerViewModel)
+
+    Spacer(modifier = Modifier.padding(8.dp))
+
+    ShootTimeSlider(
+        timerViewModel,
+        playedAudioIndices
+    )
+
+    Spacer(modifier = Modifier.padding(8.dp))
+
+    TicksSlider(timerViewModel, range)
 }
 
 fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
@@ -322,7 +329,6 @@ fun PortraitUIPreview() {
         UNLOAD_WEAPON_DURATION,
         VISITATION_DURATION
     )
-    val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16)
     PortraitUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 300.dp)
 }
 
@@ -343,12 +349,11 @@ fun LandscapeUIPreview() {
     val segmentDurations = listOf(
         TEN_SECONDS_LEFT_DURATION,
         READY_DURATION,
-        5f,
+        12f,
         CEASE_FIRE_DURATION,
         SILENCE_DURATION,
         UNLOAD_WEAPON_DURATION,
         VISITATION_DURATION
     )
-    val ticks = listOf(5, 6, 7, 8, 11, 12, 13, 14, 15, 16)
-    LandscapeUI(tvm, segmentDurations, mutableSetOf(), 280.dp)
+    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 280.dp)
 }
