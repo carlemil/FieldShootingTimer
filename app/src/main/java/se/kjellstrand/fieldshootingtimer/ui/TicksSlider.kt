@@ -23,7 +23,7 @@ fun TicksSlider(
 ) {
     val timerUiState by timerViewModel.uiState.collectAsState()
 
-    Row(modifier = Modifier.padding(16.dp)) {
+    Row(modifier = Modifier.padding(horizontal = 16.dp)) {
         Text(
             text = "+",
             fontSize = 48.sp,
