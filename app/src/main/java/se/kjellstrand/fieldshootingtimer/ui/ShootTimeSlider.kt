@@ -15,7 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import se.kjellstrand.fieldshootingtimer.CEASE_FIRE_DURATION
 import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
@@ -54,7 +53,7 @@ fun ShootTimeSlider(
         Text(
             text = stringResource(
                 R.string.shooting_time,
-                (shootingDuration + CEASE_FIRE_DURATION).toInt()
+                (shootingDuration + Command.CeaseFire.duration).toInt()
             ),
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,

@@ -43,8 +43,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.audio.AudioCue
-import se.kjellstrand.fieldshootingtimer.audio.AudioCueType
 import se.kjellstrand.fieldshootingtimer.audio.AudioManager
+import se.kjellstrand.fieldshootingtimer.ui.Command
 import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
@@ -56,11 +56,12 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.roundToInt
 
-const val TEN_SECONDS_LEFT_DURATION = 7f
-const val READY_DURATION = 3f
-const val CEASE_FIRE_DURATION = 3f
-const val UNLOAD_WEAPON_DURATION = 4f
-const val VISITATION_DURATION = 2f
+//
+//const val TEN_SECONDS_LEFT_DURATION = 7f
+//const val READY_DURATION = 3f
+//const val CEASE_FIRE_DURATION = 3f
+//const val UNLOAD_WEAPON_DURATION = 4f
+//const val VISITATION_DURATION = 2f
 
 class MainScreen : ComponentActivity() {
 
@@ -90,14 +91,12 @@ fun MainScreen(
 
     val playedAudioIndices = remember(timerUiState.timerRunningState) { mutableSetOf<Int>() }
     val segmentDurations = remember(timerUiState.shootingDuration) {
-        listOf(
-            TEN_SECONDS_LEFT_DURATION,
-            READY_DURATION,
-            timerUiState.shootingDuration.toInt().toFloat(),
-            CEASE_FIRE_DURATION,
-            UNLOAD_WEAPON_DURATION,
-            VISITATION_DURATION
-        )
+        Command.entries.filter { it.duration >= 0 }.map {
+            when (it) {
+                Command.Fire -> timerUiState.shootingDuration
+                else -> it.duration.toFloat()
+            }
+        }
     }
     val highlightedIndex = calculateHighlightedIndex(timerUiState.currentTime, segmentDurations)
 
@@ -108,32 +107,32 @@ fun MainScreen(
         val cues = mutableListOf<AudioCue>()
         var time = 0f
 
-        cues.add(AudioCue(time, AudioCueType.TenSecondsLeft))
-        time += TEN_SECONDS_LEFT_DURATION
+        cues.add(AudioCue(time, Command.TenSecondsLeft))
+        time += Command.TenSecondsLeft.duration
 
-        cues.add(AudioCue(time, AudioCueType.Ready))
-        time += READY_DURATION
+        cues.add(AudioCue(time, Command.Ready))
+        time += Command.Ready.duration
 
-        cues.add(AudioCue(time, AudioCueType.Fire))
+        cues.add(AudioCue(time, Command.Fire))
         time += timerUiState.shootingDuration.toInt().toFloat()
 
-        cues.add(AudioCue(time, AudioCueType.CeaseFire))
-        time += CEASE_FIRE_DURATION
+        cues.add(AudioCue(time, Command.CeaseFire))
+        time += Command.CeaseFire.duration
 
-        cues.add(AudioCue(time, AudioCueType.UnloadWeapon))
-        time += UNLOAD_WEAPON_DURATION
+        cues.add(AudioCue(time, Command.UnloadWeapon))
+        time += Command.UnloadWeapon.duration
 
-        cues.add(AudioCue(time, AudioCueType.Visitation))
+        cues.add(AudioCue(time, Command.Visitation))
         cues
     }
 
     val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
 
-    val rangeOffset = TEN_SECONDS_LEFT_DURATION + READY_DURATION
+    val rangeOffset = Command.TenSecondsLeft.duration + Command.Ready.duration
     val range = remember(timerUiState.shootingDuration) {
         val range = IntRange(
             (rangeOffset + 1).toInt(),
-            (timerUiState.shootingDuration + rangeOffset + CEASE_FIRE_DURATION - 1).toInt()
+            (timerUiState.shootingDuration + rangeOffset + Command.CeaseFire.duration - 1).toInt()
         )
         range
     }
@@ -296,17 +295,7 @@ fun Settings(
 fun CommandList(
     highlightedIndex: Int // Index of the highlighted command
 ) {
-    val commands = listOf(
-        stringResource(id = R.string.command_load),
-        stringResource(id = R.string.command_all_ready),
-        stringResource(id = R.string.command_10_seconds),
-        stringResource(id = R.string.command_ready),
-        stringResource(id = R.string.command_fire),
-        stringResource(id = R.string.command_cease_fire),
-        stringResource(id = R.string.command_unload_weapon),
-        stringResource(id = R.string.command_inspection),
-        stringResource(id = R.string.command_mark),
-    )
+    val commands = Command.entries
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -314,7 +303,7 @@ fun CommandList(
     ) {
         items(commands.size) { index ->
             Text(
-                text = commands[index],
+                text = stringResource(commands[index].stringResId),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
@@ -365,14 +354,7 @@ fun PortraitUIPreview() {
     tvm.setCurrentTime(0f)
     tvm.setTimerState(TimerState.NotStarted)
 
-    val segmentDurations = listOf(
-        TEN_SECONDS_LEFT_DURATION,
-        READY_DURATION,
-        5f,
-        CEASE_FIRE_DURATION,
-        UNLOAD_WEAPON_DURATION,
-        VISITATION_DURATION
-    )
+    val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     PortraitUI(tvm, segmentDurations, 3, IntRange(10, 20), mutableSetOf(), 300.dp)
 }
 
@@ -390,13 +372,6 @@ fun LandscapeUIPreview() {
     tvm.setCurrentTime(0f)
     tvm.setTimerState(TimerState.NotStarted)
 
-    val segmentDurations = listOf(
-        TEN_SECONDS_LEFT_DURATION,
-        READY_DURATION,
-        12f,
-        CEASE_FIRE_DURATION,
-        UNLOAD_WEAPON_DURATION,
-        VISITATION_DURATION
-    )
+    val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     LandscapeUI(tvm, segmentDurations, 4, IntRange(10, 20), mutableSetOf(), 280.dp)
 }
