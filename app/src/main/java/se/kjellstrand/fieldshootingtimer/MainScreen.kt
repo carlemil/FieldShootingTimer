@@ -21,8 +21,10 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -32,8 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -55,8 +59,7 @@ import kotlin.math.roundToInt
 const val TEN_SECONDS_LEFT_DURATION = 7f
 const val READY_DURATION = 3f
 const val CEASE_FIRE_DURATION = 3f
-const val SILENCE_DURATION = 2f
-const val UNLOAD_WEAPON_DURATION = 3f
+const val UNLOAD_WEAPON_DURATION = 4f
 const val VISITATION_DURATION = 2f
 
 class MainScreen : ComponentActivity() {
@@ -92,11 +95,11 @@ fun MainScreen(
             READY_DURATION,
             timerUiState.shootingDuration.toInt().toFloat(),
             CEASE_FIRE_DURATION,
-            SILENCE_DURATION,
             UNLOAD_WEAPON_DURATION,
             VISITATION_DURATION
         )
     }
+    val highlightedIndex = calculateHighlightedIndex(timerUiState.currentTime, segmentDurations)
 
     val context = LocalContext.current
 
@@ -115,7 +118,7 @@ fun MainScreen(
         time += timerUiState.shootingDuration.toInt().toFloat()
 
         cues.add(AudioCue(time, AudioCueType.CeaseFire))
-        time += CEASE_FIRE_DURATION + SILENCE_DURATION
+        time += CEASE_FIRE_DURATION
 
         cues.add(AudioCue(time, AudioCueType.UnloadWeapon))
         time += UNLOAD_WEAPON_DURATION
@@ -172,6 +175,7 @@ fun MainScreen(
             PortraitUI(
                 timerViewModel,
                 segmentDurations,
+                highlightedIndex,
                 range,
                 playedAudioIndices,
                 300.dp
@@ -182,6 +186,7 @@ fun MainScreen(
             LandscapeUI(
                 timerViewModel,
                 segmentDurations,
+                highlightedIndex,
                 range,
                 playedAudioIndices,
                 280.dp
@@ -194,6 +199,7 @@ fun MainScreen(
 fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
+    highlightedIndex: Int,
     range: IntRange,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
@@ -228,7 +234,7 @@ fun LandscapeUI(
                 .padding(8.dp)
                 .navigationBarsPadding()
         ) {
-            Settings(timerViewModel, range, playedAudioIndices)
+            Settings(timerViewModel, range, playedAudioIndices, highlightedIndex)
         }
     }
 }
@@ -237,6 +243,7 @@ fun LandscapeUI(
 fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
+    highlightedIndex: Int,
     range: IntRange,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
@@ -258,12 +265,11 @@ fun PortraitUI(
             ShootTimer(timerUiState, segmentDurations, timerSize)
             PlayButton(timerViewModel, timerSize)
         }
-
         Spacer(modifier = Modifier.padding(24.dp))
-
-        Settings(timerViewModel, range, playedAudioIndices)
-
+        Settings(timerViewModel, range, playedAudioIndices, highlightedIndex)
         Spacer(modifier = Modifier.padding(8.dp))
+        CommandList(highlightedIndex)
+
     }
 }
 
@@ -271,20 +277,66 @@ fun PortraitUI(
 fun Settings(
     timerViewModel: TimerViewModel,
     range: IntRange,
-    playedAudioIndices: MutableSet<Int>
+    playedAudioIndices: MutableSet<Int>,
+    highlightedIndex: Int
 ) {
     ShowSegmentTimes(timerViewModel)
-
     Spacer(modifier = Modifier.padding(8.dp))
-
     ShootTimeSlider(
         timerViewModel,
         playedAudioIndices
     )
-
     Spacer(modifier = Modifier.padding(8.dp))
-
     TicksSlider(timerViewModel, range)
+    Spacer(modifier = Modifier.padding(8.dp))
+    CommandList(highlightedIndex)
+}
+
+@Composable
+fun CommandList(
+    highlightedIndex: Int // Index of the highlighted command
+) {
+    val commands = listOf(
+        stringResource(id = R.string.command_load),
+        stringResource(id = R.string.command_all_ready),
+        stringResource(id = R.string.command_10_seconds),
+        stringResource(id = R.string.command_ready),
+        stringResource(id = R.string.command_fire),
+        stringResource(id = R.string.command_cease_fire),
+        stringResource(id = R.string.command_unload_weapon),
+        stringResource(id = R.string.command_inspection),
+        stringResource(id = R.string.command_mark),
+    )
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        items(commands.size) { index ->
+            Text(
+                text = commands[index],
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(
+                        if (index == highlightedIndex) Color.Yellow else Color.Transparent
+                    ),
+                color = if (index == highlightedIndex) Color.Black else Color.Gray,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+fun calculateHighlightedIndex(currentTime: Float, highlightDurations: List<Float>): Int {
+    var accumulatedTime = 0f
+    highlightDurations.forEachIndexed { index, duration ->
+        accumulatedTime += duration
+        if (currentTime < accumulatedTime) {
+            return index + 2 // +2 due to the initial commands not being part of the timer duration
+        }
+    }
+    return 7 // Default to the last command if time exceeds all durations
 }
 
 fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
@@ -318,11 +370,10 @@ fun PortraitUIPreview() {
         READY_DURATION,
         5f,
         CEASE_FIRE_DURATION,
-        SILENCE_DURATION,
         UNLOAD_WEAPON_DURATION,
         VISITATION_DURATION
     )
-    PortraitUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 300.dp)
+    PortraitUI(tvm, segmentDurations, 3, IntRange(10, 20), mutableSetOf(), 300.dp)
 }
 
 @Preview(
@@ -344,9 +395,8 @@ fun LandscapeUIPreview() {
         READY_DURATION,
         12f,
         CEASE_FIRE_DURATION,
-        SILENCE_DURATION,
         UNLOAD_WEAPON_DURATION,
         VISITATION_DURATION
     )
-    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 280.dp)
+    LandscapeUI(tvm, segmentDurations, 4, IntRange(10, 20), mutableSetOf(), 280.dp)
 }
