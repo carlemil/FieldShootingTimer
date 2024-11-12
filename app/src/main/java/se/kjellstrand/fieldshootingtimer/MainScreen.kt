@@ -56,13 +56,6 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.roundToInt
 
-//
-//const val TEN_SECONDS_LEFT_DURATION = 7f
-//const val READY_DURATION = 3f
-//const val CEASE_FIRE_DURATION = 3f
-//const val UNLOAD_WEAPON_DURATION = 4f
-//const val VISITATION_DURATION = 2f
-
 class MainScreen : ComponentActivity() {
 
     private val timerViewModel: TimerViewModel by viewModels()
