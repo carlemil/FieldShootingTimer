@@ -20,7 +20,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
 
 @Composable
-fun TicksSlider(
+fun TicksAdjuster(
     timerViewModel: TimerViewModel,
     range: IntRange,
 ) {
@@ -49,7 +49,8 @@ fun TicksSlider(
         )
 
         MultiThumbSlider(
-            timerViewModel, range,
+            timerViewModel = timerViewModel,
+            range = range,
             trackColor = SliderInactiveTrackColor,
             thumbColor = SliderThumbColor,
             modifier = Modifier

@@ -49,7 +49,7 @@ import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
 import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
-import se.kjellstrand.fieldshootingtimer.ui.TicksSlider
+import se.kjellstrand.fieldshootingtimer.ui.TicksAdjuster
 import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
@@ -278,7 +278,7 @@ fun Settings(
         playedAudioIndices
     )
     Spacer(modifier = Modifier.padding(8.dp))
-    TicksSlider(timerViewModel, range)
+    TicksAdjuster(timerViewModel, range)
     Spacer(modifier = Modifier.padding(8.dp))
     CommandList(highlightedIndex)
 }
