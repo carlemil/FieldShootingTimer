@@ -7,8 +7,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -19,26 +19,23 @@ import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
-import kotlin.math.roundToInt
 
 @Composable
 fun ShootTimeSlider(
-    timerViewModel: TimerViewModel,
-    playedAudioIndices: MutableSet<Int>
+    shootingDuration: Float,
+    timerRunningState: TimerState,
+    onValueChange: (Float) -> Unit
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
-    val shootingDuration = timerUiState.shootingDuration
+    val onValueChangeState by rememberUpdatedState(onValueChange)
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
     ) {
         Slider(
             value = shootingDuration,
-            enabled = timerUiState.timerRunningState == TimerState.NotStarted,
-            onValueChange = { newShootingDuration ->
-                timerViewModel.setShootingTime(newShootingDuration.roundToInt().toFloat())
-                playedAudioIndices.clear()
-            },
+            enabled = timerRunningState == TimerState.NotStarted,
+            onValueChange = { value -> onValueChangeState(value) },
             onValueChangeFinished = { },
             colors = SliderDefaults.colors(
                 thumbColor = SliderThumbColor,

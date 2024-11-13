@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.audio.AudioCue
 import se.kjellstrand.fieldshootingtimer.audio.AudioManager
@@ -273,9 +274,21 @@ fun Settings(
 ) {
     ShowSegmentTimes(timerViewModel)
     Spacer(modifier = Modifier.padding(8.dp))
+
+    val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
+        initial = 5f, context = Dispatchers.Main
+    )
+    val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
+        initial = TimerState.NotStarted, context = Dispatchers.Main
+    )
+
     ShootTimeSlider(
-        timerViewModel,
-        playedAudioIndices
+        shootingDuration = shootingDuration,
+        timerRunningState = timerRunningState,
+        onValueChange = { duration ->
+            timerViewModel.setShootingTime(duration.roundToInt().toFloat())
+            playedAudioIndices.clear()
+        }
     )
     Spacer(modifier = Modifier.padding(8.dp))
     TicksAdjuster(timerViewModel, range)

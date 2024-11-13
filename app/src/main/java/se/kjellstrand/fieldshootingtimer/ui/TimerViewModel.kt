@@ -13,10 +13,9 @@ open class TimerViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(TimerUiState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
 
-    // Expose `thumbValues` with distinctUntilChanged to avoid unnecessary updates
-    val thumbValuesFlow = uiState
-        .map { it.thumbValues }
-        .distinctUntilChanged()
+    val thumbValuesFlow = uiState.map { it.thumbValues }.distinctUntilChanged()
+    val shootingDurationFlow = uiState.map { it.shootingDuration }.distinctUntilChanged()
+    val timerRunningStateFlow = uiState.map { it.timerRunningState }.distinctUntilChanged()
 
     init {
         _uiState.value = TimerUiState()
