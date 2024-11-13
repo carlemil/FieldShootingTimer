@@ -124,7 +124,7 @@ fun MainScreen(
     val rangeOffset = Command.TenSecondsLeft.duration + Command.Ready.duration
     val range = remember(timerUiState.shootingDuration) {
         val range = IntRange(
-            (rangeOffset + 1).toInt(),
+            (rangeOffset + 1),
             (timerUiState.shootingDuration + rangeOffset + Command.CeaseFire.duration - 1).toInt()
         )
         range
@@ -261,7 +261,6 @@ fun PortraitUI(
         Settings(timerViewModel, range, playedAudioIndices, highlightedIndex)
         Spacer(modifier = Modifier.padding(8.dp))
         CommandList(highlightedIndex)
-
     }
 }
 

@@ -52,8 +52,6 @@ fun MultiThumbSlider(
             toThumbOffsets(timerUiState, range, sliderWidth)
         }
         Canvas(modifier = Modifier.fillMaxSize()) {
-            println("Draw the slider with values ${timerUiState.thumbValues}")
-
             drawLine(
                 color = trackColor,
                 start = Offset(0f, size.height / 2),
