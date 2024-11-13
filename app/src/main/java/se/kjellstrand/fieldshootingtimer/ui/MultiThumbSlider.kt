@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -34,7 +36,16 @@ fun MultiThumbSlider(
     thumbRadius: Dp = 12.dp,
     modifier: Modifier = Modifier
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
+    val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(initial = listOf())
+
+    val onHorizontalDragSetThumbValues = rememberUpdatedState { updatedValues: List<Float> ->
+        timerViewModel.setThumbValues(updatedValues)
+    }
+
+    val onDragEndSetThumbValues = rememberUpdatedState { updatedValues: List<Float> ->
+        timerViewModel.setThumbValues(updatedValues
+            .toMutableList().map { value -> value.roundToInt().toFloat() })
+    }
 
     val density = LocalDensity.current
     val thumbRadiusPx = with(density) { thumbRadius.toPx() }
@@ -46,10 +57,13 @@ fun MultiThumbSlider(
             .height(thumbRadius * 2)
             .padding(horizontal = 8.dp)
     ) {
-        val sliderWidth = constraints.maxWidth.toFloat()
-
-        val thumbOffsets = remember(timerUiState.thumbValues, range) {
-            toThumbOffsets(timerUiState, range, sliderWidth)
+        val sliderWidth = remember(constraints.maxWidth) {
+            constraints.maxWidth.toFloat()
+        }
+        val thumbOffsets by remember(thumbValues, range, sliderWidth) {
+            derivedStateOf {
+                toThumbOffsets(thumbValues, range, sliderWidth)
+            }
         }
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawLine(
@@ -65,17 +79,17 @@ fun MultiThumbSlider(
                     color = thumbColor,
                     start = Offset(thumbOffset, (size.height / 2) - thumbRadiusPx),
                     end = Offset(thumbOffset, (size.height / 2) + thumbRadiusPx),
-                    strokeWidth = trackHeightPx/2f,
+                    strokeWidth = trackHeightPx / 2f,
                     cap = StrokeCap.Round
                 )
             }
         }
 
-        timerUiState.thumbValues.forEachIndexed { index, _ ->
+        thumbValues.forEachIndexed { index, _ ->
             Box(modifier = Modifier
                 .offset(x = with(density) {
                     val currentThumbOffset =
-                        ((timerUiState.thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
+                        ((thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
                     currentThumbOffset.toDp()
                 } - thumbRadius)
                 .size(thumbRadius * 2)
@@ -83,26 +97,20 @@ fun MultiThumbSlider(
                     detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
                         change.consume()
                         val currentThumbOffset =
-                            ((timerUiState.thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
+                            ((thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
                         val newOffset = (currentThumbOffset + change.position.x).coerceIn(
                             0f, sliderWidth
                         )
                         val newValue =
                             (newOffset / sliderWidth) * (range.last - range.first) + range.first
 
-                        val updatedValues = timerUiState.thumbValues
+                        val updatedValues = thumbValues
                             .toMutableList()
                             .apply { this[index] = newValue }
 
-                        timerViewModel.setThumbValues(updatedValues)
+                        onHorizontalDragSetThumbValues.value(updatedValues)
                     }, onDragEnd = {
-                        timerViewModel.setThumbValues(timerUiState.thumbValues
-                            .toMutableList()
-                            .map { value ->
-                                value
-                                    .roundToInt()
-                                    .toFloat()
-                            })
+                        onDragEndSetThumbValues.value(thumbValues)
                     })
                 })
         }
@@ -110,7 +118,7 @@ fun MultiThumbSlider(
 }
 
 private fun toThumbOffsets(
-    timerUiState: TimerUiState, range: IntRange, sliderWidth: Float
-) = timerUiState.thumbValues.map { value ->
+    thumbValues: List<Float>, range: IntRange, sliderWidth: Float
+) = thumbValues.map { value ->
     ((value - range.first) / (range.last - range.first)) * sliderWidth
 }

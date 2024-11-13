@@ -4,12 +4,19 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 
 open class TimerViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
+
+    // Expose `thumbValues` with distinctUntilChanged to avoid unnecessary updates
+    val thumbValuesFlow = uiState
+        .map { it.thumbValues }
+        .distinctUntilChanged()
 
     init {
         _uiState.value = TimerUiState()
@@ -39,7 +46,10 @@ open class TimerViewModel : ViewModel() {
         }
     }
 
-    fun setThumbValues(updatedValues: List<Float>) {
-        _uiState.value = _uiState.value.copy(thumbValues = updatedValues.toSet().toList().sorted())
+    fun setThumbValues(thumbValues: List<Float>) {
+        println("setThumbValues: $thumbValues")
+        _uiState.value = _uiState.value.copy(
+            thumbValues = thumbValues
+        )
     }
 }
