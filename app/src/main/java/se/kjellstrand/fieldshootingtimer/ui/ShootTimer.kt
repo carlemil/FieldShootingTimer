@@ -14,10 +14,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
-import se.kjellstrand.fieldshootingtimer.ui.theme.LightGrayColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.MutedYellowColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.RedColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
 @Composable
@@ -38,15 +34,7 @@ fun ShootTimer(
     Box(
         contentAlignment = Alignment.Center
     ) {
-        val segmentColors = listOf(
-            LightGrayColor,
-            LightGrayColor,
-            LightGreenColor,
-            MutedYellowColor,
-            RedColor,
-            LightGrayColor,
-            LightGrayColor
-        )
+        val segmentColors = Command.entries.filter { it.duration >= 0 }.map { it.color }
         val gapAngleDegrees = 30f
         val borderWidth = 2.dp
 
