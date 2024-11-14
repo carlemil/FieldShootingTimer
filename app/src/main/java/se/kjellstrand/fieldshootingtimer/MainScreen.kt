@@ -21,10 +21,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -34,10 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -46,6 +42,7 @@ import kotlinx.coroutines.isActive
 import se.kjellstrand.fieldshootingtimer.audio.AudioCue
 import se.kjellstrand.fieldshootingtimer.audio.AudioManager
 import se.kjellstrand.fieldshootingtimer.ui.Command
+import se.kjellstrand.fieldshootingtimer.ui.CommandList
 import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
@@ -53,7 +50,7 @@ import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
 import se.kjellstrand.fieldshootingtimer.ui.TicksAdjuster
 import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
-import se.kjellstrand.fieldshootingtimer.ui.theme.BackgroundColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.roundToInt
 
@@ -92,7 +89,6 @@ fun MainScreen(
             }
         }
     }
-    val highlightedIndex = calculateHighlightedIndex(timerUiState.currentTime, segmentDurations)
 
     val context = LocalContext.current
 
@@ -168,7 +164,6 @@ fun MainScreen(
             PortraitUI(
                 timerViewModel,
                 segmentDurations,
-                highlightedIndex,
                 range,
                 playedAudioIndices,
                 300.dp
@@ -179,7 +174,6 @@ fun MainScreen(
             LandscapeUI(
                 timerViewModel,
                 segmentDurations,
-                highlightedIndex,
                 range,
                 playedAudioIndices,
                 280.dp
@@ -192,7 +186,6 @@ fun MainScreen(
 fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
-    highlightedIndex: Int,
     range: IntRange,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
@@ -201,7 +194,7 @@ fun LandscapeUI(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundColor)
+            .background(GrayColor)
             .systemBarsPadding()
     ) {
         Column(
@@ -227,7 +220,7 @@ fun LandscapeUI(
                 .padding(8.dp)
                 .navigationBarsPadding()
         ) {
-            Settings(timerViewModel, range, playedAudioIndices, highlightedIndex)
+            Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
         }
     }
 }
@@ -236,7 +229,6 @@ fun LandscapeUI(
 fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
-    highlightedIndex: Int,
     range: IntRange,
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
@@ -247,8 +239,8 @@ fun PortraitUI(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundColor)
-            .padding(WindowInsets.statusBars.asPaddingValues())
+            .background(GrayColor)
+            .systemBarsPadding()
     ) {
         Spacer(modifier = Modifier.padding(16.dp))
         Box(
@@ -259,9 +251,7 @@ fun PortraitUI(
             PlayButton(timerViewModel, timerSize)
         }
         Spacer(modifier = Modifier.padding(24.dp))
-        Settings(timerViewModel, range, playedAudioIndices, highlightedIndex)
-        Spacer(modifier = Modifier.padding(8.dp))
-        CommandList(highlightedIndex)
+        Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
     }
 }
 
@@ -270,8 +260,11 @@ fun Settings(
     timerViewModel: TimerViewModel,
     range: IntRange,
     playedAudioIndices: MutableSet<Int>,
-    highlightedIndex: Int
+    segmentDurations: List<Float>
 ) {
+    val timerUiState by timerViewModel.uiState.collectAsState()
+    val highlightedIndex = calculateHighlightedIndex(timerUiState.currentTime, segmentDurations)
+
     ShowSegmentTimes(timerViewModel)
     Spacer(modifier = Modifier.padding(8.dp))
 
@@ -294,32 +287,6 @@ fun Settings(
     TicksAdjuster(timerViewModel, range)
     Spacer(modifier = Modifier.padding(8.dp))
     CommandList(highlightedIndex)
-}
-
-@Composable
-fun CommandList(
-    highlightedIndex: Int // Index of the highlighted command
-) {
-    val commands = Command.entries
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-    ) {
-        items(commands.size) { index ->
-            Text(
-                text = stringResource(commands[index].stringResId),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .background(
-                        if (index == highlightedIndex) Color.Yellow else Color.Transparent
-                    ),
-                color = if (index == highlightedIndex) Color.Black else Color.Gray,
-                style = MaterialTheme.typography.bodyLarge
-            )
-        }
-    }
 }
 
 fun calculateHighlightedIndex(currentTime: Float, highlightDurations: List<Float>): Int {
@@ -360,7 +327,7 @@ fun PortraitUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    PortraitUI(tvm, segmentDurations, 3, IntRange(10, 20), mutableSetOf(), 300.dp)
+    PortraitUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 300.dp)
 }
 
 @Preview(
@@ -378,5 +345,5 @@ fun LandscapeUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    LandscapeUI(tvm, segmentDurations, 4, IntRange(10, 20), mutableSetOf(), 280.dp)
+    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 280.dp)
 }

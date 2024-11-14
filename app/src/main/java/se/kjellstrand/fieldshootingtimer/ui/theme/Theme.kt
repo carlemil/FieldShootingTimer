@@ -11,15 +11,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrepareSegmentColor,
-    secondary = ShootSegmentColor,
-    tertiary = CeaseFireSegmentColor
+    primary = LightGrayColor,
+    secondary = LightGreenColor,
+    tertiary = MutedYellowColor
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrepareSegmentColor,
-    secondary = ShootSegmentColor,
-    tertiary = CeaseFireSegmentColor
+    primary = LightGrayColor,
+    secondary = LightGreenColor,
+    tertiary = MutedYellowColor
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),

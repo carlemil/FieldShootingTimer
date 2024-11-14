@@ -14,8 +14,8 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.R
-import se.kjellstrand.fieldshootingtimer.ui.theme.ShootSegmentColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.TimerBordersColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 
 @Composable
 fun TimerStateButton(
@@ -28,9 +28,9 @@ fun TimerStateButton(
         modifier = Modifier.size(buttonSize),
         shape = CircleShape,
         contentPadding = PaddingValues(0.dp),
-        border = BorderStroke(2.dp, TimerBordersColor),
+        border = BorderStroke(2.dp, BlackColor),
         colors = ButtonDefaults.buttonColors(
-            containerColor = ShootSegmentColor
+            containerColor = LightGreenColor
         )
     ) {
         when(timerUiState.timerRunningState) {

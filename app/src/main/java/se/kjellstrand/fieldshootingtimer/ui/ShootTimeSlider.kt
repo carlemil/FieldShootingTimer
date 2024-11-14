@@ -16,9 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.kjellstrand.fieldshootingtimer.R
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderActiveTrackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 
 @Composable
 fun ShootTimeSlider(
@@ -38,9 +38,9 @@ fun ShootTimeSlider(
             onValueChange = { value -> onValueChangeState(value) },
             onValueChangeFinished = { },
             colors = SliderDefaults.colors(
-                thumbColor = SliderThumbColor,
-                activeTrackColor = SliderActiveTrackColor,
-                inactiveTrackColor = SliderInactiveTrackColor
+                thumbColor = PaleGreenColor,
+                activeTrackColor = LightGreenColor,
+                inactiveTrackColor = TransparentGreenColor
             ),
             valueRange = 1f..27f,
             modifier = Modifier

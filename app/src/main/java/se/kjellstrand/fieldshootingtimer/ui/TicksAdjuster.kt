@@ -16,8 +16,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import se.kjellstrand.fieldshootingtimer.findNextFreeThumbSpot
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderInactiveTrackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.SliderThumbColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 
 @Composable
 fun TicksAdjuster(
@@ -51,8 +51,8 @@ fun TicksAdjuster(
         MultiThumbSlider(
             timerViewModel = timerViewModel,
             range = range,
-            trackColor = SliderInactiveTrackColor,
-            thumbColor = SliderThumbColor,
+            trackColor = TransparentGreenColor,
+            thumbColor = PaleGreenColor,
             modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically)
