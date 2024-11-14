@@ -267,17 +267,16 @@ fun Settings(
     playedAudioIndices: MutableSet<Int>,
     segmentDurations: List<Float>
 ) {
-   // val timerUiState by timerViewModel.uiState.collectAsState()
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
-    val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
     val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerState.NotStarted, context = Dispatchers.Main
     )
+    val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
 
     ShowSegmentTimes(timerViewModel)
     Spacer(modifier = Modifier.padding(8.dp))
