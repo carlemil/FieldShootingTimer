@@ -12,14 +12,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -78,13 +75,24 @@ class MainScreen : ComponentActivity() {
 fun MainScreen(
     timerViewModel: TimerViewModel
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
-
-    val playedAudioIndices = remember(timerUiState.timerRunningState) { mutableSetOf<Int>() }
-    val segmentDurations = remember(timerUiState.shootingDuration) {
+    //val timerUiState by timerViewModel.uiState.collectAsState()
+    val currentTime by timerViewModel.currentTimeFlow.collectAsState(
+        initial = 0f, context = Dispatchers.Main
+    )
+    val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
+        initial = 0f, context = Dispatchers.Main
+    )
+    val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
+        initial = TimerState.NotStarted, context = Dispatchers.Main
+    )
+    val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
+        initial = listOf(), context = Dispatchers.Main
+    )
+    val playedAudioIndices = remember(timerRunningState) { mutableSetOf<Int>() }
+    val segmentDurations = remember(shootingDuration) {
         Command.entries.filter { it.duration >= 0 }.map {
             when (it) {
-                Command.Fire -> timerUiState.shootingDuration
+                Command.Fire -> shootingDuration
                 else -> it.duration.toFloat()
             }
         }
@@ -93,7 +101,7 @@ fun MainScreen(
     val context = LocalContext.current
 
     val audioManager = remember { AudioManager(context) }
-    val audioCues = remember(timerUiState.timerRunningState) {
+    val audioCues = remember(timerRunningState) {
         val cues = mutableListOf<AudioCue>()
         var time = 0f
 
@@ -104,7 +112,7 @@ fun MainScreen(
         time += Command.Ready.duration
 
         cues.add(AudioCue(time, Command.Fire))
-        time += timerUiState.shootingDuration.toInt().toFloat()
+        time += shootingDuration.toInt().toFloat()
 
         cues.add(AudioCue(time, Command.CeaseFire))
         time += Command.CeaseFire.duration
@@ -119,27 +127,27 @@ fun MainScreen(
     val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
 
     val rangeOffset = Command.TenSecondsLeft.duration + Command.Ready.duration
-    val range = remember(timerUiState.shootingDuration) {
+    val range = remember(shootingDuration) {
         val range = IntRange(
             (rangeOffset + 1),
-            (timerUiState.shootingDuration + rangeOffset + Command.CeaseFire.duration - 1).toInt()
+            (shootingDuration + rangeOffset + Command.CeaseFire.duration - 1).toInt()
         )
         range
     }
 
-    LaunchedEffect(timerUiState.timerRunningState) {
-        if (timerUiState.timerRunningState == TimerState.Running) {
-            audioManager.playAudioCue(audioCues, timerUiState, playedAudioIndices)
+    LaunchedEffect(timerRunningState) {
+        if (timerRunningState == TimerState.Running) {
+            audioManager.playAudioCue(audioCues, currentTime, playedAudioIndices)
 
             val startTimeMillis = withFrameMillis { it }
             var lastFrameTimeMillis = startTimeMillis
-            while (timerUiState.currentTime < totalDuration && isActive) {
+            while (currentTime < totalDuration && isActive) {
                 val frameTimeMillis = withFrameMillis { it }
                 val deltaTime = (frameTimeMillis - lastFrameTimeMillis) / 1000f
-                timerViewModel.setCurrentTime(timerUiState.currentTime + deltaTime)
-                audioManager.playAudioCue(audioCues, timerUiState, playedAudioIndices)
+                timerViewModel.setCurrentTime(currentTime + deltaTime)
+                audioManager.playAudioCue(audioCues, currentTime, playedAudioIndices)
 
-                if (timerUiState.currentTime >= totalDuration) {
+                if (currentTime >= totalDuration) {
                     timerViewModel.setCurrentTime(totalDuration)
                     timerViewModel.setTimerState(TimerState.Finished)
                     break
@@ -149,8 +157,8 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(timerUiState.shootingDuration) {
-        timerViewModel.setThumbValues(timerUiState.thumbValues.filter { it.roundToInt() in range })
+    LaunchedEffect(shootingDuration) {
+        timerViewModel.setThumbValues(thumbValues.filter { it.roundToInt() in range })
     }
 
     DisposableEffect(Unit) {
@@ -190,7 +198,6 @@ fun LandscapeUI(
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -202,13 +209,13 @@ fun LandscapeUI(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(start = 16.dp)
+                .padding(start = 8.dp)
                 .navigationBarsPadding()
         ) {
             Box(
                 contentAlignment = Alignment.Center
             ) {
-                ShootTimer(timerUiState, segmentDurations, timerSize)
+                ShootTimer(timerViewModel, segmentDurations, timerSize)
                 PlayButton(timerViewModel, timerSize)
             }
 
@@ -217,7 +224,7 @@ fun LandscapeUI(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(8.dp)
+                .padding(4.dp)
                 .navigationBarsPadding()
         ) {
             Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
@@ -233,8 +240,6 @@ fun PortraitUI(
     playedAudioIndices: MutableSet<Int>,
     timerSize: Dp
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -242,15 +247,15 @@ fun PortraitUI(
             .background(GrayColor)
             .systemBarsPadding()
     ) {
-        Spacer(modifier = Modifier.padding(16.dp))
+        Spacer(modifier = Modifier.padding(8.dp))
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxWidth()
         ) {
-            ShootTimer(timerUiState, segmentDurations, timerSize)
+            ShootTimer(timerViewModel, segmentDurations, timerSize)
             PlayButton(timerViewModel, timerSize)
         }
-        Spacer(modifier = Modifier.padding(24.dp))
+        Spacer(modifier = Modifier.padding(16.dp))
         Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
     }
 }
@@ -262,18 +267,21 @@ fun Settings(
     playedAudioIndices: MutableSet<Int>,
     segmentDurations: List<Float>
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
-    val highlightedIndex = calculateHighlightedIndex(timerUiState.currentTime, segmentDurations)
-
-    ShowSegmentTimes(timerViewModel)
-    Spacer(modifier = Modifier.padding(8.dp))
-
+   // val timerUiState by timerViewModel.uiState.collectAsState()
+    val currentTime by timerViewModel.currentTimeFlow.collectAsState(
+        initial = 0f, context = Dispatchers.Main
+    )
+    val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
     val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
-        initial = 5f, context = Dispatchers.Main
+        initial = 0f, context = Dispatchers.Main
     )
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerState.NotStarted, context = Dispatchers.Main
     )
+
+    ShowSegmentTimes(timerViewModel)
+    Spacer(modifier = Modifier.padding(8.dp))
+
 
     ShootTimeSlider(
         shootingDuration = shootingDuration,

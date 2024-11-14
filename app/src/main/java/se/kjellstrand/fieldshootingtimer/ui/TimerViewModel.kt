@@ -11,11 +11,13 @@ import kotlinx.coroutines.flow.update
 open class TimerViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
-    val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
+    private val uiStateFlow: StateFlow<TimerUiState> = _uiState.asStateFlow()
 
-    val thumbValuesFlow = uiState.map { it.thumbValues }.distinctUntilChanged()
-    val shootingDurationFlow = uiState.map { it.shootingDuration }.distinctUntilChanged()
-    val timerRunningStateFlow = uiState.map { it.timerRunningState }.distinctUntilChanged()
+    val shootingDurationFlow = uiStateFlow.map { it.shootingDuration }.distinctUntilChanged()
+    val badgesVisibleFlow = uiStateFlow.map { it.badgesVisible }.distinctUntilChanged()
+    val currentTimeFlow = uiStateFlow.map { it.currentTime }.distinctUntilChanged()
+    val timerRunningStateFlow = uiStateFlow.map { it.timerRunningState }.distinctUntilChanged()
+    val thumbValuesFlow = uiStateFlow.map { it.thumbValues }.distinctUntilChanged()
 
     init {
         _uiState.value = TimerUiState()

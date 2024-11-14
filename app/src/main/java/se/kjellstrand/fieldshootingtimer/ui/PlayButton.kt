@@ -6,21 +6,24 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.Dp
+import kotlinx.coroutines.Dispatchers
 
 @Composable
 fun PlayButton(
     timerViewModel: TimerViewModel,
     timerSize: Dp
 ) {
-    val timerUiState by timerViewModel.uiState.collectAsState()
+    val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
+        initial = TimerState.NotStarted, context = Dispatchers.Main
+    )
     Box(
         contentAlignment = Alignment.Center
     ) {
         TimerStateButton(
-            timerUiState = timerUiState,
+            timerViewModel = timerViewModel,
             buttonSize = timerSize / 3f,
             onPlayStopResetClicked = {
-                when (timerUiState.timerRunningState) {
+                when (timerRunningState) {
                     TimerState.NotStarted -> {
                         timerViewModel.setTimerState(TimerState.Running)
                     }

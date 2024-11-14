@@ -4,7 +4,6 @@ import android.content.Context
 import android.media.SoundPool
 import android.util.Log
 import se.kjellstrand.fieldshootingtimer.ui.Command
-import se.kjellstrand.fieldshootingtimer.ui.TimerUiState
 
 class AudioManager(context: Context) {
     private val soundPool: SoundPool = SoundPool.Builder()
@@ -26,11 +25,11 @@ class AudioManager(context: Context) {
 
     fun playAudioCue(
         audioCues: List<AudioCue>,
-        timerUiState: TimerUiState,
+        currentTime: Float,
         playedAudioIndices: MutableSet<Int>
     ) {
         for ((index, audioCue) in audioCues.withIndex()) {
-            if (timerUiState.currentTime >= audioCue.time &&
+            if (currentTime >= audioCue.time &&
                 !playedAudioIndices.contains(index)
             ) {
                 playSound(audioCue.command)

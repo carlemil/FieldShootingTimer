@@ -27,7 +27,7 @@ fun TicksAdjuster(
     val setThumbValuesMinusOne = rememberUpdatedState { thumbValues: List<Float> ->
         timerViewModel.setThumbValues(thumbValues.dropLast(1))
     }
-    val thumbValues by timerViewModel.uiState.map { it.thumbValues }.collectAsState(
+    val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
     )
 

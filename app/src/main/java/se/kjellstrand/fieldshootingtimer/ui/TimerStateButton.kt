@@ -8,21 +8,27 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 
 @Composable
 fun TimerStateButton(
-    timerUiState: TimerUiState,
+    timerViewModel: TimerViewModel,
     onPlayStopResetClicked: () -> Unit,
     buttonSize: Dp = 56.dp
 ) {
+    val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
+        initial = TimerState.NotStarted, context = Dispatchers.Main
+    )
     OutlinedButton(
         onClick = { onPlayStopResetClicked() },
         modifier = Modifier.size(buttonSize),
@@ -33,7 +39,7 @@ fun TimerStateButton(
             containerColor = LightGreenColor
         )
     ) {
-        when(timerUiState.timerRunningState) {
+        when(timerRunningState) {
             TimerState.NotStarted -> {
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.play_arrow),

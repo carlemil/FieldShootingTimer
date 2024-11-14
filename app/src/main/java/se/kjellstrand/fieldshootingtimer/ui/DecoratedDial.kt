@@ -46,7 +46,7 @@ fun DecoratedDial(
         val cumulativeSegments = segments.scan(0.0f) { acc, next -> acc + next }.drop(1)
         val everySecondTicks = (1..ticksMax)
             .map { it.toFloat() }
-            .filter { it !in cumulativeSegments }
+            .filter { it !in cumulativeSegments } // Don't show ticks for segments, looks bad in ui.
 
         Dial(
             segmentColors = segmentColors,
