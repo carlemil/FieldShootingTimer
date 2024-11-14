@@ -43,7 +43,10 @@ fun DecoratedDial(
         val scalingFactor = availableAngle / sumOfSegments
         val sweepAngles = segments.map { it * scalingFactor }
         val ticksMax = sumOfSegments.toInt()
-        val everySecondTicks = (1..ticksMax).map { it.toFloat() } // Generate ticks for every second
+        val cumulativeSegments = segments.scan(0.0f) { acc, next -> acc + next }.drop(1)
+        val everySecondTicks = (1..ticksMax)
+            .map { it.toFloat() }
+            .filter { it !in cumulativeSegments }
 
         Dial(
             segmentColors = segmentColors,
