@@ -24,6 +24,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.roundToInt
 
 @Composable
@@ -32,7 +33,7 @@ fun MultiThumbSlider(
     range: IntRange,
     trackColor: Color = Color.Gray,
     thumbColor: Color = Color.Blue,
-    trackHeight: Dp = 8.dp,
+    trackHeight: Dp = Paddings.Small,
     thumbRadius: Dp = 12.dp,
     modifier: Modifier = Modifier
 ) {
@@ -54,7 +55,7 @@ fun MultiThumbSlider(
         modifier = modifier
             .fillMaxWidth()
             .height(thumbRadius * 2)
-            .padding(horizontal = 8.dp)
+            .padding(horizontal = Paddings.Small)
     ) {
         val sliderWidth by remember(constraints.maxWidth) {
             derivedStateOf { constraints.maxWidth }

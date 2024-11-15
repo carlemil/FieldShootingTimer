@@ -49,6 +49,7 @@ import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.roundToInt
 
 class MainScreen : ComponentActivity() {
@@ -75,7 +76,6 @@ class MainScreen : ComponentActivity() {
 fun MainScreen(
     timerViewModel: TimerViewModel
 ) {
-    //val timerUiState by timerViewModel.uiState.collectAsState()
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
@@ -224,7 +224,7 @@ fun LandscapeUI(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(4.dp)
+                .padding(Paddings.Tiny)
                 .navigationBarsPadding()
         ) {
             Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
@@ -247,7 +247,7 @@ fun PortraitUI(
             .background(GrayColor)
             .systemBarsPadding()
     ) {
-        Spacer(modifier = Modifier.padding(8.dp))
+        Spacer(modifier = Modifier.padding(Paddings.Small))
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxWidth()
@@ -255,7 +255,7 @@ fun PortraitUI(
             ShootTimer(timerViewModel, segmentDurations, timerSize)
             PlayButton(timerViewModel, timerSize)
         }
-        Spacer(modifier = Modifier.padding(16.dp))
+        Spacer(modifier = Modifier.padding(Paddings.Medium))
         Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
     }
 }
@@ -279,9 +279,7 @@ fun Settings(
     val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
 
     ShowSegmentTimes(timerViewModel)
-    Spacer(modifier = Modifier.padding(8.dp))
-
-
+    Spacer(modifier = Modifier.padding(Paddings.Small))
     ShootTimeSlider(
         shootingDuration = shootingDuration,
         timerRunningState = timerRunningState,
@@ -290,13 +288,13 @@ fun Settings(
             playedAudioIndices.clear()
         }
     )
-    Spacer(modifier = Modifier.padding(8.dp))
+    Spacer(modifier = Modifier.padding(Paddings.Small))
     TicksAdjuster(timerViewModel, range)
-    Spacer(modifier = Modifier.padding(8.dp))
+    Spacer(modifier = Modifier.padding(Paddings.Small))
     CommandList(highlightedIndex)
 }
 
-fun calculateHighlightedIndex(currentTime: Float, highlightDurations: List<Float>): Int {
+private fun calculateHighlightedIndex(currentTime: Float, highlightDurations: List<Float>): Int {
     var accumulatedTime = 0f
     highlightDurations.forEachIndexed { index, duration ->
         accumulatedTime += duration
@@ -305,24 +303,6 @@ fun calculateHighlightedIndex(currentTime: Float, highlightDurations: List<Float
         }
     }
     return 7 // Default to the last command if time exceeds all durations
-}
-
-fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
-    val center = (range.first + range.last) / 2
-    val maxDistance = (range.last - range.first) / 2
-
-    for (distance in 0..maxDistance) {
-        val forward = center + distance
-        val backward = center - distance
-
-        if (forward in range && takenSpots.find { it.roundToInt() == forward } == null) {
-            return forward.toFloat()
-        }
-        if (backward in range && takenSpots.find { it.roundToInt() == backward } == null) {
-            return backward.toFloat()
-        }
-    }
-    return center.toFloat()
 }
 
 @Preview(showBackground = true)

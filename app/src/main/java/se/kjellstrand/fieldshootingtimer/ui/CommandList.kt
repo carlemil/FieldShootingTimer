@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
@@ -43,8 +44,8 @@ fun CommandList(
         state = listState,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
-            .border(2.dp, BlackColor)
+            .padding(Paddings.Large)
+            .border(Paddings.Tiny, BlackColor)
             .background(WhiteColor)
     ) {
         items(commands.size) { index ->
@@ -53,7 +54,7 @@ fun CommandList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(if (index == hlIndex) PaleGreenColor else Color.Transparent)
-                    .padding(8.dp),
+                    .padding(Paddings.Small),
                 color = if (index == hlIndex) BlackColor else GrayColor,
                 style = if (index == hlIndex) {
                     MaterialTheme.typography.bodyLarge.copy(

@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 
 @Composable
 fun PlayButton(
@@ -54,7 +55,7 @@ fun PlayButton(
             modifier = Modifier.size(buttonSize),
             shape = CircleShape,
             contentPadding = PaddingValues(0.dp),
-            border = BorderStroke(2.dp, BlackColor),
+            border = BorderStroke(Paddings.Tiny, BlackColor),
             colors = ButtonDefaults.buttonColors(
                 containerColor = LightGreenColor
             )

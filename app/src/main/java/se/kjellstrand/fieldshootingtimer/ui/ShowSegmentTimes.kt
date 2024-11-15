@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.R
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 
 @Composable
 fun ShowSegmentTimes(
@@ -30,7 +31,7 @@ fun ShowSegmentTimes(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, end = 8.dp)
+            .padding(start = Paddings.Tiny, end = Paddings.Small)
     ) {
         Checkbox(
             checked = badgesVisible,
@@ -38,7 +39,7 @@ fun ShowSegmentTimes(
         )
         Text(
             text = stringResource(R.string.show_segment_times),
-            modifier = Modifier.padding(start = 8.dp)
+            modifier = Modifier.padding(start = Paddings.Small)
         )
     }
 }

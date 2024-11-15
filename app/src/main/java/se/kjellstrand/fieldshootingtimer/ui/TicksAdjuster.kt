@@ -11,13 +11,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
-import se.kjellstrand.fieldshootingtimer.findNextFreeThumbSpot
-import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
+import kotlin.math.roundToInt
 
 @Composable
 fun TicksAdjuster(
@@ -31,18 +30,17 @@ fun TicksAdjuster(
         initial = listOf(), context = Dispatchers.Main
     )
 
-    Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+    Row(modifier = Modifier.padding(horizontal = Paddings.Large)) {
         Text(
             text = "+",
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .padding(end = 8.dp)
+                .padding(end = Paddings.Small)
                 .clickable {
                     if (thumbValues.size < (range.last - range.first)) {
                         timerViewModel.setThumbValues(
-                            thumbValues +
-                                    findNextFreeThumbSpot(range, thumbValues)
+                            thumbValues + findNextFreeThumbSpot(range, thumbValues)
                         )
                     }
                 }
@@ -56,7 +54,7 @@ fun TicksAdjuster(
             modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically)
-                .padding(horizontal = 8.dp)
+                .padding(horizontal = Paddings.Small)
         )
 
         Text(
@@ -64,8 +62,26 @@ fun TicksAdjuster(
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .padding(start = 8.dp)
+                .padding(start = Paddings.Small)
                 .clickable { setThumbValuesMinusOne.value(thumbValues) }
         )
     }
+}
+
+private fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
+    val center = (range.first + range.last) / 2
+    val maxDistance = (range.last - range.first) / 2
+
+    for (distance in 0..maxDistance) {
+        val forward = center + distance
+        val backward = center - distance
+
+        if (forward in range && takenSpots.find { it.roundToInt() == forward } == null) {
+            return forward.toFloat()
+        }
+        if (backward in range && takenSpots.find { it.roundToInt() == backward } == null) {
+            return backward.toFloat()
+        }
+    }
+    return center.toFloat()
 }

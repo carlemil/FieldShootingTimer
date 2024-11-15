@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
 @Composable
@@ -69,7 +70,7 @@ fun ShootTimer(
                 borderWidth = borderWidth,
                 handColor = WhiteColor,
                 borderColor = BlackColor,
-                handThickness = 8.dp,
+                handThickness = Paddings.Small,
                 overshootPercent = 0.1f // 10% overshoot
             )
         }

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -26,7 +27,7 @@ fun DialHand(
     borderWidth: Dp = 2.dp,
     handColor: Color = Color.White,
     borderColor: Color = Color.Black,
-    handThickness: Dp = 4.dp,
+    handThickness: Dp = Paddings.Tiny,
     overshootPercent: Float = 0.5f
 ) {
     Canvas(modifier = Modifier.size(size)) {
@@ -91,10 +92,10 @@ fun DialHandPreview() {
             currentTime = 50f,
             totalTime = 100f,
             size = 200.dp,
-            borderWidth = 4.dp,
+            borderWidth = Paddings.Tiny,
             handColor = Color.White,
             borderColor = Color.Black,
-            handThickness = 8.dp,
+            handThickness = Paddings.Small,
             overshootPercent = 0.0f
         )
     }

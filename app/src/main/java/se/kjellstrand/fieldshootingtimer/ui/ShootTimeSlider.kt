@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 
@@ -44,7 +45,7 @@ fun ShootTimeSlider(
             ),
             valueRange = 1f..27f,
             modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp)
+                .padding(start = Paddings.Large, end = Paddings.Large)
                 .weight(1f)
         )
         Text(
@@ -55,7 +56,7 @@ fun ShootTimeSlider(
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
             modifier = Modifier
-                .padding(end = 16.dp)
+                .padding(end = Paddings.Large)
         )
     }
 }
