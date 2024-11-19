@@ -9,15 +9,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
@@ -25,33 +22,16 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 
 @Composable
 fun PlayButton(
-    timerViewModel: TimerViewModel,
+    onClickPlayButton: () -> Unit,
+    timerRunningState: TimerState,
     timerSize: Dp
 ) {
-    val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
-        initial = TimerState.NotStarted, context = Dispatchers.Main
-    )
     Box(
         contentAlignment = Alignment.Center
     ) {
         val buttonSize = timerSize / 3f
         OutlinedButton(
-            onClick = {
-                when (timerRunningState) {
-                    TimerState.NotStarted -> {
-                        timerViewModel.setTimerState(TimerState.Running)
-                    }
-
-                    TimerState.Running -> {
-                        timerViewModel.setTimerState(TimerState.Stopped)
-                    }
-
-                    TimerState.Stopped, TimerState.Finished -> {
-                        timerViewModel.setCurrentTime(0f)
-                        timerViewModel.setTimerState(TimerState.NotStarted)
-                    }
-                }
-            },
+            onClick = onClickPlayButton,
             modifier = Modifier.size(buttonSize),
             shape = CircleShape,
             contentPadding = PaddingValues(0.dp),

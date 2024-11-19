@@ -191,6 +191,23 @@ fun MainScreen(
         }
     }
 
+    val onClickPlayButton: () -> Unit = {
+        when (timerRunningState) {
+            TimerState.NotStarted -> {
+                timerViewModel.setTimerState(TimerState.Running)
+            }
+
+            TimerState.Running -> {
+                timerViewModel.setTimerState(TimerState.Stopped)
+            }
+
+            TimerState.Stopped, TimerState.Finished -> {
+                timerViewModel.setCurrentTime(0f)
+                timerViewModel.setTimerState(TimerState.NotStarted)
+            }
+        }
+    }
+
     when (LocalConfiguration.current.orientation) {
         Configuration.ORIENTATION_PORTRAIT -> {
             PortraitUI(
@@ -198,6 +215,8 @@ fun MainScreen(
                 segmentDurations,
                 range.toIntRange(),
                 clearPlayedAudioIndices,
+                onClickPlayButton,
+                timerRunningState,
                 300.dp
             )
         }
@@ -208,6 +227,8 @@ fun MainScreen(
                 segmentDurations,
                 range.toIntRange(),
                 clearPlayedAudioIndices,
+                onClickPlayButton,
+                timerRunningState,
                 280.dp
             )
         }
@@ -224,6 +245,8 @@ fun LandscapeUI(
     segmentDurations: List<Float>,
     range: IntRange,
     onClearPlayedAudioIndices: () -> Unit,
+    onClickPlayButton: () -> Unit,
+    timerRunningState: TimerState,
     timerSize: Dp
 ) {
     Row(
@@ -244,7 +267,11 @@ fun LandscapeUI(
                 contentAlignment = Alignment.Center
             ) {
                 ShootTimer(timerViewModel, segmentDurations, timerSize)
-                PlayButton(timerViewModel, timerSize)
+                PlayButton(
+                    onClickPlayButton = onClickPlayButton,
+                    timerRunningState = timerRunningState,
+                    timerSize = timerSize
+                )
             }
 
         }
@@ -266,6 +293,8 @@ fun PortraitUI(
     segmentDurations: List<Float>,
     range: IntRange,
     onClearPlayedAudioIndices: () -> Unit,
+    onClickPlayButton: () -> Unit,
+    timerRunningState: TimerState,
     timerSize: Dp
 ) {
     Column(
@@ -281,7 +310,11 @@ fun PortraitUI(
             modifier = Modifier.fillMaxWidth()
         ) {
             ShootTimer(timerViewModel, segmentDurations, timerSize)
-            PlayButton(timerViewModel, timerSize)
+            PlayButton(
+                onClickPlayButton = onClickPlayButton,
+                timerRunningState = timerRunningState,
+                timerSize = timerSize
+            )
         }
         Spacer(modifier = Modifier.padding(Paddings.Medium))
         Settings(timerViewModel, range, onClearPlayedAudioIndices, segmentDurations)
@@ -342,7 +375,7 @@ fun PortraitUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    PortraitUI(tvm, segmentDurations, IntRange(10, 20), {}, 300.dp)
+    PortraitUI(tvm, segmentDurations, IntRange(10, 20), {}, {}, TimerState.NotStarted, 300.dp)
 }
 
 @Preview(
@@ -360,5 +393,5 @@ fun LandscapeUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), { }, 280.dp)
+    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), {}, {}, TimerState.NotStarted, 280.dp)
 }
