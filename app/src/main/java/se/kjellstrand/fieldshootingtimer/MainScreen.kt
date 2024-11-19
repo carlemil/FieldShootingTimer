@@ -25,7 +25,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,8 +51,8 @@ import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
 import se.kjellstrand.fieldshootingtimer.ui.TicksAdjuster
 import se.kjellstrand.fieldshootingtimer.ui.TimerState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
-import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.roundToInt
 
@@ -88,20 +92,30 @@ fun MainScreen(
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
     )
-    val playedAudioIndices = remember(timerRunningState) { mutableSetOf<Int>() }
-    val segmentDurations = remember(shootingDuration) {
-        Command.entries.filter { it.duration >= 0 }.map {
+
+    var playedAudioIndices by rememberSaveable(timerRunningState) { mutableStateOf(setOf<Int>()) }
+    val clearPlayedAudioIndices: () -> Unit = {
+        playedAudioIndices = emptySet()
+    }
+    val onAddPlayedAudioIndex: (Int) -> Unit = { index ->
+        val mutableSet = playedAudioIndices.toMutableSet()
+        mutableSet.add(index)
+        playedAudioIndices = mutableSet.toSet()
+    }
+
+    val segmentDurations by rememberSaveable(shootingDuration) {
+        mutableStateOf(Command.entries.filter { it.duration >= 0 }.map {
             when (it) {
                 Command.Fire -> shootingDuration
                 else -> it.duration.toFloat()
             }
-        }
+        })
     }
 
     val context = LocalContext.current
 
     val audioManager = remember { AudioManager(context) }
-    val audioCues = remember(timerRunningState) {
+    val audioCues by rememberSaveable(timerRunningState) {
         val cues = mutableListOf<AudioCue>()
         var time = 0f
 
@@ -121,23 +135,28 @@ fun MainScreen(
         time += Command.UnloadWeapon.duration
 
         cues.add(AudioCue(time, Command.Visitation))
-        cues
+        mutableStateOf(cues.toList())
     }
 
-    val totalDuration = remember(segmentDurations) { segmentDurations.sum() }
+    val totalDuration by rememberSaveable(segmentDurations) { mutableFloatStateOf(segmentDurations.sum()) }
 
     val rangeOffset = Command.TenSecondsLeft.duration + Command.Ready.duration
-    val range = remember(shootingDuration) {
-        val range = IntRange(
+    val range by rememberSaveable(shootingDuration) {
+        val range = Pair(
             (rangeOffset + 1),
             (shootingDuration + rangeOffset + Command.CeaseFire.duration - 1).toInt()
         )
-        range
+        mutableStateOf(range)
     }
 
     LaunchedEffect(timerRunningState) {
         if (timerRunningState == TimerState.Running) {
-            audioManager.playAudioCue(audioCues, currentTime, playedAudioIndices)
+            audioManager.playAudioCue(
+                audioCues = audioCues,
+                currentTime = currentTime,
+                playedAudioIndices = playedAudioIndices,
+                onAddPlayedAudioIndex = onAddPlayedAudioIndex
+            )
 
             val startTimeMillis = withFrameMillis { it }
             var lastFrameTimeMillis = startTimeMillis
@@ -145,7 +164,12 @@ fun MainScreen(
                 val frameTimeMillis = withFrameMillis { it }
                 val deltaTime = (frameTimeMillis - lastFrameTimeMillis) / 1000f
                 timerViewModel.setCurrentTime(currentTime + deltaTime)
-                audioManager.playAudioCue(audioCues, currentTime, playedAudioIndices)
+                audioManager.playAudioCue(
+                    audioCues = audioCues,
+                    currentTime = currentTime,
+                    playedAudioIndices = playedAudioIndices,
+                    onAddPlayedAudioIndex = onAddPlayedAudioIndex
+                )
 
                 if (currentTime >= totalDuration) {
                     timerViewModel.setCurrentTime(totalDuration)
@@ -158,7 +182,7 @@ fun MainScreen(
     }
 
     LaunchedEffect(shootingDuration) {
-        timerViewModel.setThumbValues(thumbValues.filter { it.roundToInt() in range })
+        timerViewModel.setThumbValues(thumbValues.filter { it.roundToInt() in range.toIntRange() })
     }
 
     DisposableEffect(Unit) {
@@ -172,8 +196,8 @@ fun MainScreen(
             PortraitUI(
                 timerViewModel,
                 segmentDurations,
-                range,
-                playedAudioIndices,
+                range.toIntRange(),
+                clearPlayedAudioIndices,
                 300.dp
             )
         }
@@ -182,12 +206,16 @@ fun MainScreen(
             LandscapeUI(
                 timerViewModel,
                 segmentDurations,
-                range,
-                playedAudioIndices,
+                range.toIntRange(),
+                clearPlayedAudioIndices,
                 280.dp
             )
         }
     }
+}
+
+private fun Pair<Int, Int>.toIntRange(): IntRange {
+    return IntRange(first, second)
 }
 
 @Composable
@@ -195,7 +223,7 @@ fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
     range: IntRange,
-    playedAudioIndices: MutableSet<Int>,
+    onClearPlayedAudioIndices: () -> Unit,
     timerSize: Dp
 ) {
     Row(
@@ -227,7 +255,7 @@ fun LandscapeUI(
                 .padding(Paddings.Tiny)
                 .navigationBarsPadding()
         ) {
-            Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
+            Settings(timerViewModel, range, onClearPlayedAudioIndices, segmentDurations)
         }
     }
 }
@@ -237,7 +265,7 @@ fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
     range: IntRange,
-    playedAudioIndices: MutableSet<Int>,
+    onClearPlayedAudioIndices: () -> Unit,
     timerSize: Dp
 ) {
     Column(
@@ -256,7 +284,7 @@ fun PortraitUI(
             PlayButton(timerViewModel, timerSize)
         }
         Spacer(modifier = Modifier.padding(Paddings.Medium))
-        Settings(timerViewModel, range, playedAudioIndices, segmentDurations)
+        Settings(timerViewModel, range, onClearPlayedAudioIndices, segmentDurations)
     }
 }
 
@@ -264,7 +292,7 @@ fun PortraitUI(
 fun Settings(
     timerViewModel: TimerViewModel,
     range: IntRange,
-    playedAudioIndices: MutableSet<Int>,
+    onClearPlayedAudioIndices: () -> Unit,
     segmentDurations: List<Float>
 ) {
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
@@ -285,7 +313,7 @@ fun Settings(
         timerRunningState = timerRunningState,
         onValueChange = { duration ->
             timerViewModel.setShootingTime(duration.roundToInt().toFloat())
-            playedAudioIndices.clear()
+            onClearPlayedAudioIndices()
         }
     )
     Spacer(modifier = Modifier.padding(Paddings.Small))
@@ -314,7 +342,7 @@ fun PortraitUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    PortraitUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 300.dp)
+    PortraitUI(tvm, segmentDurations, IntRange(10, 20), {}, 300.dp)
 }
 
 @Preview(
@@ -332,5 +360,5 @@ fun LandscapeUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), mutableSetOf(), 280.dp)
+    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), { }, 280.dp)
 }
