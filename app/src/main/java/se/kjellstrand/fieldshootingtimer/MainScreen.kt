@@ -208,15 +208,18 @@ fun MainScreen(
         }
     }
 
+    val statelessSettingsComposable: @Composable () -> Unit = {
+        Settings(timerViewModel, range.toIntRange(), clearPlayedAudioIndices, segmentDurations)
+    }
+
     when (LocalConfiguration.current.orientation) {
         Configuration.ORIENTATION_PORTRAIT -> {
             PortraitUI(
                 timerViewModel,
                 segmentDurations,
-                range.toIntRange(),
-                clearPlayedAudioIndices,
                 onClickPlayButton,
                 timerRunningState,
+                statelessSettingsComposable,
                 300.dp
             )
         }
@@ -225,10 +228,9 @@ fun MainScreen(
             LandscapeUI(
                 timerViewModel,
                 segmentDurations,
-                range.toIntRange(),
-                clearPlayedAudioIndices,
                 onClickPlayButton,
                 timerRunningState,
+                statelessSettingsComposable,
                 280.dp
             )
         }
@@ -243,10 +245,9 @@ private fun Pair<Int, Int>.toIntRange(): IntRange {
 fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
-    range: IntRange,
-    onClearPlayedAudioIndices: () -> Unit,
     onClickPlayButton: () -> Unit,
     timerRunningState: TimerState,
+    statelessSettingsComposable: @Composable () -> Unit,
     timerSize: Dp
 ) {
     Row(
@@ -282,7 +283,7 @@ fun LandscapeUI(
                 .padding(Paddings.Tiny)
                 .navigationBarsPadding()
         ) {
-            Settings(timerViewModel, range, onClearPlayedAudioIndices, segmentDurations)
+            statelessSettingsComposable()
         }
     }
 }
@@ -291,10 +292,9 @@ fun LandscapeUI(
 fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
-    range: IntRange,
-    onClearPlayedAudioIndices: () -> Unit,
     onClickPlayButton: () -> Unit,
     timerRunningState: TimerState,
+    statelessSettingsComposable: @Composable () -> Unit,
     timerSize: Dp
 ) {
     Column(
@@ -317,7 +317,7 @@ fun PortraitUI(
             )
         }
         Spacer(modifier = Modifier.padding(Paddings.Medium))
-        Settings(timerViewModel, range, onClearPlayedAudioIndices, segmentDurations)
+        statelessSettingsComposable()
     }
 }
 
@@ -375,7 +375,17 @@ fun PortraitUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    PortraitUI(tvm, segmentDurations, IntRange(10, 20), {}, {}, TimerState.NotStarted, 300.dp)
+    val settings: @Composable () -> Unit = {
+        Settings(tvm, IntRange(5,12), { }, segmentDurations)
+    }
+    PortraitUI(
+        tvm,
+        segmentDurations,
+        {},
+        TimerState.NotStarted,
+        settings,
+        300.dp
+    )
 }
 
 @Preview(
@@ -393,5 +403,15 @@ fun LandscapeUIPreview() {
     tvm.setTimerState(TimerState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    LandscapeUI(tvm, segmentDurations, IntRange(10, 20), {}, {}, TimerState.NotStarted, 280.dp)
+    val settings: @Composable () -> Unit = {
+        Settings(tvm, IntRange(5,12), { }, segmentDurations)
+    }
+    LandscapeUI(
+        tvm,
+        segmentDurations,
+        {},
+        TimerState.NotStarted,
+        settings,
+        280.dp
+    )
 }

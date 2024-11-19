@@ -14,8 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -57,19 +57,15 @@ fun MultiThumbSlider(
             .height(thumbRadius * 2)
             .padding(horizontal = Paddings.Small)
     ) {
-        val sliderWidth by remember(constraints.maxWidth) {
-            derivedStateOf { constraints.maxWidth }
-        }
-
-        val thumbOffsets by remember(thumbValues, range, sliderWidth) {
-            derivedStateOf { toThumbOffsets(thumbValues, range, sliderWidth) }
+        val thumbOffsets = rememberSaveable(thumbValues, range, constraints.maxWidth) {
+             toThumbOffsets(thumbValues, range, constraints.maxWidth)
         }
 
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawLine(
                 color = trackColor,
                 start = Offset(0f, size.height / 2),
-                end = Offset(sliderWidth.toFloat(), size.height / 2),
+                end = Offset(constraints.maxWidth.toFloat(), size.height / 2),
                 strokeWidth = trackHeightPx,
                 cap = StrokeCap.Round
             )
@@ -89,7 +85,7 @@ fun MultiThumbSlider(
             Box(modifier = Modifier
                 .offset(x = with(density) {
                     val currentThumbOffset =
-                        ((thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
+                        ((thumbValues[index] - range.first) / (range.last - range.first)) * constraints.maxWidth
                     currentThumbOffset.toDp()
                 } - thumbRadius)
                 .size(thumbRadius * 2)
@@ -97,12 +93,12 @@ fun MultiThumbSlider(
                     detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
                         change.consume()
                         val currentThumbOffset =
-                            ((thumbValues[index] - range.first) / (range.last - range.first)) * sliderWidth
+                            ((thumbValues[index] - range.first) / (range.last - range.first)) * constraints.maxWidth
                         val newOffset = (currentThumbOffset + change.position.x).coerceIn(
-                            0f, sliderWidth.toFloat()
+                            0f, constraints.maxWidth.toFloat()
                         )
                         val newValue =
-                            (newOffset / sliderWidth) * (range.last - range.first) + range.first
+                            (newOffset / constraints.maxWidth) * (range.last - range.first) + range.first
 
                         val updatedValues =
                             thumbValues
