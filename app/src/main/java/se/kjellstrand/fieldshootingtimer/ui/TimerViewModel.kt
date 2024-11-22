@@ -7,6 +7,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlin.math.roundToInt
+
+data class TimerUiState(
+    val shootingDuration: Float = 5f,
+    val badgesVisible: Boolean = false,
+    val timerRunningState: TimerState = TimerState.NotStarted,
+    val currentTime: Float = 0f,
+    val thumbValues: List<Float> = listOf()
+)
+
+enum class TimerState{
+    NotStarted,
+    Running,
+    Stopped,
+    Finished
+}
 
 open class TimerViewModel : ViewModel() {
 
@@ -48,9 +64,14 @@ open class TimerViewModel : ViewModel() {
     }
 
     fun setThumbValues(thumbValues: List<Float>) {
-        println("setThumbValues: $thumbValues")
+        _uiState.update { currentState ->
+            currentState.copy(thumbValues = thumbValues)
+        }
+    }
+
+    fun roundThumbValues() {
         _uiState.value = _uiState.value.copy(
-            thumbValues = thumbValues
+            thumbValues = _uiState.value.thumbValues.map { it.roundToInt().toFloat() }
         )
     }
 }

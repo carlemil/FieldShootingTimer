@@ -30,6 +30,13 @@ fun TicksAdjuster(
         initial = listOf(), context = Dispatchers.Main
     )
 
+    val onHorizontalDragSetThumbValues = rememberUpdatedState{ newThumbValues: List<Float> ->
+        timerViewModel.setThumbValues(newThumbValues)
+    }
+    val onHorizontalDragRoundThumbValues = rememberUpdatedState {
+        timerViewModel.roundThumbValues()
+    }
+
     Row(modifier = Modifier.padding(horizontal = Paddings.Large)) {
         Text(
             text = "+",
@@ -47,7 +54,9 @@ fun TicksAdjuster(
         )
 
         MultiThumbSlider(
-            timerViewModel = timerViewModel,
+            thumbValues = thumbValues,
+            onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
+            onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues,
             range = range,
             trackColor = TransparentGreenColor,
             thumbColor = PaleGreenColor,

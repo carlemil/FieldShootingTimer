@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -25,11 +23,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
-import kotlin.math.roundToInt
 
 @Composable
 fun MultiThumbSlider(
-    timerViewModel: TimerViewModel,
+    thumbValues: List<Float>,
+    onHorizontalDragSetThumbValues: State<(List<Float>) -> Unit>,
+    onHorizontalDragRoundThumbValues: State<() -> Unit>,
     range: IntRange,
     trackColor: Color = Color.Gray,
     thumbColor: Color = Color.Blue,
@@ -37,19 +36,10 @@ fun MultiThumbSlider(
     thumbRadius: Dp = 12.dp,
     modifier: Modifier = Modifier
 ) {
-    val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(initial = listOf())
-
-    val onHorizontalDragSetThumbValues = rememberUpdatedState { updatedValues: List<Float> ->
-        timerViewModel.setThumbValues(updatedValues)
-    }
-
-    val onDragEndSetThumbValues = rememberUpdatedState { updatedValues: List<Float> ->
-        timerViewModel.setThumbValues(updatedValues.map { it.roundToInt().toFloat() })
-    }
-
     val density = LocalDensity.current
     val thumbRadiusPx = with(density) { thumbRadius.toPx() }
     val trackHeightPx = with(density) { trackHeight.toPx() }
+    val currentThumbValuesState by rememberUpdatedState(thumbValues)
 
     BoxWithConstraints(
         modifier = modifier
@@ -57,11 +47,9 @@ fun MultiThumbSlider(
             .height(thumbRadius * 2)
             .padding(horizontal = Paddings.Small)
     ) {
-        val thumbOffsets = rememberSaveable(thumbValues, range, constraints.maxWidth) {
-             toThumbOffsets(thumbValues, range, constraints.maxWidth)
-        }
-
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val thumbOffsets = toThumbOffsets(currentThumbValuesState, range, constraints.maxWidth)
+
             drawLine(
                 color = trackColor,
                 start = Offset(0f, size.height / 2),
@@ -81,11 +69,11 @@ fun MultiThumbSlider(
             }
         }
 
-        thumbValues.forEachIndexed { index, _ ->
+        currentThumbValuesState.forEachIndexed { index, _ ->
             Box(modifier = Modifier
                 .offset(x = with(density) {
                     val currentThumbOffset =
-                        ((thumbValues[index] - range.first) / (range.last - range.first)) * constraints.maxWidth
+                        ((currentThumbValuesState[index] - range.first) / (range.last - range.first)) * constraints.maxWidth
                     currentThumbOffset.toDp()
                 } - thumbRadius)
                 .size(thumbRadius * 2)
@@ -93,7 +81,7 @@ fun MultiThumbSlider(
                     detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
                         change.consume()
                         val currentThumbOffset =
-                            ((thumbValues[index] - range.first) / (range.last - range.first)) * constraints.maxWidth
+                            ((currentThumbValuesState[index] - range.first) / (range.last - range.first)) * constraints.maxWidth.toFloat()
                         val newOffset = (currentThumbOffset + change.position.x).coerceIn(
                             0f, constraints.maxWidth.toFloat()
                         )
@@ -101,13 +89,12 @@ fun MultiThumbSlider(
                             (newOffset / constraints.maxWidth) * (range.last - range.first) + range.first
 
                         val updatedValues =
-                            thumbValues
+                            currentThumbValuesState
                                 .toMutableList()
                                 .apply { this[index] = newValue }
-
                         onHorizontalDragSetThumbValues.value(updatedValues)
                     }, onDragEnd = {
-                        onDragEndSetThumbValues.value(thumbValues)
+                        onHorizontalDragRoundThumbValues.value()
                     })
                 })
         }
