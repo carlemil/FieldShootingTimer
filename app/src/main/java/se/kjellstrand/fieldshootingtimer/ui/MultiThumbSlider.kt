@@ -40,6 +40,7 @@ fun MultiThumbSlider(
     val thumbRadiusPx = with(density) { thumbRadius.toPx() }
     val trackHeightPx = with(density) { trackHeight.toPx() }
     val currentThumbValuesState by rememberUpdatedState(thumbValues)
+    val currentRange by rememberUpdatedState(range)
 
     BoxWithConstraints(
         modifier = modifier
@@ -48,7 +49,8 @@ fun MultiThumbSlider(
             .padding(horizontal = Paddings.Small)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val thumbOffsets = toThumbOffsets(currentThumbValuesState, range, constraints.maxWidth)
+            val thumbOffsets =
+                toThumbOffsets(currentThumbValuesState, currentRange, constraints.maxWidth)
 
             drawLine(
                 color = trackColor,
@@ -73,7 +75,7 @@ fun MultiThumbSlider(
             Box(modifier = Modifier
                 .offset(x = with(density) {
                     val currentThumbOffset =
-                        ((currentThumbValuesState[index] - range.first) / (range.last - range.first)) * constraints.maxWidth
+                        ((currentThumbValuesState[index] - currentRange.first) / (currentRange.last - currentRange.first)) * constraints.maxWidth
                     currentThumbOffset.toDp()
                 } - thumbRadius)
                 .size(thumbRadius * 2)
@@ -81,12 +83,12 @@ fun MultiThumbSlider(
                     detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
                         change.consume()
                         val currentThumbOffset =
-                            ((currentThumbValuesState[index] - range.first) / (range.last - range.first)) * constraints.maxWidth.toFloat()
+                            ((currentThumbValuesState[index] - currentRange.first) / (currentRange.last - currentRange.first)) * constraints.maxWidth.toFloat()
                         val newOffset = (currentThumbOffset + change.position.x).coerceIn(
                             0f, constraints.maxWidth.toFloat()
                         )
                         val newValue =
-                            (newOffset / constraints.maxWidth) * (range.last - range.first) + range.first
+                            (newOffset / constraints.maxWidth) * (currentRange.last - currentRange.first) + currentRange.first
 
                         val updatedValues =
                             currentThumbValuesState
