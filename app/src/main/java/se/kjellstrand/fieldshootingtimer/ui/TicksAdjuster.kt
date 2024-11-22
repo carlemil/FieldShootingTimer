@@ -30,7 +30,7 @@ fun TicksAdjuster(
         initial = listOf(), context = Dispatchers.Main
     )
 
-    val onHorizontalDragSetThumbValues = rememberUpdatedState{ newThumbValues: List<Float> ->
+    val onHorizontalDragSetThumbValues = rememberUpdatedState { newThumbValues: List<Float> ->
         timerViewModel.setThumbValues(newThumbValues)
     }
     val onHorizontalDragRoundThumbValues = rememberUpdatedState {

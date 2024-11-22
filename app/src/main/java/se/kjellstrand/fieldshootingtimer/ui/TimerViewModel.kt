@@ -17,7 +17,7 @@ data class TimerUiState(
     val thumbValues: List<Float> = listOf()
 )
 
-enum class TimerState{
+enum class TimerState {
     NotStarted,
     Running,
     Stopped,
