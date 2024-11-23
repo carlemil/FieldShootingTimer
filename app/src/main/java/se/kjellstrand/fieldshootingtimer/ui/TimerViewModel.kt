@@ -35,43 +35,50 @@ open class TimerViewModel : ViewModel() {
     val timerRunningStateFlow = uiStateFlow.map { it.timerRunningState }.distinctUntilChanged()
     val thumbValuesFlow = uiStateFlow.map { it.thumbValues }.distinctUntilChanged()
 
-    init {
-        _uiState.value = TimerUiState()
-    }
-
     fun setShootingTime(shootingDuration: Float) {
+        require(shootingDuration >= 0) { "Shooting duration cannot be negative." }
         _uiState.update { currentState ->
             currentState.copy(shootingDuration = shootingDuration)
         }
+        logStateChange("setShootingTime")
     }
 
     fun setBadgesVisible(badgesVisible: Boolean) {
         _uiState.update { currentState ->
             currentState.copy(badgesVisible = badgesVisible)
         }
+        logStateChange("setBadgesVisible")
     }
 
     fun setTimerState(timerState: TimerState) {
         _uiState.update { currentState ->
             currentState.copy(timerRunningState = timerState)
         }
+        logStateChange("setTimerState")
     }
 
     fun setCurrentTime(currentTime: Float) {
         _uiState.update { currentState ->
             currentState.copy(currentTime = currentTime)
         }
+        logStateChange("setCurrentTime")
     }
 
     fun setThumbValues(thumbValues: List<Float>) {
         _uiState.update { currentState ->
             currentState.copy(thumbValues = thumbValues)
         }
+        logStateChange("setThumbValues")
     }
 
     fun roundThumbValues() {
         _uiState.value = _uiState.value.copy(
             thumbValues = _uiState.value.thumbValues.map { it.roundToInt().toFloat() }
         )
+        logStateChange("roundThumbValues")
+    }
+
+    private fun logStateChange(action: String) {
+        println("Action: $action, New State: ${_uiState.value}")
     }
 }
