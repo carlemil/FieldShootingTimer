@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
@@ -339,6 +340,24 @@ fun Settings(
     )
     val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
 
+    val setThumbValuesMinusOne = rememberUpdatedState { thumbValues: List<Float> ->
+        timerViewModel.setThumbValues(thumbValues.dropLast(1))
+    }
+    val setThumbValuesPlusOne = rememberUpdatedState { thumbValues: List<Float> ->
+        if (thumbValues.size < (range.last - range.first)) {
+            timerViewModel.setThumbValues(thumbValues + findNextFreeThumbSpot(range, thumbValues))
+        }
+    }
+    val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
+        initial = listOf(), context = Dispatchers.Main
+    )
+    val onHorizontalDragSetThumbValues = rememberUpdatedState { newThumbValues: List<Float> ->
+        timerViewModel.setThumbValues(newThumbValues)
+    }
+    val onHorizontalDragRoundThumbValues = rememberUpdatedState {
+        timerViewModel.roundThumbValues()
+    }
+
     ShowSegmentTimes(timerViewModel)
     Spacer(modifier = Modifier.padding(Paddings.Small))
     ShootTimeSlider(
@@ -350,7 +369,14 @@ fun Settings(
         }
     )
     Spacer(modifier = Modifier.padding(Paddings.Small))
-    TicksAdjuster(timerViewModel, range)
+    TicksAdjuster(
+        thumbValues = thumbValues,
+        range = range,
+        setThumbValuesMinusOne = setThumbValuesMinusOne,
+        setThumbValuesPlusOne = setThumbValuesPlusOne,
+        onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
+        onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues
+    )
     Spacer(modifier = Modifier.padding(Paddings.Small))
     CommandList(highlightedIndex)
 }
@@ -366,6 +392,24 @@ private fun calculateHighlightedIndex(currentTime: Float, highlightDurations: Li
     return 7 // Default to the last command if time exceeds all durations
 }
 
+private fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
+    val center = (range.first + range.last) / 2
+    val maxDistance = (range.last - range.first) / 2
+
+    for (distance in 0..maxDistance) {
+        val forward = center + distance
+        val backward = center - distance
+
+        if (forward in range && takenSpots.find { it.roundToInt() == forward } == null) {
+            return forward.toFloat()
+        }
+        if (backward in range && takenSpots.find { it.roundToInt() == backward } == null) {
+            return backward.toFloat()
+        }
+    }
+    return center.toFloat()
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PortraitUIPreview() {
@@ -376,7 +420,7 @@ fun PortraitUIPreview() {
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     val settings: @Composable () -> Unit = {
-        Settings(tvm, IntRange(5,12), { }, segmentDurations)
+        Settings(tvm, IntRange(5, 12), { }, segmentDurations)
     }
     PortraitUI(
         tvm,
@@ -404,7 +448,7 @@ fun LandscapeUIPreview() {
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     val settings: @Composable () -> Unit = {
-        Settings(tvm, IntRange(5,12), { }, segmentDurations)
+        Settings(tvm, IntRange(5, 12), { }, segmentDurations)
     }
     LandscapeUI(
         tvm,
