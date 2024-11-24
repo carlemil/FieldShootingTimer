@@ -50,7 +50,7 @@ import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
 import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
 import se.kjellstrand.fieldshootingtimer.ui.TicksAdjuster
-import se.kjellstrand.fieldshootingtimer.ui.TimerState
+import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
@@ -88,7 +88,7 @@ fun MainScreen(
         initial = 0f, context = Dispatchers.Main
     )
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
-        initial = TimerState.NotStarted, context = Dispatchers.Main
+        initial = TimerRunningState.NotStarted, context = Dispatchers.Main
     )
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
@@ -151,7 +151,7 @@ fun MainScreen(
     }
 
     LaunchedEffect(timerRunningState) {
-        if (timerRunningState == TimerState.Running) {
+        if (timerRunningState == TimerRunningState.Running) {
             audioManager.playAudioCue(
                 audioCues = audioCues,
                 currentTime = currentTime,
@@ -174,7 +174,7 @@ fun MainScreen(
 
                 if (currentTime >= totalDuration) {
                     timerViewModel.setCurrentTime(totalDuration)
-                    timerViewModel.setTimerState(TimerState.Finished)
+                    timerViewModel.setTimerState(TimerRunningState.Finished)
                     break
                 }
                 lastFrameTimeMillis = frameTimeMillis
@@ -194,17 +194,17 @@ fun MainScreen(
 
     val onClickPlayButton: () -> Unit = {
         when (timerRunningState) {
-            TimerState.NotStarted -> {
-                timerViewModel.setTimerState(TimerState.Running)
+            TimerRunningState.NotStarted -> {
+                timerViewModel.setTimerState(TimerRunningState.Running)
             }
 
-            TimerState.Running -> {
-                timerViewModel.setTimerState(TimerState.Stopped)
+            TimerRunningState.Running -> {
+                timerViewModel.setTimerState(TimerRunningState.Stopped)
             }
 
-            TimerState.Stopped, TimerState.Finished -> {
+            TimerRunningState.Stopped, TimerRunningState.Finished -> {
                 timerViewModel.setCurrentTime(0f)
-                timerViewModel.setTimerState(TimerState.NotStarted)
+                timerViewModel.setTimerState(TimerRunningState.NotStarted)
             }
         }
     }
@@ -247,7 +247,7 @@ fun LandscapeUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
     onClickPlayButton: () -> Unit,
-    timerRunningState: TimerState,
+    timerRunningState: TimerRunningState,
     statelessSettingsComposable: @Composable () -> Unit,
     timerSize: Dp
 ) {
@@ -294,7 +294,7 @@ fun PortraitUI(
     timerViewModel: TimerViewModel,
     segmentDurations: List<Float>,
     onClickPlayButton: () -> Unit,
-    timerRunningState: TimerState,
+    timerRunningState: TimerRunningState,
     statelessSettingsComposable: @Composable () -> Unit,
     timerSize: Dp
 ) {
@@ -336,7 +336,7 @@ fun Settings(
         initial = 0f, context = Dispatchers.Main
     )
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
-        initial = TimerState.NotStarted, context = Dispatchers.Main
+        initial = TimerRunningState.NotStarted, context = Dispatchers.Main
     )
     val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
 
@@ -416,7 +416,7 @@ fun PortraitUIPreview() {
     val tvm = TimerViewModel()
     tvm.setShootingTime(5f)
     tvm.setCurrentTime(0f)
-    tvm.setTimerState(TimerState.NotStarted)
+    tvm.setTimerState(TimerRunningState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     val settings: @Composable () -> Unit = {
@@ -426,7 +426,7 @@ fun PortraitUIPreview() {
         tvm,
         segmentDurations,
         {},
-        TimerState.NotStarted,
+        TimerRunningState.NotStarted,
         settings,
         300.dp
     )
@@ -444,7 +444,7 @@ fun LandscapeUIPreview() {
     val tvm = TimerViewModel()
     tvm.setShootingTime(5f)
     tvm.setCurrentTime(0f)
-    tvm.setTimerState(TimerState.NotStarted)
+    tvm.setTimerState(TimerRunningState.NotStarted)
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     val settings: @Composable () -> Unit = {
@@ -454,7 +454,7 @@ fun LandscapeUIPreview() {
         tvm,
         segmentDurations,
         {},
-        TimerState.NotStarted,
+        TimerRunningState.NotStarted,
         settings,
         280.dp
     )

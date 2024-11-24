@@ -12,12 +12,12 @@ import kotlin.math.roundToInt
 data class TimerUiState(
     val shootingDuration: Float = 5f,
     val badgesVisible: Boolean = false,
-    val timerRunningState: TimerState = TimerState.NotStarted,
+    val timerRunningState: TimerRunningState = TimerRunningState.NotStarted,
     val currentTime: Float = 0f,
     val thumbValues: List<Float> = listOf()
 )
 
-enum class TimerState {
+enum class TimerRunningState {
     NotStarted,
     Running,
     Stopped,
@@ -50,7 +50,7 @@ open class TimerViewModel : ViewModel() {
         logStateChange("setBadgesVisible")
     }
 
-    fun setTimerState(timerState: TimerState) {
+    fun setTimerState(timerState: TimerRunningState) {
         _uiState.update { currentState ->
             currentState.copy(timerRunningState = timerState)
         }

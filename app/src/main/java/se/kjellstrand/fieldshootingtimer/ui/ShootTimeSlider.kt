@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
@@ -24,7 +23,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 @Composable
 fun ShootTimeSlider(
     shootingDuration: Float,
-    timerRunningState: TimerState,
+    timerRunningState: TimerRunningState,
     onValueChange: (Float) -> Unit
 ) {
     val onValueChangeState by rememberUpdatedState(onValueChange)
@@ -35,7 +34,7 @@ fun ShootTimeSlider(
     ) {
         Slider(
             value = shootingDuration,
-            enabled = timerRunningState == TimerState.NotStarted,
+            enabled = timerRunningState == TimerRunningState.NotStarted,
             onValueChange = { value -> onValueChangeState(value) },
             onValueChangeFinished = { },
             colors = SliderDefaults.colors(

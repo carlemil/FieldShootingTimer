@@ -23,7 +23,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 @Composable
 fun PlayButton(
     onClickPlayButton: () -> Unit,
-    timerRunningState: TimerState,
+    timerRunningState: TimerRunningState,
     timerSize: Dp
 ) {
     Box(
@@ -41,7 +41,7 @@ fun PlayButton(
             )
         ) {
             when (timerRunningState) {
-                TimerState.NotStarted -> {
+                TimerRunningState.NotStarted -> {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.play_arrow),
                         contentDescription = "Play",
@@ -49,7 +49,7 @@ fun PlayButton(
                     )
                 }
 
-                TimerState.Running -> {
+                TimerRunningState.Running -> {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.stop),
                         contentDescription = "Stop",
@@ -57,7 +57,7 @@ fun PlayButton(
                     )
                 }
 
-                TimerState.Finished, TimerState.Stopped -> {
+                TimerRunningState.Finished, TimerRunningState.Stopped -> {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.skip_previous),
                         contentDescription = "Reset",
