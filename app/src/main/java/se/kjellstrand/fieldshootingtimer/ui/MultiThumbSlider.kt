@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import android.icu.text.ListFormatter.Width
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Box
@@ -24,6 +23,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
+import kotlin.math.roundToInt
 
 @Composable
 fun MultiThumbSlider(
@@ -33,18 +33,17 @@ fun MultiThumbSlider(
     range: IntRange,
     trackColor: Color = Color.Gray,
     thumbColor: Color = Color.Blue,
-    markerColor: Color = Color.DarkGray,
     trackHeight: Dp = Paddings.Small,
     thumbHeight: Dp = 18.dp,
     thumbWidth: Dp = 4.dp,
-    markerWidth: Dp = 1.dp,
+    markerCutoutWidth: Dp = 3.dp,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
     val thumbHeightPx = with(density) { thumbHeight.toPx() }
     val thumbWidthPx = with(density) { thumbWidth.toPx() }
     val trackHeightPx = with(density) { trackHeight.toPx() }
-    val markerWidthPx = with(density) { markerWidth.toPx() }
+    val markerCutoutWidthPx = with(density) { markerCutoutWidth.toPx() }
     val currentThumbValues by rememberUpdatedState(thumbValues)
     val currentRange by rememberUpdatedState(range)
 
@@ -58,22 +57,36 @@ fun MultiThumbSlider(
             val trackWidth = constraints.maxWidth
             val integerMarkers = currentRange.first..currentRange.last
 
-            drawLine(
-                color = trackColor,
-                start = Offset(0f, size.height / 2),
-                end = Offset(constraints.maxWidth.toFloat(), size.height / 2),
-                strokeWidth = trackHeightPx,
-                cap = StrokeCap.Round
-            )
+            val lineSegments = mutableListOf<Pair<Float, Float>>()
+            var previousEnd = 0f
 
             integerMarkers.forEach { marker ->
                 val markerOffset = ((marker - currentRange.first).toFloat() /
                         (currentRange.last - currentRange.first)) * trackWidth
+
+                val isThumbAtMarker = currentThumbValues.any { thumb ->
+                    thumb.roundToInt() == marker
+                }
+
+                val cutoutWidth = if (isThumbAtMarker) markerCutoutWidthPx * 2 else markerCutoutWidthPx
+
+                if (markerOffset > previousEnd + cutoutWidth) {
+                    lineSegments.add(previousEnd to (markerOffset - cutoutWidth))
+                }
+                previousEnd = markerOffset + cutoutWidth
+            }
+
+            if (previousEnd < trackWidth) {
+                lineSegments.add(previousEnd to trackWidth.toFloat())
+            }
+
+            lineSegments.forEach { (start, end) ->
                 drawLine(
-                    color = markerColor,
-                    start = Offset(markerOffset, size.height / 2 - trackHeightPx / 2),
-                    end = Offset(markerOffset, size.height / 2 + trackHeightPx / 2),
-                    strokeWidth = markerWidthPx
+                    color = trackColor,
+                    start = Offset(start, size.height / 2),
+                    end = Offset(end, size.height / 2),
+                    strokeWidth = trackHeightPx,
+                    cap = StrokeCap.Butt
                 )
             }
 

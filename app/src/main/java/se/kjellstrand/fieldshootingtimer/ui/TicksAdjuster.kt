@@ -42,8 +42,6 @@ fun TicksAdjuster(
             trackColor = TransparentGreenColor,
             thumbColor = PaleGreenColor,
             trackHeight = 16.dp,
-            markerColor = MutedYellowColor,
-            markerWidth = 2.dp,
             modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically)

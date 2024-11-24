@@ -78,7 +78,7 @@ open class TimerViewModel : ViewModel() {
         logStateChange("dropLastThumbValue")
     }
 
-    fun addNewThumbValueSomewhereInRange(range: IntRange) {
+    fun addNewThumbValue(range: IntRange) {
         val thumbValues = _uiState.value.thumbValues.toMutableList()
         if (thumbValues.size < (range.last - range.first)) {
             thumbValues.add(findNextFreeThumbSpot(range, thumbValues))

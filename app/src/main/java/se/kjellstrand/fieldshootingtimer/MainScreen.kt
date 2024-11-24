@@ -344,7 +344,7 @@ fun Settings(
         timerViewModel.dropLastThumbValue()
     }
     val setThumbValuesPlusOne = rememberUpdatedState {
-        timerViewModel.addNewThumbValueSomewhereInRange(range)
+        timerViewModel.addNewThumbValue(range)
     }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
