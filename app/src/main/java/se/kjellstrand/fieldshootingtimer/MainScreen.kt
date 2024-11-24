@@ -340,13 +340,11 @@ fun Settings(
     )
     val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
 
-    val setThumbValuesMinusOne = rememberUpdatedState { thumbValues: List<Float> ->
-        timerViewModel.setThumbValues(thumbValues.dropLast(1))
+    val setThumbValuesMinusOne = rememberUpdatedState {
+        timerViewModel.dropLastThumbValue()
     }
-    val setThumbValuesPlusOne = rememberUpdatedState { thumbValues: List<Float> ->
-        if (thumbValues.size < (range.last - range.first)) {
-            timerViewModel.setThumbValues(thumbValues + findNextFreeThumbSpot(range, thumbValues))
-        }
+    val setThumbValuesPlusOne = rememberUpdatedState {
+        timerViewModel.addNewThumbValueSomewhereInRange(range)
     }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
@@ -390,24 +388,6 @@ private fun calculateHighlightedIndex(currentTime: Float, highlightDurations: Li
         }
     }
     return 7 // Default to the last command if time exceeds all durations
-}
-
-private fun findNextFreeThumbSpot(range: IntRange, takenSpots: List<Float>): Float {
-    val center = (range.first + range.last) / 2
-    val maxDistance = (range.last - range.first) / 2
-
-    for (distance in 0..maxDistance) {
-        val forward = center + distance
-        val backward = center - distance
-
-        if (forward in range && takenSpots.find { it.roundToInt() == forward } == null) {
-            return forward.toFloat()
-        }
-        if (backward in range && takenSpots.find { it.roundToInt() == backward } == null) {
-            return backward.toFloat()
-        }
-    }
-    return center.toFloat()
 }
 
 @Preview(showBackground = true)

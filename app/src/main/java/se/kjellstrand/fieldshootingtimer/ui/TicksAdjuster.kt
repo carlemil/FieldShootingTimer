@@ -18,8 +18,8 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
 fun TicksAdjuster(
     thumbValues: List<Float>,
     range: IntRange,
-    setThumbValuesMinusOne: State<(List<Float>) -> Unit>,
-    setThumbValuesPlusOne: State<(List<Float>) -> Unit>,
+    setThumbValuesMinusOne: State<() -> Unit>,
+    setThumbValuesPlusOne: State<() -> Unit>,
     onHorizontalDragSetThumbValues: State<(List<Float>) -> Unit>,
     onHorizontalDragRoundThumbValues: State<() -> Unit>
 ) {
@@ -30,7 +30,7 @@ fun TicksAdjuster(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(end = Paddings.Small)
-                .clickable { setThumbValuesPlusOne.value(thumbValues) }
+                .clickable { setThumbValuesPlusOne.value() }
         )
         MultiThumbSlider(
             thumbValues = thumbValues,
@@ -50,7 +50,7 @@ fun TicksAdjuster(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(start = Paddings.Small)
-                .clickable { setThumbValuesMinusOne.value(thumbValues) }
+                .clickable { setThumbValuesMinusOne.value() }
         )
     }
 }
