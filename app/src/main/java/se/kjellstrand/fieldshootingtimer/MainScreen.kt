@@ -384,10 +384,10 @@ private fun calculateHighlightedIndex(currentTime: Float, highlightDurations: Li
     highlightDurations.forEachIndexed { index, duration ->
         accumulatedTime += duration
         if (currentTime < accumulatedTime) {
-            return index + 2 // +2 due to the initial commands not being part of the timer duration
+            return index + Command.TenSecondsLeft.ordinal
         }
     }
-    return 7 // Default to the last command if time exceeds all durations
+    return Command.Visitation.ordinal
 }
 
 @Preview(showBackground = true)
