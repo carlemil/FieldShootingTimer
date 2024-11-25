@@ -27,13 +27,16 @@ enum class TimerRunningState {
 open class TimerViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
-    private val uiStateFlow: StateFlow<TimerUiState> = _uiState.asStateFlow()
+    val uiStateFlow: StateFlow<TimerUiState> = _uiState
 
     val shootingDurationFlow = uiStateFlow.map { it.shootingDuration }.distinctUntilChanged()
     val badgesVisibleFlow = uiStateFlow.map { it.badgesVisible }.distinctUntilChanged()
     val currentTimeFlow = uiStateFlow.map { it.currentTime }.distinctUntilChanged()
     val timerRunningStateFlow = uiStateFlow.map { it.timerRunningState }.distinctUntilChanged()
-    val thumbValuesFlow = uiStateFlow.map { it.thumbValues }.distinctUntilChanged()
+    val thumbValuesFlow = _uiState.map { it.thumbValues }.distinctUntilChanged()
+// private val _thumbValuesFlow = MutableStateFlow(listOf(3f))
+//    val thumbValuesFlow: StateFlow<List<Float>> = _thumbValuesFlow.asStateFlow()
+     // använd _thumbValuesFlow nedan i alla funs
 
     fun setShootingTime(shootingDuration: Float) {
         require(shootingDuration >= 0) { "Shooting duration cannot be negative." }

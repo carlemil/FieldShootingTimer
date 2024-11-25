@@ -90,9 +90,11 @@ fun MainScreen(
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerRunningState.NotStarted, context = Dispatchers.Main
     )
+    var savedThumbValues by rememberSaveable { mutableStateOf<List<Float>>(listOf()) }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
-        initial = listOf(), context = Dispatchers.Main
+        initial = savedThumbValues, context = Dispatchers.Main
     )
+    savedThumbValues = thumbValues
 
     var playedAudioIndices by rememberSaveable(timerRunningState) { mutableStateOf(setOf<Int>()) }
     val clearPlayedAudioIndices: () -> Unit = {
@@ -183,7 +185,9 @@ fun MainScreen(
     }
 
     LaunchedEffect(shootingDuration) {
+        println("Action range: $range thumbs: $thumbValues")
         timerViewModel.setThumbValues(thumbValues.filter { it.roundToInt() in range.toIntRange() })
+        println("Action after thumbs: $thumbValues")
     }
 
     DisposableEffect(Unit) {
@@ -347,10 +351,12 @@ fun Settings(
         timerViewModel.addNewThumbValue(range)
     }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
-        initial = listOf(), context = Dispatchers.Main
+        initial = listOf(4f), context = Dispatchers.Main
     )
     val onHorizontalDragSetThumbValues = rememberUpdatedState { newThumbValues: List<Float> ->
+        println("thumbValues: $newThumbValues")
         timerViewModel.setThumbValues(newThumbValues)
+        println("new thumbValues: $newThumbValues")
     }
     val onHorizontalDragRoundThumbValues = rememberUpdatedState {
         timerViewModel.roundThumbValues()
