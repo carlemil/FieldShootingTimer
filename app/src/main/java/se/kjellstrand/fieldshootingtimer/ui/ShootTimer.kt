@@ -26,9 +26,6 @@ fun ShootTimer(
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
-    val badgesVisible by timerViewModel.badgesVisibleFlow.collectAsState(
-        initial = false, context = Dispatchers.Main
-    )
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
     )
@@ -58,7 +55,6 @@ fun ShootTimer(
                 borderColor = BlackColor,
                 borderWidth = borderWidth,
                 size = timerSize,
-                segmentBadgesVisible = badgesVisible,
                 badgeRadius = 15.dp
             )
 

@@ -48,7 +48,6 @@ import se.kjellstrand.fieldshootingtimer.ui.CommandList
 import se.kjellstrand.fieldshootingtimer.ui.PlayButton
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
-import se.kjellstrand.fieldshootingtimer.ui.ShowSegmentTimes
 import se.kjellstrand.fieldshootingtimer.ui.TicksAdjuster
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
@@ -362,7 +361,6 @@ fun Settings(
         timerViewModel.roundThumbValues()
     }
 
-    ShowSegmentTimes(timerViewModel)
     Spacer(modifier = Modifier.padding(Paddings.Small))
     ShootTimeSlider(
         shootingDuration = shootingDuration,

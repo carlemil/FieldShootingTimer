@@ -32,8 +32,7 @@ fun DecoratedDial(
     borderColor: Color = Color.Black,
     borderWidth: Dp = 2.dp,
     size: Dp = 200.dp,
-    badgeRadius: Dp = 10.dp,
-    segmentBadgesVisible: Boolean = true
+    badgeRadius: Dp = 10.dp
 ) {
     Box(
         contentAlignment = Alignment.Center, modifier = modifier.size(size)
@@ -89,19 +88,17 @@ fun DecoratedDial(
             borderColor = borderColor
         )
 
-        if (segmentBadgesVisible) {
-            SegmentBadges(
-                size = size,
-                sweepAngles = sweepAngles,
-                timesForSegments = segments,
-                segmentColors = segmentColors,
-                gapAngleDegrees = gapAngleDegrees,
-                ringThickness = ringThickness,
-                borderColor = borderColor,
-                borderWidth = borderWidth,
-                badgeRadius = badgeRadius / 1.2f
-            )
-        }
+        SegmentBadges(
+            size = size,
+            sweepAngles = sweepAngles,
+            timesForSegments = segments,
+            segmentColors = segmentColors,
+            gapAngleDegrees = gapAngleDegrees,
+            ringThickness = ringThickness,
+            borderColor = borderColor,
+            borderWidth = borderWidth,
+            badgeRadius = badgeRadius / 1.2f
+        )
 
         TickBadges(
             size = size,

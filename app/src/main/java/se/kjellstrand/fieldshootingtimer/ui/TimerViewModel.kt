@@ -3,7 +3,6 @@ package se.kjellstrand.fieldshootingtimer.ui
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -11,7 +10,6 @@ import kotlin.math.roundToInt
 
 data class TimerUiState(
     val shootingDuration: Float = 5f,
-    val badgesVisible: Boolean = false,
     val timerRunningState: TimerRunningState = TimerRunningState.NotStarted,
     val currentTime: Float = 0f,
     val thumbValues: List<Float> = listOf()
@@ -30,13 +28,9 @@ open class TimerViewModel : ViewModel() {
     val uiStateFlow: StateFlow<TimerUiState> = _uiState
 
     val shootingDurationFlow = uiStateFlow.map { it.shootingDuration }.distinctUntilChanged()
-    val badgesVisibleFlow = uiStateFlow.map { it.badgesVisible }.distinctUntilChanged()
     val currentTimeFlow = uiStateFlow.map { it.currentTime }.distinctUntilChanged()
     val timerRunningStateFlow = uiStateFlow.map { it.timerRunningState }.distinctUntilChanged()
     val thumbValuesFlow = _uiState.map { it.thumbValues }.distinctUntilChanged()
-// private val _thumbValuesFlow = MutableStateFlow(listOf(3f))
-//    val thumbValuesFlow: StateFlow<List<Float>> = _thumbValuesFlow.asStateFlow()
-     // använd _thumbValuesFlow nedan i alla funs
 
     fun setShootingTime(shootingDuration: Float) {
         require(shootingDuration >= 0) { "Shooting duration cannot be negative." }
@@ -44,13 +38,6 @@ open class TimerViewModel : ViewModel() {
             currentState.copy(shootingDuration = shootingDuration)
         }
         logStateChange("setShootingTime")
-    }
-
-    fun setBadgesVisible(badgesVisible: Boolean) {
-        _uiState.update { currentState ->
-            currentState.copy(badgesVisible = badgesVisible)
-        }
-        logStateChange("setBadgesVisible")
     }
 
     fun setTimerState(timerState: TimerRunningState) {
