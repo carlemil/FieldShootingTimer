@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.roundToInt
@@ -112,14 +113,17 @@ fun MultiThumbSlider(
 
         currentThumbValues.forEachIndexed { index, value ->
             Box(modifier = Modifier
-                .offset(x = with(density) {
-                    toThumbOffset(
-                        value,
-                        currentRange,
-                        trackWidth,
-                        firstAndLastSegmentWidth
-                    ).toDp()
-                } - thumbHeight)
+                .offset {
+                    IntOffset(
+                        x = toThumbOffset(
+                            value,
+                            currentRange,
+                            trackWidth,
+                            firstAndLastSegmentWidth
+                        ).roundToInt(),
+                        y = 0
+                    )
+                }
                 .size(thumbHeight * 2)
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->

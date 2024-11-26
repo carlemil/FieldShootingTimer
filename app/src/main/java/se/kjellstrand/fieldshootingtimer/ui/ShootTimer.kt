@@ -30,7 +30,7 @@ fun ShootTimer(
         initial = false, context = Dispatchers.Main
     )
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
-        initial = listOf(5f), context = Dispatchers.Main
+        initial = listOf(), context = Dispatchers.Main
     )
     Box(
         contentAlignment = Alignment.Center

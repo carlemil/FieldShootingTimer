@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import se.kjellstrand.fieldshootingtimer.ui.theme.MutedYellowColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor

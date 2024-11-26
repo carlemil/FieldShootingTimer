@@ -351,7 +351,7 @@ fun Settings(
         timerViewModel.addNewThumbValue(range)
     }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
-        initial = listOf(4f), context = Dispatchers.Main
+        initial = listOf(), context = Dispatchers.Main
     )
     val onHorizontalDragSetThumbValues = rememberUpdatedState { newThumbValues: List<Float> ->
         println("thumbValues: $newThumbValues")
