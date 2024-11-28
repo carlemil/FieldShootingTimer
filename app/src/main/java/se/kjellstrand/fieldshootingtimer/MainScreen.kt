@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
@@ -42,7 +43,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
-import se.kjellstrand.fieldshootingtimer.audio.AudioCue
 import se.kjellstrand.fieldshootingtimer.audio.AudioManager
 import se.kjellstrand.fieldshootingtimer.ui.Command
 import se.kjellstrand.fieldshootingtimer.ui.CommandList
@@ -147,25 +147,25 @@ fun MainScreen(
 
     val audioManager = remember { AudioManager(context) }
     val audioCues by rememberSaveable(timerRunningState) {
-        val cues = mutableListOf<AudioCue>()
+        val cues = mutableListOf<Pair<Float, Command>>()
         var time = 0f
 
-        cues.add(AudioCue(time, Command.TenSecondsLeft))
+        cues.add(Pair(time, Command.TenSecondsLeft))
         time += Command.TenSecondsLeft.duration
 
-        cues.add(AudioCue(time, Command.Ready))
+        cues.add(Pair(time, Command.Ready))
         time += Command.Ready.duration
 
-        cues.add(AudioCue(time, Command.Fire))
+        cues.add(Pair(time, Command.Fire))
         time += shootingDuration.toInt().toFloat()
 
-        cues.add(AudioCue(time, Command.CeaseFire))
+        cues.add(Pair(time, Command.CeaseFire))
         time += Command.CeaseFire.duration
 
-        cues.add(AudioCue(time, Command.UnloadWeapon))
+        cues.add(Pair(time, Command.UnloadWeapon))
         time += Command.UnloadWeapon.duration
 
-        cues.add(AudioCue(time, Command.Visitation))
+        cues.add(Pair(time, Command.Visitation))
         mutableStateOf(cues.toList())
     }
 

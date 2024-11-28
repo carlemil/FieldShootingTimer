@@ -24,16 +24,16 @@ class AudioManager(context: Context) {
     }
 
     fun playAudioCue(
-        audioCues: List<AudioCue>,
+        audioCues: List<Pair<Float, Command>>,
         currentTime: Float,
         playedAudioIndices: Set<Int>,
         onAddPlayedAudioIndex: (index: Int) -> Unit
         ) {
         for ((index, audioCue) in audioCues.withIndex()) {
-            if (currentTime >= audioCue.time &&
+            if (currentTime >= audioCue.first &&
                 !playedAudioIndices.contains(index)
             ) {
-                playSound(audioCue.command)
+                playSound(audioCue.second)
                 onAddPlayedAudioIndex(index)
             }
         }
