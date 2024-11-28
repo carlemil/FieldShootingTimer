@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.math.cos
 import kotlin.math.roundToInt
@@ -72,9 +73,9 @@ fun DecoratedDial(
             ticks = ticks,
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
-            ringThickness = ringThickness * 1.3f,
-            borderWidth = borderWidth * 1.8f,
-            borderColor = borderColor
+            ringThickness = ringThickness * 1.0f,
+            borderWidth = borderWidth * 1.4f,
+            tickColor = BlackColor
         )
 
         // One tick for each second, but smaller that the regular user defined ticks.
@@ -85,7 +86,7 @@ fun DecoratedDial(
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness / 1.7f,
             borderWidth = borderWidth / 1.4f,
-            borderColor = borderColor
+            tickColor = borderColor.copy(alpha = 0.6f)
         )
 
         SegmentBadges(
@@ -261,7 +262,7 @@ fun Ticks(
     gapAngleDegrees: Float,
     ringThickness: Dp,
     borderWidth: Dp,
-    borderColor: Color
+    tickColor: Color
 ) {
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
@@ -299,7 +300,7 @@ fun Ticks(
             }
 
             drawPath(
-                path = trianglePath, color = borderColor.copy(alpha = 0.6f)
+                path = trianglePath, color = tickColor
             )
         }
     }
