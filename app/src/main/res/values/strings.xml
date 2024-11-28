@@ -1,15 +1,14 @@
 <resources>
-    <string name="app_name">Field Shooting Timer</string>
+    <string name="app_name">Fältskyttetimer</string>
     <string name="shooting_time">:%1$ds</string>
-    <string name="show_segment_times">Show segment times</string>
-    <string name="command_load">LOAD!</string>
-    <string name="command_all_ready">ALL READY?</string>
-    <string name="command_10_seconds">10 SECONDS LEFT!</string>
-    <string name="command_ready">READY!</string>
-    <string name="command_fire">FIRE!</string>
-    <string name="command_cease_fire">CEASE FIRE!</string>
-    <string name="command_unload_weapon">UNLOAD! SECURE WEAPON!</string>
-    <string name="command_inspection">INSPECTION!</string>
-    <string name="command_mark">MARK!</string>
-
+    <string name="show_segment_times">Visa segment tider</string>
+    <string name="command_load">LADDA!</string>
+    <string name="command_all_ready">ALLA KLARA?</string>
+    <string name="command_10_seconds">10 SEKUNDER KVAR!</string>
+    <string name="command_ready">FÄRDIGA!</string>
+    <string name="command_fire">ELD!</string>
+    <string name="command_cease_fire">ELD UPPHÖR!</string>
+    <string name="command_unload_weapon">PATRON UR! PROPPA VAPEN!</string>
+    <string name="command_inspection">VISITATION!</string>
+    <string name="command_mark">MARKERA!</string>
 </resources>
