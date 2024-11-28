@@ -1,9 +1,8 @@
 <resources>
     <string name="app_name">Fältskyttetimer</string>
     <string name="shooting_time">:%1$ds</string>
-    <string name="show_segment_times">Visa segment tider</string>
     <string name="command_load">LADDA!</string>
-    <string name="command_all_ready">ALLA KLARA?</string>
+    <string name="command_all_ready">ALLA KLARA!</string>
     <string name="command_10_seconds">10 SEKUNDER KVAR!</string>
     <string name="command_ready">FÄRDIGA!</string>
     <string name="command_fire">ELD!</string>
