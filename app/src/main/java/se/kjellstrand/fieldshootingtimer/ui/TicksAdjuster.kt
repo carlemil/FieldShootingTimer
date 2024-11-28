@@ -19,6 +19,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
 fun TicksAdjuster(
     thumbValues: List<Float>,
     range: IntRange,
+    timerRunningState: TimerRunningState,
     setThumbValuesMinusOne: State<() -> Unit>,
     setThumbValuesPlusOne: State<() -> Unit>,
     onHorizontalDragSetThumbValues: State<(List<Float>) -> Unit>,
@@ -38,6 +39,7 @@ fun TicksAdjuster(
             onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
             onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues,
             range = range,
+            timerRunningState = timerRunningState,
             trackColor = TransparentGreenColor,
             thumbColor = PaleGreenColor,
             trackHeight = 16.dp,

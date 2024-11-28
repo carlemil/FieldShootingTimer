@@ -38,7 +38,8 @@ fun MultiThumbSlider(
     thumbHeight: Dp = 18.dp,
     thumbWidth: Dp = 4.dp,
     trackGapWidth: Dp = 3.dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    timerRunningState: TimerRunningState
 ) {
     val density = LocalDensity.current
     val thumbHeightPx = with(density) { thumbHeight.toPx() }
@@ -58,7 +59,7 @@ fun MultiThumbSlider(
         val segmentWidth = maxWidth / ((currentRange.last + 1) - currentRange.first)
         val firstAndLastSegmentWidth = segmentWidth / 2f
         val trackWidth = maxWidth - segmentWidth
-        val integerMarkers = currentRange.first ..currentRange.last + 1
+        val integerMarkers = currentRange.first..currentRange.last + 1
         Canvas(modifier = Modifier.fillMaxSize()) {
             val lineSegments = mutableListOf<Pair<Float, Float>>()
             var previousEnd = 0f
@@ -66,7 +67,7 @@ fun MultiThumbSlider(
             integerMarkers.forEach { marker ->
                 var markerOffset = ((marker - currentRange.first).toFloat() /
                         (currentRange.last - currentRange.first)) * trackWidth + firstAndLastSegmentWidth
-                if(markerOffset<0)markerOffset=0f
+                if (markerOffset < 0) markerOffset = 0f
 
                 val isThumbAtMarker = currentThumbValues.any { thumb ->
                     thumb.roundToInt() == marker
@@ -91,18 +92,11 @@ fun MultiThumbSlider(
                 )
             }
 
-            val thumbOffsets =
-                currentThumbValues.map { value ->
-                    toThumbOffset(
-                        value,
-                        currentRange,
-                        trackWidth,
-                        firstAndLastSegmentWidth
-                    )
-                }
-            thumbOffsets.forEach { thumbOffset ->
+            currentThumbValues.map { value ->
+                toThumbOffset(value, currentRange, trackWidth, firstAndLastSegmentWidth)
+            }.forEach { thumbOffset ->
                 drawLine(
-                    color = thumbColor,
+                    color = if (timerRunningState == TimerRunningState.NotStarted) thumbColor else trackColor,
                     start = Offset(thumbOffset, (size.height / 2) - thumbHeightPx),
                     end = Offset(thumbOffset, (size.height / 2) + thumbHeightPx),
                     strokeWidth = thumbWidthPx,
@@ -111,40 +105,42 @@ fun MultiThumbSlider(
             }
         }
 
-        currentThumbValues.forEachIndexed { index, value ->
-            Box(modifier = Modifier
-                .offset {
-                    IntOffset(
-                        x = toThumbOffset(
-                            value,
-                            currentRange,
-                            trackWidth,
-                            firstAndLastSegmentWidth
-                        ).roundToInt(),
-                        y = 0
-                    )
-                }
-                .size(thumbHeight * 2)
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
-                        change.consume()
-                        val currentThumbOffset =
-                            ((currentThumbValues[index] - currentRange.first) / (currentRange.last - currentRange.first)) * maxWidth.toFloat()
-                        val newOffset = (currentThumbOffset + change.position.x).coerceIn(
-                            0f, maxWidth.toFloat()
+        if (timerRunningState == TimerRunningState.NotStarted) {
+            currentThumbValues.forEachIndexed { index, value ->
+                Box(modifier = Modifier
+                    .offset {
+                        IntOffset(
+                            x = toThumbOffset(
+                                value,
+                                currentRange,
+                                trackWidth,
+                                firstAndLastSegmentWidth
+                            ).roundToInt(),
+                            y = 0
                         )
-                        val newValue =
-                            (newOffset / maxWidth) * (currentRange.last - currentRange.first) + currentRange.first
+                    }
+                    .size(thumbHeight * 2)
+                    .pointerInput(Unit) {
+                        detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
+                            change.consume()
+                            val currentThumbOffset =
+                                ((currentThumbValues[index] - currentRange.first) / (currentRange.last - currentRange.first)) * maxWidth.toFloat()
+                            val newOffset = (currentThumbOffset + change.position.x).coerceIn(
+                                0f, maxWidth.toFloat()
+                            )
+                            val newValue =
+                                (newOffset / maxWidth) * (currentRange.last - currentRange.first) + currentRange.first
 
-                        val updatedValues =
-                            currentThumbValues
-                                .toMutableList()
-                                .apply { this[index] = newValue }
-                        onHorizontalDragSetThumbValues.value(updatedValues)
-                    }, onDragEnd = {
-                        onHorizontalDragRoundThumbValues.value()
+                            val updatedValues =
+                                currentThumbValues
+                                    .toMutableList()
+                                    .apply { this[index] = newValue }
+                            onHorizontalDragSetThumbValues.value(updatedValues)
+                        }, onDragEnd = {
+                            onHorizontalDragRoundThumbValues.value()
+                        })
                     })
-                })
+            }
         }
     }
 }

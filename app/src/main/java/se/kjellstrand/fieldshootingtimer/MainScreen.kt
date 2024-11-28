@@ -1,6 +1,7 @@
 package se.kjellstrand.fieldshootingtimer
 
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -76,10 +77,14 @@ class MainScreen : ComponentActivity() {
     }
 }
 
+private const val VIBRATION_LENGTH_MS = 300L
+
 @Composable
 fun MainScreen(
     timerViewModel: TimerViewModel
 ) {
+    val context = LocalContext.current
+
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
@@ -94,6 +99,25 @@ fun MainScreen(
         initial = savedThumbValues, context = Dispatchers.Main
     )
     savedThumbValues = thumbValues
+
+    val passedThumbs = remember { mutableSetOf<Float>() }
+    val vibrator = remember { context.getSystemService(android.os.Vibrator::class.java) }
+
+    LaunchedEffect(currentTime, thumbValues) {
+        thumbValues.forEach { thumbValue ->
+            if (thumbValue !in passedThumbs && currentTime >= thumbValue) {
+                passedThumbs.add(thumbValue)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    vibrator?.vibrate(
+                        android.os.VibrationEffect.createOneShot(
+                            VIBRATION_LENGTH_MS,
+                            android.os.VibrationEffect.DEFAULT_AMPLITUDE
+                        )
+                    )
+                }
+            }
+        }
+    }
 
     var playedAudioIndices by rememberSaveable(timerRunningState) { mutableStateOf(setOf<Int>()) }
     val clearPlayedAudioIndices: () -> Unit = {
@@ -113,8 +137,6 @@ fun MainScreen(
             }
         })
     }
-
-    val context = LocalContext.current
 
     val audioManager = remember { AudioManager(context) }
     val audioCues by rememberSaveable(timerRunningState) {
@@ -374,6 +396,7 @@ fun Settings(
     TicksAdjuster(
         thumbValues = thumbValues,
         range = range,
+        timerRunningState = timerRunningState,
         setThumbValuesMinusOne = setThumbValuesMinusOne,
         setThumbValuesPlusOne = setThumbValuesPlusOne,
         onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
