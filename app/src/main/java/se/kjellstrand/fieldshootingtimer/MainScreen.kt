@@ -100,13 +100,15 @@ fun MainScreen(
     )
     savedThumbValues = thumbValues
 
-    val passedThumbs = remember { mutableSetOf<Float>() }
+    var passedThumbs by rememberSaveable(timerRunningState) { mutableStateOf(setOf<Float>()) }
     val vibrator = remember { context.getSystemService(android.os.Vibrator::class.java) }
 
     LaunchedEffect(currentTime, thumbValues) {
         thumbValues.forEach { thumbValue ->
             if (thumbValue !in passedThumbs && currentTime >= thumbValue) {
-                passedThumbs.add(thumbValue)
+                val mutableSet = passedThumbs.toMutableSet()
+                mutableSet.add(thumbValue)
+                passedThumbs = mutableSet.toSet()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator?.vibrate(
                         android.os.VibrationEffect.createOneShot(
@@ -206,9 +208,7 @@ fun MainScreen(
     }
 
     LaunchedEffect(shootingDuration) {
-        println("Action range: $range thumbs: $thumbValues")
         timerViewModel.setThumbValues(thumbValues.filter { it.roundToInt() in range.toIntRange() })
-        println("Action after thumbs: $thumbValues")
     }
 
     DisposableEffect(Unit) {
