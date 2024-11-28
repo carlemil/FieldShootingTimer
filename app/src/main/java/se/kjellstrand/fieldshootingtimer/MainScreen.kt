@@ -85,30 +85,35 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
+    var savedCurrentTime by rememberSaveable { mutableFloatStateOf(0f) }
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
-        initial = 0f, context = Dispatchers.Main
+        initial = savedCurrentTime, context = Dispatchers.Main
     )
+    savedCurrentTime = currentTime
+
     val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
+
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerRunningState.NotStarted, context = Dispatchers.Main
     )
+
     var savedThumbValues by rememberSaveable { mutableStateOf<List<Float>>(listOf()) }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = savedThumbValues, context = Dispatchers.Main
     )
     savedThumbValues = thumbValues
 
-    var passedThumbs by rememberSaveable(timerRunningState) { mutableStateOf(setOf<Float>()) }
+    var passedThumbs by rememberSaveable { mutableStateOf(setOf<Float>()) }
     val vibrator = remember { context.getSystemService(android.os.Vibrator::class.java) }
 
-    LaunchedEffect(currentTime, thumbValues) {
+    LaunchedEffect(savedCurrentTime, thumbValues) {
         thumbValues.forEach { thumbValue ->
-            if (thumbValue !in passedThumbs && currentTime >= thumbValue) {
-                val mutableSet = passedThumbs.toMutableSet()
-                mutableSet.add(thumbValue)
-                passedThumbs = mutableSet.toSet()
+            if (thumbValue !in passedThumbs && savedCurrentTime >= thumbValue) {
+                val mutablePassedThumbs = passedThumbs.toMutableSet()
+                mutablePassedThumbs.add(thumbValue)
+                passedThumbs = mutablePassedThumbs.toSet()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     vibrator?.vibrate(
                         android.os.VibrationEffect.createOneShot(
@@ -177,27 +182,29 @@ fun MainScreen(
 
     LaunchedEffect(timerRunningState) {
         if (timerRunningState == TimerRunningState.Running) {
+            passedThumbs = setOf()
+
             audioManager.playAudioCue(
                 audioCues = audioCues,
-                currentTime = currentTime,
+                currentTime = savedCurrentTime,
                 playedAudioIndices = playedAudioIndices,
                 onAddPlayedAudioIndex = onAddPlayedAudioIndex
             )
 
             val startTimeMillis = withFrameMillis { it }
             var lastFrameTimeMillis = startTimeMillis
-            while (currentTime < totalDuration && isActive) {
+            while (savedCurrentTime < totalDuration && isActive) {
                 val frameTimeMillis = withFrameMillis { it }
                 val deltaTime = (frameTimeMillis - lastFrameTimeMillis) / 1000f
-                timerViewModel.setCurrentTime(currentTime + deltaTime)
+                timerViewModel.setCurrentTime(savedCurrentTime + deltaTime)
                 audioManager.playAudioCue(
                     audioCues = audioCues,
-                    currentTime = currentTime,
+                    currentTime = savedCurrentTime,
                     playedAudioIndices = playedAudioIndices,
                     onAddPlayedAudioIndex = onAddPlayedAudioIndex
                 )
 
-                if (currentTime >= totalDuration) {
+                if (savedCurrentTime >= totalDuration) {
                     timerViewModel.setCurrentTime(totalDuration)
                     timerViewModel.setTimerState(TimerRunningState.Finished)
                     break
