@@ -46,7 +46,7 @@ import se.kjellstrand.fieldshootingtimer.audio.AudioManager
 import se.kjellstrand.fieldshootingtimer.ui.Command
 import se.kjellstrand.fieldshootingtimer.ui.CommandList
 import se.kjellstrand.fieldshootingtimer.ui.PlayButton
-import se.kjellstrand.fieldshootingtimer.ui.ShootTimeSlider
+import se.kjellstrand.fieldshootingtimer.ui.ShootTimeAdjuster
 import se.kjellstrand.fieldshootingtimer.ui.ShootTimer
 import se.kjellstrand.fieldshootingtimer.ui.TicksAdjuster
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
@@ -387,15 +387,17 @@ fun Settings(
     val onHorizontalDragRoundThumbValues = rememberUpdatedState {
         timerViewModel.roundThumbValues()
     }
+    val onShootTimeAdjusterValueChange = rememberUpdatedState { duration: List<Float> ->
+        val shootingTime = if (duration.isEmpty()) 0f else duration.first().roundToInt().toFloat()
+        timerViewModel.setShootingTime(shootingTime)
+    }
     val enabled = timerRunningState == TimerRunningState.NotStarted
 
     Spacer(modifier = Modifier.padding(Paddings.Small))
-    ShootTimeSlider(
+    ShootTimeAdjuster(
         shootingDuration = shootingDuration,
         enabled = enabled,
-        onValueChange = { duration ->
-            timerViewModel.setShootingTime(duration.roundToInt().toFloat())
-        }
+        onValueChange = onShootTimeAdjusterValueChange
     )
     Spacer(modifier = Modifier.padding(Paddings.Small))
     TicksAdjuster(

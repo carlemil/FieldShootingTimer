@@ -30,14 +30,15 @@ import kotlin.math.roundToInt
 fun MultiThumbSlider(
     thumbValues: List<Float>,
     onHorizontalDragSetThumbValues: State<(List<Float>) -> Unit>,
-    onHorizontalDragRoundThumbValues: State<() -> Unit>,
+    onHorizontalDragRoundThumbValues: State<() -> Unit> = rememberUpdatedState({}),
     range: IntRange,
     trackColor: Color = Color.Gray,
     thumbColor: Color = Color.Blue,
-    trackHeight: Dp = Paddings.Small,
+    inactiveColor: Color = Color.LightGray,
+    trackHeight: Dp = 8.dp,
     thumbHeight: Dp = 18.dp,
     thumbWidth: Dp = 4.dp,
-    trackGapWidth: Dp = 3.dp,
+    trackGapWidth: Dp = 1.dp,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
@@ -74,7 +75,7 @@ fun MultiThumbSlider(
                 }
 
                 val cutoutWidth =
-                    if (isThumbAtMarker) trackGapWidthPx * 2 else trackGapWidthPx
+                    if (isThumbAtMarker) thumbWidthPx  else trackGapWidthPx
 
                 var newEnd = (markerOffset - cutoutWidth)
                 if (newEnd > maxWidth) newEnd = maxWidth.toFloat()
@@ -84,7 +85,7 @@ fun MultiThumbSlider(
 
             lineSegments.forEach { (start, end) ->
                 drawLine(
-                    color = trackColor,
+                    color = if (enabled) trackColor else inactiveColor,
                     start = Offset(start, size.height / 2),
                     end = Offset(end, size.height / 2),
                     strokeWidth = trackHeightPx,
@@ -96,7 +97,7 @@ fun MultiThumbSlider(
                 toThumbOffset(value, currentRange, trackWidth, firstAndLastSegmentWidth)
             }.forEach { thumbOffset ->
                 drawLine(
-                    color = if (enabled) thumbColor else trackColor,
+                    color = if (enabled) thumbColor else inactiveColor,
                     start = Offset(thumbOffset, (size.height / 2) - thumbHeightPx),
                     end = Offset(thumbOffset, (size.height / 2) + thumbHeightPx),
                     strokeWidth = thumbWidthPx,

@@ -9,8 +9,8 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
@@ -32,7 +32,7 @@ fun TicksAdjuster(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(end = Paddings.Large)
-                .clickable { setThumbValuesPlusOne.value() }
+                .clickable { if (enabled) setThumbValuesPlusOne.value() }
         )
         MultiThumbSlider(
             thumbValues = thumbValues,
@@ -40,9 +40,9 @@ fun TicksAdjuster(
             onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues,
             range = range,
             enabled = enabled,
-            trackColor = TransparentGreenColor,
             thumbColor = PaleGreenColor,
-            trackHeight = 16.dp,
+            trackColor = LightGreenColor,
+            inactiveColor = TransparentGreenColor,
             modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically)
@@ -54,7 +54,7 @@ fun TicksAdjuster(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(start = Paddings.Large)
-                .clickable { setThumbValuesMinusOne.value() }
+                .clickable { if (enabled) setThumbValuesMinusOne.value() }
         )
     }
 }
