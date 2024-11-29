@@ -39,7 +39,7 @@ fun MultiThumbSlider(
     thumbWidth: Dp = 4.dp,
     trackGapWidth: Dp = 3.dp,
     modifier: Modifier = Modifier,
-    timerRunningState: TimerRunningState
+    enabled: Boolean = true,
 ) {
     val density = LocalDensity.current
     val thumbHeightPx = with(density) { thumbHeight.toPx() }
@@ -96,7 +96,7 @@ fun MultiThumbSlider(
                 toThumbOffset(value, currentRange, trackWidth, firstAndLastSegmentWidth)
             }.forEach { thumbOffset ->
                 drawLine(
-                    color = if (timerRunningState == TimerRunningState.NotStarted) thumbColor else trackColor,
+                    color = if (enabled) thumbColor else trackColor,
                     start = Offset(thumbOffset, (size.height / 2) - thumbHeightPx),
                     end = Offset(thumbOffset, (size.height / 2) + thumbHeightPx),
                     strokeWidth = thumbWidthPx,
@@ -105,7 +105,7 @@ fun MultiThumbSlider(
             }
         }
 
-        if (timerRunningState == TimerRunningState.NotStarted) {
+        if (enabled) {
             currentThumbValues.forEachIndexed { index, value ->
                 Box(modifier = Modifier
                     .offset {

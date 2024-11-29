@@ -23,7 +23,7 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 @Composable
 fun ShootTimeSlider(
     shootingDuration: Float,
-    timerRunningState: TimerRunningState,
+    enabled: Boolean,
     onValueChange: (Float) -> Unit
 ) {
     val onValueChangeState by rememberUpdatedState(onValueChange)
@@ -34,7 +34,7 @@ fun ShootTimeSlider(
     ) {
         Slider(
             value = shootingDuration,
-            enabled = timerRunningState == TimerRunningState.NotStarted,
+            enabled = enabled,
             onValueChange = { value -> onValueChangeState(value) },
             onValueChangeFinished = { },
             colors = SliderDefaults.colors(

@@ -30,7 +30,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
@@ -242,7 +241,7 @@ fun MainScreen(
     }
 
     val statelessSettingsComposable: @Composable () -> Unit = {
-        Settings(timerViewModel, range.toIntRange(), clearPlayedAudioIndices, segmentDurations)
+        Settings(timerViewModel, range.toIntRange(), segmentDurations)
     }
 
     when (LocalConfiguration.current.orientation) {
@@ -358,7 +357,6 @@ fun PortraitUI(
 fun Settings(
     timerViewModel: TimerViewModel,
     range: IntRange,
-    onClearPlayedAudioIndices: () -> Unit,
     segmentDurations: List<Float>
 ) {
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
@@ -389,21 +387,21 @@ fun Settings(
     val onHorizontalDragRoundThumbValues = rememberUpdatedState {
         timerViewModel.roundThumbValues()
     }
+    val enabled = timerRunningState == TimerRunningState.NotStarted
 
     Spacer(modifier = Modifier.padding(Paddings.Small))
     ShootTimeSlider(
         shootingDuration = shootingDuration,
-        timerRunningState = timerRunningState,
+        enabled = enabled,
         onValueChange = { duration ->
             timerViewModel.setShootingTime(duration.roundToInt().toFloat())
-            onClearPlayedAudioIndices()
         }
     )
     Spacer(modifier = Modifier.padding(Paddings.Small))
     TicksAdjuster(
         thumbValues = thumbValues,
         range = range,
-        timerRunningState = timerRunningState,
+        enabled = enabled,
         setThumbValuesMinusOne = setThumbValuesMinusOne,
         setThumbValuesPlusOne = setThumbValuesPlusOne,
         onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
@@ -434,7 +432,7 @@ fun PortraitUIPreview() {
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     val settings: @Composable () -> Unit = {
-        Settings(tvm, IntRange(5, 12), { }, segmentDurations)
+        Settings(tvm, IntRange(5, 12), segmentDurations)
     }
     PortraitUI(
         tvm,
@@ -462,7 +460,7 @@ fun LandscapeUIPreview() {
 
     val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     val settings: @Composable () -> Unit = {
-        Settings(tvm, IntRange(5, 12), { }, segmentDurations)
+        Settings(tvm, IntRange(5, 12), segmentDurations)
     }
     LandscapeUI(
         tvm,
