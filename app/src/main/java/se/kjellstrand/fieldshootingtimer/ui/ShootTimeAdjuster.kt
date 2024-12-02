@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import se.kjellstrand.fieldshootingtimer.R
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
@@ -28,7 +29,6 @@ fun ShootTimeAdjuster(
     Row(
         verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
     ) {
-
         MultiThumbSlider(
             thumbValues = listOf(shootingDuration),
             onHorizontalDragSetThumbValues = onValueChangeState,
@@ -40,7 +40,7 @@ fun ShootTimeAdjuster(
             modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically)
-                .padding(top = Paddings.Small, start = Paddings.Large, bottom = Paddings.Large)
+                .padding(Paddings.Large)
         )
         Text(
             text = stringResource(
@@ -48,19 +48,20 @@ fun ShootTimeAdjuster(
             ),
             fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
-            modifier = Modifier.padding(end = Paddings.Large)
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .padding(end = Paddings.Large)
         )
     }
 }
 
+@Preview(showBackground = true, widthDp = 400, heightDp = 100)
 @Composable
 fun ShootTimeAdjusterPreview() {
-    // Mock state for `onValueChange`
     val mockOnValueChange = rememberUpdatedState { _: List<Float> -> }
 
-    // Call the composable with mock data
     ShootTimeAdjuster(
-        shootingDuration = 10f, // Example shooting duration
+        shootingDuration = 15f,
         enabled = true,
         onValueChange = mockOnValueChange
     )

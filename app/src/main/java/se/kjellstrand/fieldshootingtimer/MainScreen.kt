@@ -339,7 +339,9 @@ fun PortraitUI(
         Spacer(modifier = Modifier.padding(Paddings.Small))
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Paddings.Large)
         ) {
             ShootTimer(timerViewModel, segmentDurations, timerSize)
             PlayButton(

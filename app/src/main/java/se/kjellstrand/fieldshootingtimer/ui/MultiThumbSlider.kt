@@ -200,7 +200,7 @@ private fun toThumbOffset(
 @Composable
 fun MultiThumbSliderPreview() {
     val thumbValues = listOf(5f, 6f, 7f, 9f, 12f)
-    val range = 3..27
+    val range = 3..13
     val onHorizontalDragSetThumbValues = rememberUpdatedState { _: List<Float> -> }
     val onHorizontalDragRoundThumbValues = rememberUpdatedState { }
 
