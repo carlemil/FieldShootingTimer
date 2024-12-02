@@ -52,3 +52,16 @@ fun ShootTimeAdjuster(
         )
     }
 }
+
+@Composable
+fun ShootTimeAdjusterPreview() {
+    // Mock state for `onValueChange`
+    val mockOnValueChange = rememberUpdatedState { _: List<Float> -> }
+
+    // Call the composable with mock data
+    ShootTimeAdjuster(
+        shootingDuration = 10f, // Example shooting duration
+        enabled = true,
+        onValueChange = mockOnValueChange
+    )
+}

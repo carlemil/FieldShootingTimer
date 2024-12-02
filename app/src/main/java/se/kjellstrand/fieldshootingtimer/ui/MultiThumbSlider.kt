@@ -16,8 +16,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,10 +38,10 @@ fun MultiThumbSlider(
     trackColor: Color = Color.Gray,
     thumbColor: Color = Color.Blue,
     inactiveColor: Color = Color.LightGray,
-    trackHeight: Dp = 8.dp,
-    thumbHeight: Dp = 36.dp,
-    thumbWidth: Dp = 4.dp,
-    trackGapWidth: Dp = 1.dp,
+    trackHeight: Dp = 12.dp,
+    thumbHeight: Dp = 18.dp,
+    thumbWidth: Dp = 8.dp,
+    trackGapWidth: Dp = 0.8.dp,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
@@ -63,6 +65,7 @@ fun MultiThumbSlider(
         val firstAndLastSegmentWidth = segmentWidth / 2f
         val trackWidth = maxWidth - segmentWidth
         val integerMarkers = currentRange.first..currentRange.last + 1
+
         Canvas(modifier = Modifier.fillMaxSize()) {
             val lineSegments = mutableListOf<Pair<Float, Float>>()
             var previousEnd = 0f
@@ -77,12 +80,19 @@ fun MultiThumbSlider(
                 }
 
                 val cutoutWidth =
-                    if (isThumbAtMarker) thumbWidthPx else trackGapWidthPx
+                    if (isThumbAtMarker) thumbWidthPx+trackGapWidthPx*2 else trackGapWidthPx
 
-                var newEnd = (markerOffset - cutoutWidth)
+                var newEnd = (markerOffset - cutoutWidth/2)
                 if (newEnd > maxWidth) newEnd = maxWidth.toFloat()
                 lineSegments.add(previousEnd to newEnd)
-                previousEnd = markerOffset + cutoutWidth
+                previousEnd = markerOffset + cutoutWidth/2
+            }
+
+            if (lineSegments.isNotEmpty()) {
+                drawRoundedCap(90f,
+                    if (enabled) trackColor else inactiveColor,
+                    lineSegments.first().first,
+                    trackHeightPx)
             }
 
             lineSegments.forEach { (start, end) ->
@@ -93,6 +103,13 @@ fun MultiThumbSlider(
                     strokeWidth = trackHeightPx,
                     cap = StrokeCap.Butt
                 )
+            }
+
+            if (lineSegments.isNotEmpty()) {
+                drawRoundedCap(270f,
+                    if (enabled) trackColor else inactiveColor,
+                    lineSegments.last().second,
+                    trackHeightPx)
             }
 
             currentThumbValues.map { value ->
@@ -148,6 +165,28 @@ fun MultiThumbSlider(
     }
 }
 
+private fun DrawScope.drawRoundedCap(
+    startAngle: Float,
+    color: Color,
+    x: Float,
+    trackHeightPx: Float
+) {
+    drawArc(
+        color = color,
+        startAngle = startAngle,
+        sweepAngle = 180f,
+        useCenter = true,
+        topLeft = Offset(
+            x = x - trackHeightPx / 2,
+            y = (size.height / 2) - trackHeightPx / 2
+        ),
+        size = Size(
+            width = trackHeightPx,
+            height = trackHeightPx
+        )
+    )
+}
+
 private fun toThumbOffset(
     thumbValue: Float,
     range: IntRange,
@@ -170,13 +209,6 @@ fun MultiThumbSliderPreview() {
         onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
         onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues,
         range = range,
-        trackColor = Color.Gray,
-        thumbColor = Color.Blue,
-        inactiveColor = Color.LightGray,
-        trackHeight = 8.dp,
-        thumbHeight = 18.dp,
-        thumbWidth = 4.dp,
-        trackGapWidth = 2.dp,
         modifier = Modifier.padding(16.dp)
     )
 }
