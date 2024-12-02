@@ -380,9 +380,7 @@ fun Settings(
         initial = listOf(), context = Dispatchers.Main
     )
     val onHorizontalDragSetThumbValues = rememberUpdatedState { newThumbValues: List<Float> ->
-        println("thumbValues: $newThumbValues")
         timerViewModel.setThumbValues(newThumbValues)
-        println("new thumbValues: $newThumbValues")
     }
     val onHorizontalDragRoundThumbValues = rememberUpdatedState {
         timerViewModel.roundThumbValues()

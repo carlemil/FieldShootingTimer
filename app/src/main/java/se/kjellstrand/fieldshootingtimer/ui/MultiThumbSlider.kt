@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -36,7 +37,7 @@ fun MultiThumbSlider(
     thumbColor: Color = Color.Blue,
     inactiveColor: Color = Color.LightGray,
     trackHeight: Dp = 8.dp,
-    thumbHeight: Dp = 18.dp,
+    thumbHeight: Dp = 36.dp,
     thumbWidth: Dp = 4.dp,
     trackGapWidth: Dp = 1.dp,
     modifier: Modifier = Modifier,
@@ -57,6 +58,7 @@ fun MultiThumbSlider(
             .padding(horizontal = Paddings.Small)
     ) {
         val maxWidth = constraints.maxWidth
+        val maxHeight = constraints.maxHeight
         val segmentWidth = maxWidth / ((currentRange.last + 1) - currentRange.first)
         val firstAndLastSegmentWidth = segmentWidth / 2f
         val trackWidth = maxWidth - segmentWidth
@@ -75,7 +77,7 @@ fun MultiThumbSlider(
                 }
 
                 val cutoutWidth =
-                    if (isThumbAtMarker) thumbWidthPx  else trackGapWidthPx
+                    if (isThumbAtMarker) thumbWidthPx else trackGapWidthPx
 
                 var newEnd = (markerOffset - cutoutWidth)
                 if (newEnd > maxWidth) newEnd = maxWidth.toFloat()
@@ -111,16 +113,16 @@ fun MultiThumbSlider(
                 Box(modifier = Modifier
                     .offset {
                         IntOffset(
-                            x = toThumbOffset(
+                            x = (toThumbOffset(
                                 value,
                                 currentRange,
                                 trackWidth,
                                 firstAndLastSegmentWidth
-                            ).roundToInt(),
-                            y = 0
+                            ) - thumbWidthPx * 1.5).roundToInt(),
+                            y = (maxHeight / 2 - thumbHeightPx).toInt()
                         )
                     }
-                    .size(thumbHeight * 2)
+                    .size(width = thumbWidth * 3, height = thumbHeight * 2)
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
                             change.consume()
@@ -153,4 +155,28 @@ private fun toThumbOffset(
     firstAndLastSegmentWidth: Float
 ): Float {
     return ((thumbValue - range.first) / (range.last - range.first)) * sliderWidth + firstAndLastSegmentWidth
+}
+
+@Preview(showBackground = true, widthDp = 400, heightDp = 100)
+@Composable
+fun MultiThumbSliderPreview() {
+    val thumbValues = listOf(5f, 6f, 7f, 9f, 12f)
+    val range = 3..27
+    val onHorizontalDragSetThumbValues = rememberUpdatedState { _: List<Float> -> }
+    val onHorizontalDragRoundThumbValues = rememberUpdatedState { }
+
+    MultiThumbSlider(
+        thumbValues = thumbValues,
+        onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
+        onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues,
+        range = range,
+        trackColor = Color.Gray,
+        thumbColor = Color.Blue,
+        inactiveColor = Color.LightGray,
+        trackHeight = 8.dp,
+        thumbHeight = 18.dp,
+        thumbWidth = 4.dp,
+        trackGapWidth = 2.dp,
+        modifier = Modifier.padding(16.dp)
+    )
 }
