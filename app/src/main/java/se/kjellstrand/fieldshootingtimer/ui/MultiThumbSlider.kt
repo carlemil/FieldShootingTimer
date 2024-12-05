@@ -67,9 +67,11 @@ fun MultiThumbSlider(
         val integerMarkers = currentRange.first..currentRange.last + 1
 
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val lineSegments = mutableListOf<Pair<Float, Float>>()
-            var previousEnd = 0f
+            var lineSegments = mutableListOf<Pair<Float, Float>>()
+            // Start a bit inside the edge to not drawRoundedCap outside bounding box.
+            var previousEnd = trackHeightPx / 2f
 
+            // Calculate spaces indicating whole seconds (and extra space where we have thumbs).
             integerMarkers.forEach { marker ->
                 var markerOffset = ((marker - currentRange.first).toFloat() /
                         (currentRange.last - currentRange.first)) * trackWidth + firstAndLastSegmentWidth
@@ -80,21 +82,31 @@ fun MultiThumbSlider(
                 }
 
                 val cutoutWidth =
-                    if (isThumbAtMarker) thumbWidthPx+trackGapWidthPx*2 else trackGapWidthPx
+                    if (isThumbAtMarker) thumbWidthPx + trackGapWidthPx * 2 else trackGapWidthPx
 
-                var newEnd = (markerOffset - cutoutWidth/2)
+                var newEnd = (markerOffset - cutoutWidth / 2)
                 if (newEnd > maxWidth) newEnd = maxWidth.toFloat()
                 lineSegments.add(previousEnd to newEnd)
-                previousEnd = markerOffset + cutoutWidth/2
+                previousEnd = markerOffset + cutoutWidth / 2
             }
 
+            // End bit inside the edge to not drawRoundedCap outside bounding box.
+            lineSegments = lineSegments.toMutableList().apply {
+                val lastSegment = removeAt(lastIndex)
+                add(lastSegment.first to lastSegment.second - trackHeightPx / 2f)
+            }
+
+            // Draw start cap
             if (lineSegments.isNotEmpty()) {
-                drawRoundedCap(90f,
+                drawRoundedCap(
+                    90f,
                     if (enabled) trackColor else inactiveColor,
                     lineSegments.first().first,
-                    trackHeightPx)
+                    trackHeightPx
+                )
             }
 
+            // Draw all the little segments of the slider line.
             lineSegments.forEach { (start, end) ->
                 drawLine(
                     color = if (enabled) trackColor else inactiveColor,
@@ -105,11 +117,14 @@ fun MultiThumbSlider(
                 )
             }
 
+            // Draw end cap
             if (lineSegments.isNotEmpty()) {
-                drawRoundedCap(270f,
+                drawRoundedCap(
+                    270f,
                     if (enabled) trackColor else inactiveColor,
                     lineSegments.last().second,
-                    trackHeightPx)
+                    trackHeightPx
+                )
             }
 
             currentThumbValues.map { value ->
