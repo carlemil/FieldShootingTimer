@@ -31,7 +31,7 @@ fun TicksAdjuster(
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .padding(end = Paddings.Large)
+                .padding(end = Paddings.Medium)
                 .clickable { if (enabled) setThumbValuesPlusOne.value() }
         )
         MultiThumbSlider(
@@ -53,7 +53,7 @@ fun TicksAdjuster(
             fontSize = 48.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .padding(start = Paddings.Large)
+                .padding(start = Paddings.Medium)
                 .clickable { if (enabled) setThumbValuesMinusOne.value() }
         )
     }

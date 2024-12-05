@@ -40,7 +40,7 @@ fun ShootTimeAdjuster(
             modifier = Modifier
                 .weight(1f)
                 .align(Alignment.CenterVertically)
-                .padding(Paddings.Large)
+                .padding(start = Paddings.Large, end = Paddings.Medium)
         )
         Text(
             text = stringResource(
