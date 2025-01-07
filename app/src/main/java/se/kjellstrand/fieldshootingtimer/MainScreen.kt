@@ -1,8 +1,10 @@
 package se.kjellstrand.fieldshootingtimer
 
+import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -84,6 +86,9 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
 
+    val systemAudioManager =
+        context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+
     var savedCurrentTime by rememberSaveable { mutableFloatStateOf(0f) }
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
         initial = savedCurrentTime, context = Dispatchers.Main
@@ -110,16 +115,24 @@ fun MainScreen(
     LaunchedEffect(savedCurrentTime, thumbValues) {
         thumbValues.forEach { thumbValue ->
             if (thumbValue !in passedThumbs && savedCurrentTime >= thumbValue) {
-                val mutablePassedThumbs = passedThumbs.toMutableSet()
-                mutablePassedThumbs.add(thumbValue)
-                passedThumbs = mutablePassedThumbs.toSet()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator?.vibrate(
-                        android.os.VibrationEffect.createOneShot(
-                            VIBRATION_LENGTH_MS,
-                            android.os.VibrationEffect.DEFAULT_AMPLITUDE
-                        )
-                    )
+                when (systemAudioManager.ringerMode) {
+                    android.media.AudioManager.RINGER_MODE_SILENT -> {
+                        Log.d("MainScreen", "Skipping vibration because device is in silent mode.")
+                    }
+
+                    else -> {
+                        val mutablePassedThumbs = passedThumbs.toMutableSet()
+                        mutablePassedThumbs.add(thumbValue)
+                        passedThumbs = mutablePassedThumbs.toSet()
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            vibrator?.vibrate(
+                                android.os.VibrationEffect.createOneShot(
+                                    VIBRATION_LENGTH_MS,
+                                    android.os.VibrationEffect.DEFAULT_AMPLITUDE
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -127,8 +140,8 @@ fun MainScreen(
 
     var playedAudioIndices by rememberSaveable(timerRunningState) { mutableStateOf(setOf<Int>()) }
     val clearPlayedAudioIndices: () -> Unit = {
-        playedAudioIndices = emptySet()
-    }
+          playedAudioIndices = emptySet()
+      }
     val onAddPlayedAudioIndex: (Int) -> Unit = { index ->
         val mutableSet = playedAudioIndices.toMutableSet()
         mutableSet.add(index)
@@ -235,6 +248,7 @@ fun MainScreen(
 
             TimerRunningState.Stopped, TimerRunningState.Finished -> {
                 timerViewModel.setCurrentTime(0f)
+                clearPlayedAudioIndices()
                 timerViewModel.setTimerState(TimerRunningState.NotStarted)
             }
         }
