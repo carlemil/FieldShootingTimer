@@ -1,9 +1,12 @@
 package se.kjellstrand.fieldshootingtimer
 
+import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.res.Configuration
 import android.os.Build
 import android.util.Log
+import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -20,9 +23,14 @@ import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
-import kotlin.math.roundToInt
 
 private const val VIBRATION_LENGTH_MS = 300L
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 @Composable
 fun MainScreen(
@@ -38,10 +46,6 @@ fun MainScreen(
 
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerRunningState.NotStarted, context = Dispatchers.Main
-    )
-
-    val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
-        initial = emptyList(), context = Dispatchers.Main
     )
 
     val segmentDurations by timerViewModel.segmentDurationsFlow.collectAsState(
@@ -76,13 +80,21 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(shootingDuration) {
-        timerViewModel.setThumbValues(thumbValues.filter { it.roundToInt() in range })
-    }
-
     DisposableEffect(Unit) {
         onDispose {
             audioManager.release()
+        }
+    }
+
+    val window = remember(context) { context.findActivity()?.window }
+    DisposableEffect(window, timerRunningState) {
+        if (timerRunningState == TimerRunningState.Running) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 

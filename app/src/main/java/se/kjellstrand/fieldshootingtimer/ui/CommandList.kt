@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
@@ -53,10 +52,7 @@ fun CommandList(
                     .padding(Paddings.Small),
                 color = if (index == hlIndex) BlackColor else GrayColor,
                 style = if (index == hlIndex) {
-                    MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
+                    MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 } else {
                     MaterialTheme.typography.bodyLarge
                 }

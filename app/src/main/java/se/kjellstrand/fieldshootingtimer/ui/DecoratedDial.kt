@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -125,6 +126,8 @@ fun TickBadges(
     borderWidth: Dp,
     badgeRadius: Dp
 ) {
+    val textPaint = remember { newBadgeTextPaint() }
+    val textBounds = remember { android.graphics.Rect() }
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
         val ringThicknessPx = ringThickness.toPx()
@@ -157,7 +160,9 @@ fun TickBadges(
                 borderColor = borderColor,
                 backgroundColor = Color.White,
                 angleRad = angleRad,
-                timeText = time
+                timeText = time,
+                textPaint = textPaint,
+                textBounds = textBounds
             )
         }
     }
@@ -175,6 +180,8 @@ fun SegmentBadges(
     borderWidth: Dp,
     badgeRadius: Dp,
 ) {
+    val textPaint = remember { newBadgeTextPaint() }
+    val textBounds = remember { android.graphics.Rect() }
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
         val ringThicknessPx = ringThickness.toPx()
@@ -205,10 +212,18 @@ fun SegmentBadges(
                 backgroundColor = segmentColors[index],
                 borderColor = borderColor,
                 angleRad = angleRad,
-                timeText = time.toInt().toString()
+                timeText = time.toInt().toString(),
+                textPaint = textPaint,
+                textBounds = textBounds
             )
         }
     }
+}
+
+private fun newBadgeTextPaint(): android.graphics.Paint = android.graphics.Paint().apply {
+    color = android.graphics.Color.BLACK
+    textAlign = android.graphics.Paint.Align.CENTER
+    isAntiAlias = true
 }
 
 @Composable
@@ -328,7 +343,9 @@ fun DrawScope.drawBadge(
     borderColor: Color,
     backgroundColor: Color,
     angleRad: Double,
-    timeText: String
+    timeText: String,
+    textPaint: android.graphics.Paint,
+    textBounds: android.graphics.Rect
 ) {
     drawCircle(
         color = backgroundColor,
@@ -348,27 +365,15 @@ fun DrawScope.drawBadge(
     )
 
     drawContext.canvas.nativeCanvas.apply {
-        val paint = android.graphics.Paint().apply {
-            color = android.graphics.Color.BLACK
-            textSize = markerRadiusPx * 1.2f
-            textAlign = android.graphics.Paint.Align.CENTER
-            isAntiAlias = true
-        }
-
+        textPaint.textSize = markerRadiusPx * 1.2f
+        textPaint.getTextBounds(timeText, 0, timeText.length, textBounds)
+        val textHeight = textBounds.height()
         val angleDegrees = Math.toDegrees(angleRad + Math.PI / 2).toFloat()
 
-        val textBounds = android.graphics.Rect()
-        paint.getTextBounds(timeText, 0, timeText.length, textBounds)
-        val textHeight = textBounds.height()
-
         save()
-
         translate(x, y)
         rotate(angleDegrees)
-        drawText(
-            timeText, 0f, textHeight / 2f, paint
-        )
-
+        drawText(timeText, 0f, textHeight / 2f, textPaint)
         restore()
     }
 }

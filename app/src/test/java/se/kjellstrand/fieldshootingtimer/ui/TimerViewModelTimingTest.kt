@@ -51,16 +51,15 @@ class TimerViewModelTimingTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(2f)
 
-        vm.start()
-        // total = 7 + 3 + 2 + 3 + 4 + 2 = 21 seconds
-        advanceTimeBy(22_000)
-        runCurrent()
-
-        // Read the SharedFlow's replay cache via a late subscriber.
         val collected = mutableListOf<Command>()
         val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
             vm.cueEventsFlow.collect { collected += it }
         }
+        runCurrent()
+
+        vm.start()
+        // total = 7 + 3 + 2 + 3 + 4 + 2 = 21 seconds
+        advanceTimeBy(22_000)
         runCurrent()
         job.cancel()
 
@@ -75,6 +74,31 @@ class TimerViewModelTimingTest {
             ),
             collected
         )
+    }
+
+    @Test
+    fun `cueEventsFlow does not replay history to a late subscriber`() = runTest {
+        // Regression: replay=8 caused audio cues to refire on rotation when
+        // MainScreen's collector was recreated. Late subscribers must see
+        // future emissions only.
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(2f)
+
+        vm.start()
+        advanceTimeBy(8_000) // past TenSecondsLeft (0s) and Ready (7s)
+        runCurrent()
+
+        val collected = mutableListOf<Command>()
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.cueEventsFlow.collect { collected += it }
+        }
+        runCurrent()
+
+        assertTrue(
+            "late subscriber should not receive any past cues, got $collected",
+            collected.isEmpty()
+        )
+        job.cancel()
     }
 
     @Test

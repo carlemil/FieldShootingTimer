@@ -90,6 +90,19 @@ class TimerViewModelTest {
         }
     }
 
+    @Test
+    fun `setShootingTime drops thumbs that fall outside the new range`() {
+        // shooting=10 → range = 11..(10+10+3-1) = 11..22
+        viewModel.setShootingTime(10f)
+        viewModel.setThumbValues(listOf(12f, 18f, 22f))
+
+        // shrink to shooting=2 → range = 11..(2+10+3-1) = 11..14
+        // 18 and 22 are out of range and must be pruned atomically.
+        viewModel.setShootingTime(2f)
+
+        assertEquals(listOf(12f), viewModel.uiStateFlow.value.thumbValues)
+    }
+
     // --- setTimerState ---
 
     @Test

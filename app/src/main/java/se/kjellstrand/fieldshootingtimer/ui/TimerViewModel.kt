@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -72,13 +71,14 @@ open class TimerViewModel @JvmOverloads constructor(
         .map { buildRange(it.shootingDuration) }
         .stateIn(scope, SharingStarted.Eagerly, buildRange(_uiState.value.shootingDuration))
 
-    // replay > 0 so late subscribers (e.g. after a config change that recreates the
-    // composition) can rebuild their played-set from history. resetReplayCache() is
-    // called from reset() so a fresh timer run starts with a clean slate.
-    private val _cueEventsFlow = MutableSharedFlow<Command>(replay = 8)
+    // No replay: late subscribers (e.g. the new MainScreen collector after a
+    // config change) must not receive past cues, or audio/vibration would
+    // re-fire on every rotation. extraBufferCapacity gives slack so tryEmit
+    // never drops events while a subscriber is being re-attached.
+    private val _cueEventsFlow = MutableSharedFlow<Command>(extraBufferCapacity = 8)
     val cueEventsFlow: SharedFlow<Command> = _cueEventsFlow.asSharedFlow()
 
-    private val _thumbCrossedFlow = MutableSharedFlow<Float>(replay = 8)
+    private val _thumbCrossedFlow = MutableSharedFlow<Float>(extraBufferCapacity = 8)
     val thumbCrossedFlow: SharedFlow<Float> = _thumbCrossedFlow.asSharedFlow()
 
     private val playedCueIndices = mutableSetOf<Int>()
@@ -102,8 +102,15 @@ open class TimerViewModel @JvmOverloads constructor(
 
     fun setShootingTime(shootingDuration: Float) {
         require(shootingDuration >= 0) { "Shooting duration cannot be negative." }
-        _uiState.update { it.copy(shootingDuration = shootingDuration) }
+        val newRange = buildRange(shootingDuration)
+        _uiState.update {
+            it.copy(
+                shootingDuration = shootingDuration,
+                thumbValues = it.thumbValues.filter { t -> t.roundToInt() in newRange }
+            )
+        }
         savedStateHandle?.set(KEY_SHOOTING_DURATION, shootingDuration)
+        persistThumbValues()
     }
 
     fun setTimerState(timerState: TimerRunningState) {
@@ -193,14 +200,11 @@ open class TimerViewModel @JvmOverloads constructor(
         setTimerState(TimerRunningState.Stopped)
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun reset() {
         timerJob?.cancel()
         timerJob = null
         playedCueIndices.clear()
         crossedThumbs.clear()
-        _cueEventsFlow.resetReplayCache()
-        _thumbCrossedFlow.resetReplayCache()
         setCurrentTime(0f)
         setTimerState(TimerRunningState.NotStarted)
     }
