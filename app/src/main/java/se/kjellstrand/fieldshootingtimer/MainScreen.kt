@@ -45,11 +45,11 @@ fun MainScreen(
     )
 
     val segmentDurations by timerViewModel.segmentDurationsFlow.collectAsState(
-        initial = emptyList(), context = Dispatchers.Main
+        context = Dispatchers.Main
     )
 
     val range by timerViewModel.rangeFlow.collectAsState(
-        initial = IntRange.EMPTY, context = Dispatchers.Main
+        context = Dispatchers.Main
     )
 
     val audioManager = remember { AudioManager(context) }
