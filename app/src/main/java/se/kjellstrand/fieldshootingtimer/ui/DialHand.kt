@@ -39,7 +39,7 @@ fun DialHand(
         val radius = sizePx / 2
 
         val startAngle = 270f + (gapAngleDegrees / 2)
-        val availableAngle = 360f - gapAngleDegrees
+        val availableAngle = DialGeometry.availableAngle(gapAngleDegrees)
 
         val angleDegrees = startAngle + (currentTime / totalTime) * availableAngle - 180f
         val angleRadians = Math.toRadians(angleDegrees.toDouble()).toFloat()

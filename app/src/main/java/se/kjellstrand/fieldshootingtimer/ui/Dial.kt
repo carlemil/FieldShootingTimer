@@ -29,7 +29,7 @@ fun Dial(
     borderWidth: Dp = 2.dp,
     size: Dp = 200.dp
 ) {
-    val availableAngle = 360f - gapAngleDegrees
+    val availableAngle = DialGeometry.availableAngle(gapAngleDegrees)
 
     Canvas(
         modifier = Modifier
@@ -49,7 +49,7 @@ fun Dial(
             bottom = canvasSize - totalPadding
         )
 
-        var startAngle = 270f - (availableAngle / 2)
+        var startAngle = DialGeometry.startAngle(gapAngleDegrees)
 
         sweepAngles.forEachIndexed { index, sweepAngle ->
             val color = segmentColors.getOrNull(index) ?: Color.Gray
@@ -81,13 +81,13 @@ fun Dial(
         val borderPath = Path().apply {
             arcTo(
                 rect = outerBorderRect,
-                startAngleDegrees = 270f - (availableAngle / 2),
+                startAngleDegrees = DialGeometry.startAngle(gapAngleDegrees),
                 sweepAngleDegrees = availableAngle,
                 forceMoveTo = true
             )
             arcTo(
                 rect = innerBorderRect,
-                startAngleDegrees = 270f - (availableAngle / 2) + availableAngle,
+                startAngleDegrees = DialGeometry.startAngle(gapAngleDegrees) + availableAngle,
                 sweepAngleDegrees = -availableAngle,
                 forceMoveTo = false
             )

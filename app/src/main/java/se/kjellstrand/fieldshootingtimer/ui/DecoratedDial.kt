@@ -39,7 +39,7 @@ fun DecoratedDial(
         contentAlignment = Alignment.Center, modifier = modifier.size(size)
     ) {
         val sumOfSegments = segments.sum()
-        val availableAngle = 360f - gapAngleDegrees
+        val availableAngle = DialGeometry.availableAngle(gapAngleDegrees)
         val scalingFactor = availableAngle / sumOfSegments
         val sweepAngles = segments.map { it * scalingFactor }
         val ticksMax = sumOfSegments.toInt()
@@ -139,7 +139,7 @@ fun TickBadges(
         val markerCenterRadius = arcRadius + (ringThicknessPx / 1.6f)
 
         val adjustedTicks = ticks.map { tick ->
-            270f - (360f - gapAngleDegrees) / 2 + (tick / ticksMax) * (360f - gapAngleDegrees)
+            DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
         }
 
         adjustedTicks.zip(ticks).forEach { (angle, tick) ->
@@ -276,7 +276,7 @@ fun Ticks(
         val outerRadius = (canvasSize / 2)
 
         val adjustedTicks = ticks.map { tick ->
-            270f - (360f - gapAngleDegrees) / 2 + (tick / ticksMax) * (360f - gapAngleDegrees)
+            DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
         }
 
         adjustedTicks.forEach { angle ->
@@ -309,8 +309,7 @@ fun Ticks(
 fun centerOnSegmentMarkerAngles(
     sweepAngles: List<Float>, gapAngleDegrees: Float
 ): List<Float> {
-    val availableAngle = 360f - gapAngleDegrees
-    var currentAngle = 270f - (availableAngle / 2)
+    var currentAngle = DialGeometry.startAngle(gapAngleDegrees)
 
     val markerAngles = sweepAngles.map { sweep ->
         currentAngle += sweep / 2
@@ -377,8 +376,7 @@ fun DrawScope.drawBadge(
 fun calculateSegmentAngles(
     sweepAngles: List<Float>, gapAngleDegrees: Float
 ): List<Float> {
-    val availableAngle = 360f - gapAngleDegrees
-    var currentAngle = 270f - (availableAngle / 2)
+    var currentAngle = DialGeometry.startAngle(gapAngleDegrees)
     val segmentAngles = mutableListOf<Float>()
 
     sweepAngles.forEach { sweep ->
