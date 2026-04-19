@@ -15,14 +15,14 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "se.kjellstrand.fieldshootingtimer"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "se.kjellstrand.fieldshootingtimer"
         minSdk = 24
-        targetSdk = 34
-        versionCode = 5
-        versionName = "1.4"
+        targetSdk = 36
+        versionCode = 6
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
