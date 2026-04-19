@@ -4,7 +4,11 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.gradle.play.publisher)
 }
+
+val appVersionCode = 6
+val appVersionName = "1.5"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
@@ -21,12 +25,19 @@ android {
         applicationId = "se.kjellstrand.fieldshootingtimer"
         minSdk = 24
         targetSdk = 37
-        versionCode = 6
-        versionName = "1.5"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    flavorDimensions += "env"
+    productFlavors {
+        create("prod") {
+            dimension = "env"
         }
     }
 
@@ -59,6 +70,12 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+play {
+    serviceAccountCredentials.set(rootProject.file("play-account.json"))
+    track.set("internal")
+    defaultToAppBundles.set(true)
 }
 
 dependencies {
