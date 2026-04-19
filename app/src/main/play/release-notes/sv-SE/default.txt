@@ -1,1 +1,4 @@
-Felkorrigeringar och prestandaförbättringar.
+• Krasch vid start åtgärdad.
+• Timern är nu mer exakt under belastning — ingen drift.
+• Bättre hantering vid skärmrotation; skärmen förblir tänd under pågående timer.
+• Prestandaförbättringar och polering.
