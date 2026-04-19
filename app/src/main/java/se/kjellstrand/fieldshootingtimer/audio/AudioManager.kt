@@ -26,23 +26,7 @@ class AudioManager(context: Context) {
         soundPool.release()
     }
 
-    fun playAudioCue(
-        audioCues: List<Pair<Float, Command>>,
-        currentTime: Float,
-        playedAudioIndices: Set<Int>,
-        onAddPlayedAudioIndex: (index: Int) -> Unit
-        ) {
-        for ((index, audioCue) in audioCues.withIndex()) {
-            if (currentTime >= audioCue.first &&
-                !playedAudioIndices.contains(index)
-            ) {
-                playSound(audioCue.second)
-                onAddPlayedAudioIndex(index)
-            }
-        }
-    }
-
-    private fun playSound(command: Command) {
+    fun play(command: Command) {
         // If device is silent or vibrate, skip audio
         when (systemAudioManager.ringerMode) {
             android.media.AudioManager.RINGER_MODE_NORMAL -> {
