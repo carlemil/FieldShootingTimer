@@ -37,35 +37,30 @@ open class TimerViewModel : ViewModel() {
         _uiState.update { currentState ->
             currentState.copy(shootingDuration = shootingDuration)
         }
-        logStateChange("setShootingTime")
     }
 
     fun setTimerState(timerState: TimerRunningState) {
         _uiState.update { currentState ->
             currentState.copy(timerRunningState = timerState)
         }
-        logStateChange("setTimerState")
     }
 
     fun setCurrentTime(currentTime: Float) {
         _uiState.update { currentState ->
             currentState.copy(currentTime = currentTime)
         }
-        logStateChange("setCurrentTime")
     }
 
     fun setThumbValues(thumbValues: List<Float>) {
         _uiState.update { currentState ->
             currentState.copy(thumbValues = thumbValues)
         }
-        logStateChange("setThumbValues")
     }
 
     fun dropLastThumbValue() {
         _uiState.value = _uiState.value.copy(
             thumbValues = _uiState.value.thumbValues.dropLast(1)
         )
-        logStateChange("dropLastThumbValue")
     }
 
     fun addNewThumbValue(range: IntRange) {
@@ -75,7 +70,6 @@ open class TimerViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 thumbValues = thumbValues
             )
-            logStateChange("addNewThumbValue")
         }
     }
 
@@ -83,7 +77,6 @@ open class TimerViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(
             thumbValues = _uiState.value.thumbValues.map { it.roundToInt().toFloat() }
         )
-        logStateChange("roundThumbValues")
     }
 
     private fun findNextFreeThumbSpot(range: IntRange, thumbValues: List<Float>): Float {
@@ -102,9 +95,5 @@ open class TimerViewModel : ViewModel() {
             }
         }
         return center.toFloat()
-    }
-
-    private fun logStateChange(action: String) {
-        println("Action: $action, New State: ${_uiState.value}")
     }
 }

@@ -5,6 +5,8 @@ import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 
 class TimerViewModelTest {
 
@@ -13,6 +15,45 @@ class TimerViewModelTest {
     @Before
     fun setUp() {
         viewModel = TimerViewModel()
+    }
+
+    private fun captureStdout(block: () -> Unit): String {
+        val original = System.out
+        val buffer = ByteArrayOutputStream()
+        System.setOut(PrintStream(buffer))
+        try {
+            block()
+        } finally {
+            System.setOut(original)
+        }
+        return buffer.toString()
+    }
+
+    // --- Fixed behavior: mutations must not print to stdout ---
+    // (should FAIL before removing logStateChange, PASS after)
+
+    @Test
+    fun `setShootingTime does not print to stdout`() {
+        val printed = captureStdout { viewModel.setShootingTime(7f) }
+        assertEquals("", printed)
+    }
+
+    @Test
+    fun `setTimerState does not print to stdout`() {
+        val printed = captureStdout { viewModel.setTimerState(TimerRunningState.Running) }
+        assertEquals("", printed)
+    }
+
+    @Test
+    fun `setThumbValues does not print to stdout`() {
+        val printed = captureStdout { viewModel.setThumbValues(listOf(5f, 7f)) }
+        assertEquals("", printed)
+    }
+
+    @Test
+    fun `addNewThumbValue does not print to stdout`() {
+        val printed = captureStdout { viewModel.addNewThumbValue(4..12) }
+        assertEquals("", printed)
     }
 
     // --- setShootingTime ---
