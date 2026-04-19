@@ -31,7 +31,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
@@ -386,22 +385,22 @@ fun Settings(
     )
     val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
 
-    val setThumbValuesMinusOne = rememberUpdatedState {
+    val setThumbValuesMinusOne: () -> Unit = {
         timerViewModel.dropLastThumbValue()
     }
-    val setThumbValuesPlusOne = rememberUpdatedState {
+    val setThumbValuesPlusOne: () -> Unit = {
         timerViewModel.addNewThumbValue(range)
     }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
     )
-    val onHorizontalDragSetThumbValues = rememberUpdatedState { newThumbValues: List<Float> ->
+    val onHorizontalDragSetThumbValues: (List<Float>) -> Unit = { newThumbValues ->
         timerViewModel.setThumbValues(newThumbValues)
     }
-    val onHorizontalDragRoundThumbValues = rememberUpdatedState {
+    val onHorizontalDragRoundThumbValues: () -> Unit = {
         timerViewModel.roundThumbValues()
     }
-    val onShootTimeAdjusterValueChange = rememberUpdatedState { duration: List<Float> ->
+    val onShootTimeAdjusterValueChange: (List<Float>) -> Unit = { duration ->
         val shootingTime = if (duration.isEmpty()) 0f else duration.first().roundToInt().toFloat()
         timerViewModel.setShootingTime(shootingTime)
     }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -20,10 +19,10 @@ fun TicksAdjuster(
     thumbValues: List<Float>,
     range: IntRange,
     enabled: Boolean = true,
-    setThumbValuesMinusOne: State<() -> Unit>,
-    setThumbValuesPlusOne: State<() -> Unit>,
-    onHorizontalDragSetThumbValues: State<(List<Float>) -> Unit>,
-    onHorizontalDragRoundThumbValues: State<() -> Unit>
+    setThumbValuesMinusOne: () -> Unit,
+    setThumbValuesPlusOne: () -> Unit,
+    onHorizontalDragSetThumbValues: (List<Float>) -> Unit,
+    onHorizontalDragRoundThumbValues: () -> Unit
 ) {
     Row(modifier = Modifier.padding(horizontal = Paddings.Large)) {
         Text(
@@ -32,7 +31,7 @@ fun TicksAdjuster(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(end = Paddings.Medium)
-                .clickable { if (enabled) setThumbValuesPlusOne.value() }
+                .clickable { if (enabled) setThumbValuesPlusOne() }
         )
         MultiThumbSlider(
             thumbValues = thumbValues,
@@ -54,7 +53,7 @@ fun TicksAdjuster(
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(start = Paddings.Medium)
-                .clickable { if (enabled) setThumbValuesMinusOne.value() }
+                .clickable { if (enabled) setThumbValuesMinusOne() }
         )
     }
 }

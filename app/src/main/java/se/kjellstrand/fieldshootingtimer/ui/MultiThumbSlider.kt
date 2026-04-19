@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -32,8 +31,8 @@ import kotlin.math.roundToInt
 @Composable
 fun MultiThumbSlider(
     thumbValues: List<Float>,
-    onHorizontalDragSetThumbValues: State<(List<Float>) -> Unit>,
-    onHorizontalDragRoundThumbValues: State<() -> Unit> = rememberUpdatedState({}),
+    onHorizontalDragSetThumbValues: (List<Float>) -> Unit,
+    onHorizontalDragRoundThumbValues: () -> Unit = {},
     range: IntRange,
     trackColor: Color = Color.Gray,
     thumbColor: Color = Color.Blue,
@@ -170,9 +169,9 @@ fun MultiThumbSlider(
                                 currentThumbValues
                                     .toMutableList()
                                     .apply { this[index] = newValue }
-                            onHorizontalDragSetThumbValues.value(updatedValues)
+                            onHorizontalDragSetThumbValues(updatedValues)
                         }, onDragEnd = {
-                            onHorizontalDragRoundThumbValues.value()
+                            onHorizontalDragRoundThumbValues()
                         })
                     })
             }
@@ -214,16 +213,11 @@ private fun toThumbOffset(
 @Preview(showBackground = true, widthDp = 400, heightDp = 100)
 @Composable
 fun MultiThumbSliderPreview() {
-    val thumbValues = listOf(5f, 6f, 7f, 9f, 12f)
-    val range = 3..13
-    val onHorizontalDragSetThumbValues = rememberUpdatedState { _: List<Float> -> }
-    val onHorizontalDragRoundThumbValues = rememberUpdatedState { }
-
     MultiThumbSlider(
-        thumbValues = thumbValues,
-        onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
-        onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues,
-        range = range,
+        thumbValues = listOf(5f, 6f, 7f, 9f, 12f),
+        onHorizontalDragSetThumbValues = {},
+        onHorizontalDragRoundThumbValues = {},
+        range = 3..13,
         modifier = Modifier.padding(16.dp)
     )
 }

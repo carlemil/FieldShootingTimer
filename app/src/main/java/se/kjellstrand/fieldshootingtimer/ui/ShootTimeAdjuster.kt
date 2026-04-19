@@ -5,9 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -22,16 +19,14 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
 
 @Composable
 fun ShootTimeAdjuster(
-    shootingDuration: Float, enabled: Boolean, onValueChange: State<(List<Float>) -> Unit>
+    shootingDuration: Float, enabled: Boolean, onValueChange: (List<Float>) -> Unit
 ) {
-    val onValueChangeState by rememberUpdatedState(onValueChange)
-
     Row(
         verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()
     ) {
         MultiThumbSlider(
             thumbValues = listOf(shootingDuration),
-            onHorizontalDragSetThumbValues = onValueChangeState,
+            onHorizontalDragSetThumbValues = onValueChange,
             enabled = enabled,
             range = IntRange(1, 27),
             thumbColor = PaleGreenColor,
@@ -58,11 +53,9 @@ fun ShootTimeAdjuster(
 @Preview(showBackground = true, widthDp = 400, heightDp = 100)
 @Composable
 fun ShootTimeAdjusterPreview() {
-    val mockOnValueChange = rememberUpdatedState { _: List<Float> -> }
-
     ShootTimeAdjuster(
         shootingDuration = 15f,
         enabled = true,
-        onValueChange = mockOnValueChange
+        onValueChange = {}
     )
 }
