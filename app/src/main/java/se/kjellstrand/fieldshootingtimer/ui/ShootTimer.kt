@@ -32,7 +32,7 @@ fun ShootTimer(
     Box(
         contentAlignment = Alignment.Center
     ) {
-        val segmentColors = Command.entries.filter { it.duration >= 0 }.map { it.color }
+        val segmentColors = Command.timedCommands.map { it.color }
         val gapAngleDegrees = 30f
         val borderWidth = 2.dp
 

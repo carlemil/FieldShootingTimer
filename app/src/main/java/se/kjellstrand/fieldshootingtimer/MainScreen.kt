@@ -149,7 +149,7 @@ fun MainScreen(
     }
 
     val segmentDurations by rememberSaveable(shootingDuration) {
-        mutableStateOf(Command.entries.filter { it.duration >= 0 }.map {
+        mutableStateOf(Command.timedCommands.map {
             when (it) {
                 Command.Fire -> shootingDuration
                 else -> it.duration.toFloat()

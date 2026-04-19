@@ -17,4 +17,9 @@ enum class Command(val audioResId: Int, val stringResId: Int, val duration: Int,
     UnloadWeapon(R.raw.patron_ur_proppa_vapen, R.string.command_unload_weapon, 4, RedColor),
     Visitation(R.raw.visitation, R.string.command_inspection, 2, LightGrayColor),
     Mark(-1, R.string.command_mark, -1, LightGrayColor);
+
+    companion object {
+        val timedCommands: List<Command> = entries.filter { it.duration >= 0 }
+        val audibleCommands: List<Command> = entries.filter { it.audioResId != -1 }
+    }
 }

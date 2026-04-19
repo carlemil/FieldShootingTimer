@@ -16,7 +16,7 @@ class AudioManager(context: Context) {
     private val soundMap: MutableMap<Command, Int> = mutableMapOf()
 
     init {
-        Command.entries.filter { it.audioResId != -1 }.forEach { command ->
+        Command.audibleCommands.forEach { command ->
             val soundId = soundPool.load(context, command.audioResId, 1)
             soundMap[command] = soundId
         }
