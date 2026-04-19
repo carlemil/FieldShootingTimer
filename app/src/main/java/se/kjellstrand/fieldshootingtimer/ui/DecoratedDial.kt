@@ -393,7 +393,7 @@ fun calculateSegmentAngles(
 
 @Preview(showBackground = true)
 @Composable
-fun SegmentedSemiCircleWithMarkersPreview() {
+fun DecoratedDialPreview() {
     FieldShootingTimerTheme {
         val semiCircleColors = listOf(
             MaterialTheme.colorScheme.primary,

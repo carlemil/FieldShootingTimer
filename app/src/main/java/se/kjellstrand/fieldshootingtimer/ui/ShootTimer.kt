@@ -75,7 +75,7 @@ fun ShootTimer(
 
 @Preview(showBackground = true)
 @Composable
-fun DialWithHandPreview() {
+fun ShootTimerPreview() {
     FieldShootingTimerTheme {
         val tvm = TimerViewModel()
         val timeInSecondsForEachSegment = listOf(7f, 3f, 2f, 3f, 1f)

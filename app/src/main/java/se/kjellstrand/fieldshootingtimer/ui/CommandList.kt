@@ -67,6 +67,6 @@ fun CommandList(
 
 @Preview(showBackground = true)
 @Composable
-fun CommandList() {
+fun CommandListPreview() {
     CommandList(3)
 }

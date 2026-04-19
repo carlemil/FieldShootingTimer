@@ -104,7 +104,7 @@ fun Dial(
 
 @Preview(showBackground = true)
 @Composable
-fun SegmentedSemiCirclePreview() {
+fun DialPreview() {
     FieldShootingTimerTheme {
         val semiCircleColors = listOf(
             MaterialTheme.colorScheme.primary,
