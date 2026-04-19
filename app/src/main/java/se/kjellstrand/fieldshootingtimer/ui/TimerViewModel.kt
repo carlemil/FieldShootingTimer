@@ -38,7 +38,8 @@ enum class TimerRunningState {
 open class TimerViewModel @JvmOverloads constructor(
     externalScope: CoroutineScope? = null,
     private val tickMs: Long = 16L,
-    private val savedStateHandle: SavedStateHandle? = null
+    private val savedStateHandle: SavedStateHandle? = null,
+    private val timeSourceMs: () -> Long = { System.nanoTime() / 1_000_000L }
 ) : ViewModel() {
 
     // Picked up by SavedStateViewModelFactory (the default factory behind
@@ -154,29 +155,33 @@ open class TimerViewModel @JvmOverloads constructor(
             // Snapshot directly from _uiState — stateIn-derived flows may not have
             // propagated the latest shootingDuration when start() is called from a test.
             val shootingDuration = _uiState.value.shootingDuration
-            var currentTime = _uiState.value.currentTime
+            val initialTime = _uiState.value.currentTime
             val segments = buildSegmentDurations(shootingDuration)
             val total = segments.sum()
             val cues = buildAudioCues(shootingDuration)
             val thumbs = _uiState.value.thumbValues
 
-            setCurrentTime(currentTime)
-            emitPassedCues(currentTime, cues)
-            emitPassedThumbs(currentTime, thumbs)
+            // Anchor against wall clock so dropped frames or scheduler hiccups
+            // don't accumulate drift — currentTime is always (now - epoch).
+            val startEpochMs = timeSourceMs() - (initialTime * 1000f).toLong()
+
+            setCurrentTime(initialTime)
+            emitPassedCues(initialTime, cues)
+            emitPassedThumbs(initialTime, thumbs)
 
             while (isActive && _uiState.value.timerRunningState == TimerRunningState.Running) {
                 delay(tickMs)
-                currentTime += tickMs / 1000f
-                if (currentTime >= total) {
+                val elapsed = (timeSourceMs() - startEpochMs) / 1000f
+                if (elapsed >= total) {
                     setCurrentTime(total)
                     emitPassedCues(total, cues)
                     emitPassedThumbs(total, thumbs)
                     setTimerState(TimerRunningState.Finished)
                     break
                 }
-                setCurrentTime(currentTime)
-                emitPassedCues(currentTime, cues)
-                emitPassedThumbs(currentTime, thumbs)
+                setCurrentTime(elapsed)
+                emitPassedCues(elapsed, cues)
+                emitPassedThumbs(elapsed, thumbs)
             }
         }
     }

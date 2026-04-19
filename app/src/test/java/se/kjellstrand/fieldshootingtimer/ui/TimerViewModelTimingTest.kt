@@ -19,7 +19,7 @@ class TimerViewModelTimingTest {
 
     @Test
     fun `start advances currentTime over virtual time`() = runTest {
-        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L)
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)
 
         vm.start()
@@ -32,7 +32,7 @@ class TimerViewModelTimingTest {
 
     @Test
     fun `timer transitions to Finished when currentTime reaches totalDuration`() = runTest {
-        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L)
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(2f)
         runCurrent() // let stateIn-backed flows observe the new shootingDuration
         val total = vm.totalDurationFlow.value
@@ -48,7 +48,7 @@ class TimerViewModelTimingTest {
 
     @Test
     fun `cueEventsFlow emits each timed command exactly once`() = runTest {
-        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L)
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(2f)
 
         vm.start()
@@ -79,7 +79,7 @@ class TimerViewModelTimingTest {
 
     @Test
     fun `thumbCrossedFlow emits when currentTime crosses a thumb value`() = runTest {
-        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L)
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)
         vm.setThumbValues(listOf(11f, 13f))
 
@@ -99,7 +99,7 @@ class TimerViewModelTimingTest {
 
     @Test
     fun `stop halts the timer at the current time`() = runTest {
-        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L)
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)
 
         vm.start()
@@ -121,7 +121,7 @@ class TimerViewModelTimingTest {
 
     @Test
     fun `reset returns currentTime to zero and state to NotStarted`() = runTest {
-        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L)
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)
 
         vm.start()
@@ -134,6 +134,30 @@ class TimerViewModelTimingTest {
 
         assertEquals(0f, vm.uiStateFlow.value.currentTime, 0f)
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
+    }
+
+    @Test
+    fun `currentTime tracks wall clock, not tick count, when ticks are slow`() = runTest {
+        // Simulates a stalled main thread: virtual scheduler ticks once, but
+        // the wall-clock time source has jumped a full second. currentTime
+        // must reflect the wall clock (regression: previously incremented by
+        // tickMs/1000f per tick, drifting behind real time under load).
+        var fakeNow = 0L
+        val vm = TimerViewModel(
+            externalScope = backgroundScope,
+            tickMs = 10L,
+            timeSourceMs = { fakeNow }
+        )
+        vm.setShootingTime(5f)
+
+        vm.start()
+        runCurrent()
+
+        fakeNow = 1000L
+        advanceTimeBy(10)
+        runCurrent()
+
+        assertEquals(1.0f, vm.uiStateFlow.value.currentTime, 0.05f)
     }
 
     // --- Guard tests: derived flows produce the expected values ---
