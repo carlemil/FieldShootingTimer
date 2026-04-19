@@ -28,11 +28,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -85,14 +81,6 @@ fun MainScreen(
     val systemAudioManager =
         context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
 
-    // Shadow rememberSaveable values survive process death; Task 8 will replace
-    // these with SavedStateHandle inside the ViewModel.
-    var savedCurrentTime by rememberSaveable { mutableFloatStateOf(0f) }
-    val currentTime by timerViewModel.currentTimeFlow.collectAsState(
-        initial = savedCurrentTime, context = Dispatchers.Main
-    )
-    savedCurrentTime = currentTime
-
     val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
@@ -101,11 +89,9 @@ fun MainScreen(
         initial = TimerRunningState.NotStarted, context = Dispatchers.Main
     )
 
-    var savedThumbValues by rememberSaveable { mutableStateOf<List<Float>>(listOf()) }
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
-        initial = savedThumbValues, context = Dispatchers.Main
+        initial = emptyList(), context = Dispatchers.Main
     )
-    savedThumbValues = thumbValues
 
     val segmentDurations by timerViewModel.segmentDurationsFlow.collectAsState(
         initial = emptyList(), context = Dispatchers.Main
