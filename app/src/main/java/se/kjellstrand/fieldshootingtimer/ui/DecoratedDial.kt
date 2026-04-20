@@ -48,6 +48,9 @@ fun DecoratedDial(
         val everySecondTicks = (1..ticksMax)
             .map { it.toFloat() }
             .filter { it !in cumulativeSegments } // Don't show ticks for segments, looks bad in ui.
+        val fireIdx = Command.timedCommands.indexOf(Command.Fire)
+        val fireDuration = segments.getOrNull(fireIdx) ?: 0f
+        val unloadStart = unloadStartSeconds(fireDuration)
 
         Dial(
             segmentColors = segmentColors,
@@ -106,6 +109,7 @@ fun DecoratedDial(
             size = size,
             ticks = ticks,
             ticksMax = sumOfSegments.toInt(),
+            unloadStart = unloadStart,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness,
             borderColor = borderColor,
@@ -120,6 +124,7 @@ fun TickBadges(
     size: Dp,
     ticks: List<Float>,
     ticksMax: Int,
+    unloadStart: Float,
     gapAngleDegrees: Float,
     ringThickness: Dp,
     borderColor: Color,
@@ -129,7 +134,7 @@ fun TickBadges(
     val textPaint = remember { newBadgeTextPaint() }
     val textBounds = remember { android.graphics.Rect() }
     val fireStart = (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()
-    val labels = tickIntervalLabels(ticks, fireStart)
+    val placements = tickBadgePlacements(ticks, fireStart, unloadStart)
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
         val ringThicknessPx = ringThickness.toPx()
@@ -143,8 +148,8 @@ fun TickBadges(
         val arcRadius = (canvasSize / 2) - totalPadding
         val markerCenterRadius = arcRadius + (ringThicknessPx / 1.6f)
 
-        labels.forEach { (tick, delta) ->
-            val angle = DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
+        placements.forEach { (position, delta) ->
+            val angle = DialGeometry.tickAngle(position, ticksMax.toFloat(), gapAngleDegrees)
             val angleRad = Math.toRadians(angle.toDouble())
             val x = centerX + markerCenterRadius * cos(angleRad).toFloat()
             val y = centerY + markerCenterRadius * sin(angleRad).toFloat()
@@ -164,18 +169,6 @@ fun TickBadges(
     }
 }
 
-internal fun tickIntervalLabels(
-    ticks: List<Float>,
-    fireStart: Float
-): List<Pair<Float, Int>> {
-    if (ticks.isEmpty()) return emptyList()
-    val sorted = ticks.sorted()
-    return sorted.mapIndexed { i, t ->
-        val prev = if (i == 0) fireStart else sorted[i - 1]
-        t to (t - prev).roundToInt()
-    }
-}
-
 internal fun tickBadgePlacements(
     ticks: List<Float>,
     fireStart: Float,
@@ -185,6 +178,12 @@ internal fun tickBadgePlacements(
     val boundaries = listOf(fireStart) + ticks.sorted() + listOf(unloadStart)
     return boundaries.zipWithNext { a, b -> ((a + b) / 2f) to (b - a).roundToInt() }
 }
+
+internal fun unloadStartSeconds(fireDuration: Float): Float =
+    Command.TenSecondsLeft.duration +
+        Command.Ready.duration +
+        fireDuration +
+        Command.CeaseFire.duration
 
 @Composable
 fun SegmentBadges(
