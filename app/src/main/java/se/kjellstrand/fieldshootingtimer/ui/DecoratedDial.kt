@@ -50,6 +50,7 @@ fun DecoratedDial(
             .filter { it !in cumulativeSegments } // Don't show ticks for segments, looks bad in ui.
         val fireIdx = Command.timedCommands.indexOf(Command.Fire)
         val fireDuration = segments.getOrNull(fireIdx) ?: 0f
+        val fireStart = (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()
         val unloadStart = unloadStartSeconds(fireDuration)
 
         Dial(
@@ -76,7 +77,7 @@ fun DecoratedDial(
         // A trailing tick at UnloadWeapon start closes out the last interval.
         Ticks(
             size = size,
-            ticks = userTickDisplayPositions(ticks, unloadStart),
+            ticks = userTickDisplayPositions(ticks, fireStart, unloadStart),
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness / 1.7f,
@@ -188,8 +189,12 @@ internal fun unloadStartSeconds(fireDuration: Float): Float =
         fireDuration +
         Command.CeaseFire.duration
 
-internal fun userTickDisplayPositions(ticks: List<Float>, unloadStart: Float): List<Float> =
-    if (ticks.isEmpty()) emptyList() else ticks + unloadStart
+internal fun userTickDisplayPositions(
+    ticks: List<Float>,
+    fireStart: Float,
+    unloadStart: Float
+): List<Float> =
+    if (ticks.isEmpty()) emptyList() else listOf(fireStart) + ticks + unloadStart
 
 @Composable
 fun SegmentBadges(
