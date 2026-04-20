@@ -72,14 +72,16 @@ fun DecoratedDial(
         )
 
         // User-defined ticks showing when to flip/drop or change targets.
+        // A trailing tick at UnloadWeapon start closes out the last interval.
         Ticks(
             size = size,
-            ticks = ticks,
+            ticks = userTickDisplayPositions(ticks, unloadStart),
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness * 1.0f,
             borderWidth = borderWidth * 1.4f,
-            tickColor = BlackColor
+            tickColor = BlackColor,
+            pointOutward = true
         )
 
         // One tick for each second, but smaller that the regular user defined ticks.
@@ -184,6 +186,9 @@ internal fun unloadStartSeconds(fireDuration: Float): Float =
         Command.Ready.duration +
         fireDuration +
         Command.CeaseFire.duration
+
+internal fun userTickDisplayPositions(ticks: List<Float>, unloadStart: Float): List<Float> =
+    if (ticks.isEmpty()) emptyList() else ticks + unloadStart
 
 @Composable
 fun SegmentBadges(
@@ -294,7 +299,8 @@ fun Ticks(
     gapAngleDegrees: Float,
     ringThickness: Dp,
     borderWidth: Dp,
-    tickColor: Color
+    tickColor: Color,
+    pointOutward: Boolean = false
 ) {
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
@@ -306,6 +312,8 @@ fun Ticks(
 
         val innerRadius = (canvasSize / 2) - ringThicknessPx / 2
         val outerRadius = (canvasSize / 2)
+        val tipRadius = if (pointOutward) outerRadius else innerRadius
+        val baseRadius = if (pointOutward) innerRadius else outerRadius
 
         val adjustedTicks = ticks.map { tick ->
             DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
@@ -314,15 +322,15 @@ fun Ticks(
         adjustedTicks.forEach { angle ->
             val angleRad = Math.toRadians(angle.toDouble())
 
-            val tipX = centerX + innerRadius * cos(angleRad).toFloat()
-            val tipY = centerY + innerRadius * sin(angleRad).toFloat()
+            val tipX = centerX + tipRadius * cos(angleRad).toFloat()
+            val tipY = centerY + tipRadius * sin(angleRad).toFloat()
 
             val halfWidth = borderWidthPx / (Math.PI * 360) * 3
-            val leftBaseX = centerX + outerRadius * cos(angleRad + halfWidth).toFloat()
-            val leftBaseY = centerY + outerRadius * sin(angleRad + halfWidth).toFloat()
+            val leftBaseX = centerX + baseRadius * cos(angleRad + halfWidth).toFloat()
+            val leftBaseY = centerY + baseRadius * sin(angleRad + halfWidth).toFloat()
 
-            val rightBaseX = centerX + outerRadius * cos(angleRad - halfWidth).toFloat()
-            val rightBaseY = centerY + outerRadius * sin(angleRad - halfWidth).toFloat()
+            val rightBaseX = centerX + baseRadius * cos(angleRad - halfWidth).toFloat()
+            val rightBaseY = centerY + baseRadius * sin(angleRad - halfWidth).toFloat()
 
             val trianglePath = androidx.compose.ui.graphics.Path().apply {
                 moveTo(tipX, tipY)
