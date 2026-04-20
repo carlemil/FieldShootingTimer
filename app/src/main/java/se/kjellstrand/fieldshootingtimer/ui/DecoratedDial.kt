@@ -176,6 +176,16 @@ internal fun tickIntervalLabels(
     }
 }
 
+internal fun tickBadgePlacements(
+    ticks: List<Float>,
+    fireStart: Float,
+    unloadStart: Float
+): List<Pair<Float, Int>> {
+    if (ticks.isEmpty()) return emptyList()
+    val boundaries = listOf(fireStart) + ticks.sorted() + listOf(unloadStart)
+    return boundaries.zipWithNext { a, b -> ((a + b) / 2f) to (b - a).roundToInt() }
+}
+
 @Composable
 fun SegmentBadges(
     size: Dp,
