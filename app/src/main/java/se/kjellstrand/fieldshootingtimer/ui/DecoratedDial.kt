@@ -72,14 +72,15 @@ fun DecoratedDial(
         )
 
         // User-defined ticks showing when to flip/drop or change targets.
+        // Drawn outside the ring, matching the per-second tick size.
         // A trailing tick at UnloadWeapon start closes out the last interval.
         Ticks(
             size = size,
             ticks = userTickDisplayPositions(ticks, unloadStart),
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
-            ringThickness = ringThickness * 1.0f,
-            borderWidth = borderWidth * 1.4f,
+            ringThickness = ringThickness / 1.7f,
+            borderWidth = borderWidth / 1.4f,
             tickColor = BlackColor,
             pointOutward = true
         )
@@ -312,8 +313,16 @@ fun Ticks(
 
         val innerRadius = (canvasSize / 2) - ringThicknessPx / 2
         val outerRadius = (canvasSize / 2)
-        val tipRadius = if (pointOutward) outerRadius else innerRadius
-        val baseRadius = if (pointOutward) innerRadius else outerRadius
+        val tipRadius: Float
+        val baseRadius: Float
+        if (pointOutward) {
+            // Draw outside the ring: base sits on the outer edge, tip extends outward.
+            baseRadius = outerRadius
+            tipRadius = outerRadius + ringThicknessPx / 2
+        } else {
+            tipRadius = innerRadius
+            baseRadius = outerRadius
+        }
 
         val adjustedTicks = ticks.map { tick ->
             DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
