@@ -68,7 +68,7 @@ fun DecoratedDial(
             borderColor = borderColor
         )
 
-        // User defined ticks showing when to flip/drop or cervices change targets.
+        // User-defined ticks showing when to flip/drop or change targets.
         Ticks(
             size = size,
             ticks = ticks,
@@ -128,6 +128,8 @@ fun TickBadges(
 ) {
     val textPaint = remember { newBadgeTextPaint() }
     val textBounds = remember { android.graphics.Rect() }
+    val fireStart = (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()
+    val labels = tickIntervalLabels(ticks, fireStart)
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
         val ringThicknessPx = ringThickness.toPx()
@@ -141,17 +143,11 @@ fun TickBadges(
         val arcRadius = (canvasSize / 2) - totalPadding
         val markerCenterRadius = arcRadius + (ringThicknessPx / 1.6f)
 
-        val adjustedTicks = ticks.map { tick ->
-            DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
-        }
-
-        adjustedTicks.zip(ticks).forEach { (angle, tick) ->
+        labels.forEach { (tick, delta) ->
+            val angle = DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
             val angleRad = Math.toRadians(angle.toDouble())
             val x = centerX + markerCenterRadius * cos(angleRad).toFloat()
             val y = centerY + markerCenterRadius * sin(angleRad).toFloat()
-            val time =
-                (tick - Command.TenSecondsLeft.duration - Command.Ready.duration).roundToInt()
-                    .toString()
             drawBadge(
                 x = x,
                 y = y,
@@ -160,11 +156,23 @@ fun TickBadges(
                 borderColor = borderColor,
                 backgroundColor = Color.White,
                 angleRad = angleRad,
-                timeText = time,
+                timeText = delta.toString(),
                 textPaint = textPaint,
                 textBounds = textBounds
             )
         }
+    }
+}
+
+internal fun tickIntervalLabels(
+    ticks: List<Float>,
+    fireStart: Float
+): List<Pair<Float, Int>> {
+    if (ticks.isEmpty()) return emptyList()
+    val sorted = ticks.sorted()
+    return sorted.mapIndexed { i, t ->
+        val prev = if (i == 0) fireStart else sorted[i - 1]
+        t to (t - prev).roundToInt()
     }
 }
 
