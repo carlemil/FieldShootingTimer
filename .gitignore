@@ -13,3 +13,8 @@ local.properties
 keystore.properties
 fst-release-key.jks
 play-account.json
+
+# Claude Code local state
+.claude/settings.local.json
+.claude/worktrees/
+tasks/
