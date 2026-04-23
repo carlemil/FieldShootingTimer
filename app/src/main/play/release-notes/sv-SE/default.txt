@@ -1,4 +1,3 @@
-• Krasch vid start åtgärdad.
-• Timern är nu mer exakt under belastning — ingen drift.
-• Bättre hantering vid skärmrotation; skärmen förblir tänd under pågående timer.
-• Prestandaförbättringar och polering.
+• Användarmarkörer visas nu utanför ringen och pekar utåt för bättre synlighet.
+• Ny markör när eldkommandot startar och när patron ur börjar.
+• Tidsintervallen numreras nu i mitten av varje intervall.

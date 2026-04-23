@@ -7,8 +7,8 @@ plugins {
     alias(libs.plugins.gradle.play.publisher)
 }
 
-val appVersionCode = 7
-val appVersionName = "1.6.0"
+val appVersionCode = 8
+val appVersionName = "1.7.0"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()
