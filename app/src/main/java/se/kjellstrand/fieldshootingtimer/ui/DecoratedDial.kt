@@ -73,20 +73,19 @@ fun DecoratedDial(
         )
 
         // User-defined ticks showing when to flip/drop or change targets.
-        // Drawn outside the ring, matching the per-second tick size.
+        // Drawn as rectangles outside the ring.
         // A trailing tick at UnloadWeapon start closes out the last interval.
-        Ticks(
+        TickBlocks(
             size = size,
             ticks = userTickDisplayPositions(ticks, fireStart, unloadStart),
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness / 1.7f,
             borderWidth = borderWidth / 1.4f,
-            tickColor = BlackColor,
-            pointOutward = true
+            tickColor = BlackColor
         )
 
-        // One tick for each second, but smaller that the regular user defined ticks.
+        // One tick for each second, drawn as inward-pointing triangles inside the ring.
         Ticks(
             size = size,
             ticks = everySecondTicks,
@@ -305,8 +304,7 @@ fun Ticks(
     gapAngleDegrees: Float,
     ringThickness: Dp,
     borderWidth: Dp,
-    tickColor: Color,
-    pointOutward: Boolean = false
+    tickColor: Color
 ) {
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
@@ -316,18 +314,8 @@ fun Ticks(
         val centerX = canvasSize / 2
         val centerY = canvasSize / 2
 
-        val innerRadius = (canvasSize / 2) - ringThicknessPx / 2
-        val outerRadius = (canvasSize / 2)
-        val tipRadius: Float
-        val baseRadius: Float
-        if (pointOutward) {
-            // Draw outside the ring: base sits on the outer edge, tip extends outward.
-            baseRadius = outerRadius
-            tipRadius = outerRadius + ringThicknessPx / 2
-        } else {
-            tipRadius = innerRadius
-            baseRadius = outerRadius
-        }
+        val tipRadius = (canvasSize / 2) - ringThicknessPx / 2
+        val baseRadius = canvasSize / 2
 
         val adjustedTicks = ticks.map { tick ->
             DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
@@ -335,14 +323,12 @@ fun Ticks(
 
         adjustedTicks.forEach { angle ->
             val angleRad = Math.toRadians(angle.toDouble())
+            val halfWidth = borderWidthPx / (Math.PI * 360) * 3
 
             val tipX = centerX + tipRadius * cos(angleRad).toFloat()
             val tipY = centerY + tipRadius * sin(angleRad).toFloat()
-
-            val halfWidth = borderWidthPx / (Math.PI * 360) * 3
             val leftBaseX = centerX + baseRadius * cos(angleRad + halfWidth).toFloat()
             val leftBaseY = centerY + baseRadius * sin(angleRad + halfWidth).toFloat()
-
             val rightBaseX = centerX + baseRadius * cos(angleRad - halfWidth).toFloat()
             val rightBaseY = centerY + baseRadius * sin(angleRad - halfWidth).toFloat()
 
@@ -353,9 +339,58 @@ fun Ticks(
                 close()
             }
 
-            drawPath(
-                path = trianglePath, color = tickColor
-            )
+            drawPath(path = trianglePath, color = tickColor)
+        }
+    }
+}
+
+@Composable
+fun TickBlocks(
+    size: Dp,
+    ticks: List<Float>,
+    ticksMax: Int,
+    gapAngleDegrees: Float,
+    ringThickness: Dp,
+    borderWidth: Dp,
+    tickColor: Color
+) {
+    Canvas(modifier = Modifier.size(size)) {
+        val canvasSize = size.toPx()
+        val ringThicknessPx = ringThickness.toPx()
+        val borderWidthPx = borderWidth.toPx()
+
+        val centerX = canvasSize / 2
+        val centerY = canvasSize / 2
+
+        val innerRadius = canvasSize / 2
+        val outerRadius = innerRadius + ringThicknessPx / 2
+
+        val adjustedTicks = ticks.map { tick ->
+            DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
+        }
+
+        adjustedTicks.forEach { angle ->
+            val angleRad = Math.toRadians(angle.toDouble())
+            val halfWidth = borderWidthPx / (Math.PI * 360) * 3
+
+            val innerLeftX = centerX + innerRadius * cos(angleRad + halfWidth).toFloat()
+            val innerLeftY = centerY + innerRadius * sin(angleRad + halfWidth).toFloat()
+            val outerLeftX = centerX + outerRadius * cos(angleRad + halfWidth).toFloat()
+            val outerLeftY = centerY + outerRadius * sin(angleRad + halfWidth).toFloat()
+            val outerRightX = centerX + outerRadius * cos(angleRad - halfWidth).toFloat()
+            val outerRightY = centerY + outerRadius * sin(angleRad - halfWidth).toFloat()
+            val innerRightX = centerX + innerRadius * cos(angleRad - halfWidth).toFloat()
+            val innerRightY = centerY + innerRadius * sin(angleRad - halfWidth).toFloat()
+
+            val rectPath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(innerLeftX, innerLeftY)
+                lineTo(outerLeftX, outerLeftY)
+                lineTo(outerRightX, outerRightY)
+                lineTo(innerRightX, innerRightY)
+                close()
+            }
+
+            drawPath(path = rectPath, color = tickColor)
         }
     }
 }
