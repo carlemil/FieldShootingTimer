@@ -26,6 +26,19 @@ import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 
 private const val VIBRATION_LENGTH_MS = 300L
 
+internal fun dispatchPlayButtonClick(
+    state: TimerRunningState,
+    onStart: () -> Unit,
+    onStop: () -> Unit,
+    onReset: () -> Unit
+) {
+    when (state) {
+        TimerRunningState.NotStarted -> onStart()
+        TimerRunningState.Running -> onStop()
+        TimerRunningState.Stopped, TimerRunningState.Finished -> onReset()
+    }
+}
+
 private tailrec fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
@@ -99,11 +112,12 @@ fun MainScreen(
     }
 
     val onClickPlayButton: () -> Unit = {
-        when (timerRunningState) {
-            TimerRunningState.NotStarted -> timerViewModel.start()
-            TimerRunningState.Running -> timerViewModel.stop()
-            TimerRunningState.Stopped, TimerRunningState.Finished -> timerViewModel.reset()
-        }
+        dispatchPlayButtonClick(
+            state = timerRunningState,
+            onStart = timerViewModel::start,
+            onStop = timerViewModel::stop,
+            onReset = timerViewModel::reset
+        )
     }
 
     val statelessSettingsComposable: @Composable () -> Unit = {
