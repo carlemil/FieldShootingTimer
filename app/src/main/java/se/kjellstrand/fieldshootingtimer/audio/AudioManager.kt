@@ -27,24 +27,16 @@ class AudioManager(context: Context) {
     }
 
     fun play(command: Command) {
-        // If device is silent or vibrate, skip audio
-        when (systemAudioManager.ringerMode) {
-            android.media.AudioManager.RINGER_MODE_NORMAL -> {
-                val soundId = soundMap[command]
-                if (soundId != null) {
-                    soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
-                } else {
-                    Log.e(TAG, "Sound not loaded for audio cue: $command")
-                }
-            }
-            android.media.AudioManager.RINGER_MODE_SILENT -> {
-                Log.d(TAG, "Skipping sound because device is in silent mode.")
-                return
-            }
-            android.media.AudioManager.RINGER_MODE_VIBRATE -> {
-                Log.d(TAG, "Skipping sound because device is in vibrate mode.")
-                return
-            }
+        val ringerMode = systemAudioManager.ringerMode
+        if (!shouldPlayAudio(ringerMode)) {
+            Log.d(TAG, "Skipping sound; ringer mode = $ringerMode")
+            return
+        }
+        val soundId = soundMap[command]
+        if (soundId != null) {
+            soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
+        } else {
+            Log.e(TAG, "Sound not loaded for audio cue: $command")
         }
     }
 
@@ -52,3 +44,6 @@ class AudioManager(context: Context) {
         private const val TAG = "AudioManager"
     }
 }
+
+internal fun shouldPlayAudio(ringerMode: Int): Boolean =
+    ringerMode == android.media.AudioManager.RINGER_MODE_NORMAL
