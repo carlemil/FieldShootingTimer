@@ -1,12 +1,12 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class CommandTest {
-
-    // --- Fixed behavior: Command should expose curated lists instead of requiring callers to filter ---
 
     @Test
     fun `timedCommands contains the expected ordered sequence`() {
@@ -25,9 +25,9 @@ class CommandTest {
 
     @Test
     fun `every timedCommand has non-negative duration`() {
-        assertTrue("timedCommands must not be empty", Command.timedCommands.isNotEmpty())
+        assertTrue(Command.timedCommands.isNotEmpty(), "timedCommands must not be empty")
         Command.timedCommands.forEach { cmd ->
-            assertTrue("${cmd.name} must have non-negative duration", cmd.duration >= 0)
+            assertTrue(cmd.duration >= 0, "${cmd.name} must have non-negative duration")
         }
     }
 
@@ -48,13 +48,11 @@ class CommandTest {
 
     @Test
     fun `every audibleCommand has a non-null audio path`() {
-        assertTrue("audibleCommands must not be empty", Command.audibleCommands.isNotEmpty())
+        assertTrue(Command.audibleCommands.isNotEmpty(), "audibleCommands must not be empty")
         Command.audibleCommands.forEach { cmd ->
-            assertTrue("${cmd.name} must have a non-null audioPath", cmd.audioPath != null)
+            assertNotNull(cmd.audioPath, "${cmd.name} must have a non-null audioPath")
         }
     }
-
-    // --- Guard tests: enum shape should not regress ---
 
     @Test
     fun `Command enum has the full set of 9 entries`() {
@@ -64,8 +62,8 @@ class CommandTest {
     @Test
     fun `display-only commands carry -1 for duration and null audioPath`() {
         listOf(Command.Load, Command.AllReady, Command.Mark).forEach { cmd ->
-            assertEquals("${cmd.name} duration", -1, cmd.duration)
-            assertEquals("${cmd.name} audioPath", null, cmd.audioPath)
+            assertEquals(-1, cmd.duration, "${cmd.name} duration")
+            assertNull(cmd.audioPath, "${cmd.name} audioPath")
         }
     }
 }

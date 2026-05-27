@@ -1,15 +1,13 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class TickBadgePlacementsTest {
 
-    private val fireStart = 10f   // TenSecondsLeft (7) + Ready (3)
-    private val unloadStart = 18f // fireStart + Fire (5) + CeaseFire (3)
+    private val fireStart = 10f
+    private val unloadStart = 18f
     private val tolerance = 0.0001f
-
-    // --- Fixed behavior (should FAIL before fix, PASS after fix) ---
 
     @Test
     fun `single tick produces two placements bracketed by fireStart and unloadStart`() {
@@ -46,10 +44,6 @@ class TickBadgePlacementsTest {
 
     @Test
     fun `fractional ticks round to the nearest integer for labels`() {
-        // boundaries: 10.0, 11.4, 12.6, 18.0
-        // deltas: 1.4 -> 1, 1.2 -> 1, 5.4 -> 5
-        // midpoints: 10.7, 12.0, 15.3
-        // Values picked to stay away from the 0.5 Float-rounding boundary.
         val result = tickBadgePlacements(listOf(11.4f, 12.6f), fireStart, unloadStart)
         assertEquals(3, result.size)
         assertEquals(10.7f, result[0].first, tolerance)
@@ -60,10 +54,8 @@ class TickBadgePlacementsTest {
         assertEquals(5, result[2].second)
     }
 
-    // --- Guard tests (should PASS before and after fix) ---
-
     @Test
     fun `empty tick list produces empty placement list`() {
-        assertEquals(emptyList<Pair<Float, Int>>(), tickBadgePlacements(emptyList(), fireStart, unloadStart))
+        assertEquals(emptyList(), tickBadgePlacements(emptyList(), fireStart, unloadStart))
     }
 }

@@ -1,7 +1,7 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class UserTickDisplayPositionsTest {
 
@@ -11,7 +11,7 @@ class UserTickDisplayPositionsTest {
     @Test
     fun `empty input produces empty output`() {
         assertEquals(
-            emptyList<Float>(),
+            emptyList(),
             userTickDisplayPositions(emptyList(), fireStart, unloadStart)
         )
     }
@@ -34,7 +34,6 @@ class UserTickDisplayPositionsTest {
 
     @Test
     fun `boundaries are added verbatim even when equal to an existing tick`() {
-        // Caller controls dedup if needed; the helper simply wraps.
         assertEquals(
             listOf(10f, 10f, 18f, 18f),
             userTickDisplayPositions(listOf(10f, 18f), fireStart, unloadStart)
