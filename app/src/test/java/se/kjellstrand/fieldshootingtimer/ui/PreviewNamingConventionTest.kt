@@ -6,14 +6,14 @@ import java.io.File
 
 class PreviewNamingConventionTest {
 
-    private val sourceRoot: File = run {
-        val candidates = listOf(
-            File("src/main/java/se/kjellstrand/fieldshootingtimer"),
-            File("app/src/main/java/se/kjellstrand/fieldshootingtimer")
-        )
-        candidates.firstOrNull { it.isDirectory }
-            ?: error("source root not found. cwd=${System.getProperty("user.dir")}")
-    }
+    private val sourceRoots: List<File> = listOf(
+        File("src/main/java/se/kjellstrand/fieldshootingtimer"),
+        File("app/src/main/java/se/kjellstrand/fieldshootingtimer"),
+        File("src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+        File("shared/src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+        File("../shared/src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+    ).filter { it.isDirectory }
+        .ifEmpty { error("no source root found. cwd=${System.getProperty("user.dir")}") }
 
     private data class AnnotatedFn(val file: String, val name: String, val isPreview: Boolean)
 
@@ -23,14 +23,16 @@ class PreviewNamingConventionTest {
 
     private fun scan(): List<AnnotatedFn> {
         val results = mutableListOf<AnnotatedFn>()
-        sourceRoot.walkTopDown().filter { it.isFile && it.extension == "kt" }.forEach { file ->
-            annotatedFunRegex.findAll(file.readText()).forEach { match ->
-                val annotations = match.groupValues[1]
-                val name = match.groupValues[2]
-                val hasComposable = annotations.contains("@Composable")
-                val hasPreview = annotations.contains("@Preview")
-                if (hasComposable || hasPreview) {
-                    results += AnnotatedFn(file.name, name, hasPreview)
+        sourceRoots.forEach { root ->
+            root.walkTopDown().filter { it.isFile && it.extension == "kt" }.forEach { file ->
+                annotatedFunRegex.findAll(file.readText()).forEach { match ->
+                    val annotations = match.groupValues[1]
+                    val name = match.groupValues[2]
+                    val hasComposable = annotations.contains("@Composable")
+                    val hasPreview = annotations.contains("@Preview")
+                    if (hasComposable || hasPreview) {
+                        results += AnnotatedFn(file.name, name, hasPreview)
+                    }
                 }
             }
         }

@@ -6,17 +6,18 @@ import java.io.File
 
 class CallbackSignatureTest {
 
-    private val sourceRoot: File = run {
-        val candidates = listOf(
-            File("src/main/java/se/kjellstrand/fieldshootingtimer"),
-            File("app/src/main/java/se/kjellstrand/fieldshootingtimer")
-        )
-        candidates.firstOrNull { it.isDirectory }
-            ?: error("source root not found. cwd=${System.getProperty("user.dir")}")
-    }
+    private val sourceRoots: List<File> = listOf(
+        File("src/main/java/se/kjellstrand/fieldshootingtimer"),
+        File("app/src/main/java/se/kjellstrand/fieldshootingtimer"),
+        File("src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+        File("shared/src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+        File("../shared/src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+    ).filter { it.isDirectory }
+        .ifEmpty { error("no source root found. cwd=${System.getProperty("user.dir")}") }
 
     private fun read(relative: String): String =
-        File(sourceRoot, relative).readText()
+        sourceRoots.map { File(it, relative) }.firstOrNull { it.exists() }?.readText()
+            ?: error("file not found in any source root: $relative")
 
     private val stateLambdaRegex = Regex("""State<\([^)]*\) -> [^>]+>""")
 

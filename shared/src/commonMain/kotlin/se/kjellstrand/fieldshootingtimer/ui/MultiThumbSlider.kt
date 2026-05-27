@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -208,16 +207,4 @@ private fun toThumbOffset(
     firstAndLastSegmentWidth: Float
 ): Float {
     return ((thumbValue - range.first) / (range.last - range.first)) * sliderWidth + firstAndLastSegmentWidth
-}
-
-@Preview(showBackground = true, widthDp = 400, heightDp = 100)
-@Composable
-fun MultiThumbSliderPreview() {
-    MultiThumbSlider(
-        thumbValues = listOf(5f, 6f, 7f, 9f, 12f),
-        onHorizontalDragSetThumbValues = {},
-        onHorizontalDragRoundThumbValues = {},
-        range = 3..13,
-        modifier = Modifier.padding(16.dp)
-    )
 }

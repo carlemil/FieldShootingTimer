@@ -1,20 +1,16 @@
-// File: DialHand.kt
 package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -42,7 +38,7 @@ fun DialHand(
         val availableAngle = DialGeometry.availableAngle(gapAngleDegrees)
 
         val angleDegrees = startAngle + (currentTime / totalTime) * availableAngle - 180f
-        val angleRadians = Math.toRadians(angleDegrees.toDouble()).toFloat()
+        val angleRadians = (angleDegrees.toDouble() * PI / 180.0).toFloat()
 
         val handLength = radius + (radius * overshootPercent)
 
@@ -75,28 +71,6 @@ fun DialHand(
             color = handColor,
             radius = handThicknessPx,
             center = center
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DialHandPreview() {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .size(500.dp)
-            .background(Color.LightGray)
-    ) {
-        DialHand(
-            currentTime = 50f,
-            totalTime = 100f,
-            size = 200.dp,
-            borderWidth = Paddings.Tiny,
-            handColor = Color.White,
-            borderColor = Color.Black,
-            handThickness = Paddings.Small,
-            overshootPercent = 0.0f
         )
     }
 }

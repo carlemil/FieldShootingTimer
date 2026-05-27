@@ -2,23 +2,23 @@ package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -134,8 +134,7 @@ fun TickBadges(
     borderWidth: Dp,
     badgeRadius: Dp
 ) {
-    val textPaint = remember { newBadgeTextPaint() }
-    val textBounds = remember { android.graphics.Rect() }
+    val textMeasurer = rememberTextMeasurer()
     val fireStart = (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()
     val placements = tickBadgePlacements(ticks, fireStart, unloadStart)
     Canvas(modifier = Modifier.size(size)) {
@@ -153,7 +152,7 @@ fun TickBadges(
 
         placements.forEach { (position, delta) ->
             val angle = DialGeometry.tickAngle(position, ticksMax.toFloat(), gapAngleDegrees)
-            val angleRad = Math.toRadians(angle.toDouble())
+            val angleRad = angle.toDouble() * PI / 180.0
             val x = centerX + markerCenterRadius * cos(angleRad).toFloat()
             val y = centerY + markerCenterRadius * sin(angleRad).toFloat()
             drawBadge(
@@ -165,8 +164,7 @@ fun TickBadges(
                 backgroundColor = Color.White,
                 angleRad = angleRad,
                 timeText = delta.toString(),
-                textPaint = textPaint,
-                textBounds = textBounds
+                textMeasurer = textMeasurer
             )
         }
     }
@@ -207,8 +205,7 @@ fun SegmentBadges(
     borderWidth: Dp,
     badgeRadius: Dp,
 ) {
-    val textPaint = remember { newBadgeTextPaint() }
-    val textBounds = remember { android.graphics.Rect() }
+    val textMeasurer = rememberTextMeasurer()
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
         val ringThicknessPx = ringThickness.toPx()
@@ -227,7 +224,7 @@ fun SegmentBadges(
         )
 
         adjustedMarkers.zip(timesForSegments).forEachIndexed { index, (angle, time) ->
-            val angleRad = Math.toRadians(angle.toDouble())
+            val angleRad = angle.toDouble() * PI / 180.0
             val x = centerX + markerCenterRadius * cos(angleRad).toFloat()
             val y = centerY + markerCenterRadius * sin(angleRad).toFloat()
 
@@ -240,17 +237,10 @@ fun SegmentBadges(
                 borderColor = borderColor,
                 angleRad = angleRad,
                 timeText = time.toInt().toString(),
-                textPaint = textPaint,
-                textBounds = textBounds
+                textMeasurer = textMeasurer
             )
         }
     }
-}
-
-private fun newBadgeTextPaint(): android.graphics.Paint = android.graphics.Paint().apply {
-    color = android.graphics.Color.BLACK
-    textAlign = android.graphics.Paint.Align.CENTER
-    isAntiAlias = true
 }
 
 @Composable
@@ -278,7 +268,7 @@ fun Dividers(
         )
 
         segmentAngles.forEach { angle ->
-            val angleRad = Math.toRadians(angle.toDouble())
+            val angleRad = angle.toDouble() * PI / 180.0
 
             val startX = centerX + innerRadius * cos(angleRad).toFloat()
             val startY = centerY + innerRadius * sin(angleRad).toFloat()
@@ -322,8 +312,8 @@ fun Ticks(
         }
 
         adjustedTicks.forEach { angle ->
-            val angleRad = Math.toRadians(angle.toDouble())
-            val halfWidth = borderWidthPx / (Math.PI * 360) * 3
+            val angleRad = angle.toDouble() * PI / 180.0
+            val halfWidth = borderWidthPx / (PI * 360) * 3
 
             val tipX = centerX + tipRadius * cos(angleRad).toFloat()
             val tipY = centerY + tipRadius * sin(angleRad).toFloat()
@@ -370,8 +360,8 @@ fun TickBlocks(
         }
 
         adjustedTicks.forEach { angle ->
-            val angleRad = Math.toRadians(angle.toDouble())
-            val halfWidth = borderWidthPx / (Math.PI * 360) * 3
+            val angleRad = angle.toDouble() * PI / 180.0
+            val halfWidth = borderWidthPx / (PI * 360) * 3
 
             val innerLeftX = centerX + innerRadius * cos(angleRad + halfWidth).toFloat()
             val innerLeftY = centerY + innerRadius * sin(angleRad + halfWidth).toFloat()
@@ -418,8 +408,7 @@ fun DrawScope.drawBadge(
     backgroundColor: Color,
     angleRad: Double,
     timeText: String,
-    textPaint: android.graphics.Paint,
-    textBounds: android.graphics.Rect
+    textMeasurer: TextMeasurer
 ) {
     drawCircle(
         color = backgroundColor,
@@ -438,17 +427,20 @@ fun DrawScope.drawBadge(
         style = Stroke(width = borderWidthPx)
     )
 
-    drawContext.canvas.nativeCanvas.apply {
-        textPaint.textSize = markerRadiusPx * 1.2f
-        textPaint.getTextBounds(timeText, 0, timeText.length, textBounds)
-        val textHeight = textBounds.height()
-        val angleDegrees = Math.toDegrees(angleRad + Math.PI / 2).toFloat()
-
-        save()
-        translate(x, y)
-        rotate(angleDegrees)
-        drawText(timeText, 0f, textHeight / 2f, textPaint)
-        restore()
+    val fontSizeSp = (markerRadiusPx * 1.2f).toSp()
+    val layout = textMeasurer.measure(
+        text = timeText,
+        style = TextStyle(color = Color.Black, fontSize = fontSizeSp)
+    )
+    val angleDegrees = ((angleRad + PI / 2) * 180.0 / PI).toFloat()
+    rotate(degrees = angleDegrees, pivot = Offset(x, y)) {
+        drawText(
+            textLayoutResult = layout,
+            topLeft = Offset(
+                x - layout.size.width / 2f,
+                y - layout.size.height / 2f
+            )
+        )
     }
 }
 
@@ -466,35 +458,4 @@ fun calculateSegmentAngles(
     segmentAngles.add((currentAngle % 360))
 
     return segmentAngles
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DecoratedDialPreview() {
-    FieldShootingTimerTheme {
-        val semiCircleColors = listOf(
-            MaterialTheme.colorScheme.primary,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
-            Color.Red,
-            Color.Blue,
-            Color.Green
-        )
-
-        Box(
-            contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()
-        ) {
-            DecoratedDial(
-                segmentColors = semiCircleColors,
-                segments = listOf(7f, 3f, 6f, 2f, 3f, 1f),
-                gapAngleDegrees = 30f,
-                ringThickness = 30.dp,
-                borderColor = Color.Black,
-                borderWidth = 2.dp,
-                size = 300.dp,
-                badgeRadius = 15.dp,
-                ticks = listOf(1f, 3f, 9f, 10f, 11f, 14f, 15f, 18f, 20f, 22f)
-            )
-        }
-    }
 }
