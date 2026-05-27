@@ -89,8 +89,33 @@ open class TimerViewModel constructor(
     private var timerJob: Job? = null
 
     init {
-        // Persistence (settingsStore-backed) is wired up in
-        // task shared/persistence-datastore.
+        settingsStore?.let { store ->
+            scope.launch {
+                val savedShooting = store.loadShootingDuration()
+                val savedThumbs = store.loadThumbValues()
+                if (savedShooting != null || savedThumbs != null) {
+                    _uiState.update { current ->
+                        current.copy(
+                            shootingDuration = savedShooting ?: current.shootingDuration,
+                            thumbValues = savedThumbs ?: current.thumbValues
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun persistShootingDuration(value: Float) {
+        settingsStore?.let { store ->
+            scope.launch { store.saveShootingDuration(value) }
+        }
+    }
+
+    private fun persistThumbValues() {
+        settingsStore?.let { store ->
+            val snapshot = _uiState.value.thumbValues
+            scope.launch { store.saveThumbValues(snapshot) }
+        }
     }
 
     fun setShootingTime(shootingDuration: Float) {
@@ -102,6 +127,8 @@ open class TimerViewModel constructor(
                 thumbValues = it.thumbValues.filter { t -> t.roundToInt() in newRange }
             )
         }
+        persistShootingDuration(shootingDuration)
+        persistThumbValues()
     }
 
     fun setTimerState(timerState: TimerRunningState) {
@@ -114,12 +141,14 @@ open class TimerViewModel constructor(
 
     fun setThumbValues(thumbValues: List<Float>) {
         _uiState.update { it.copy(thumbValues = thumbValues) }
+        persistThumbValues()
     }
 
     fun dropLastThumbValue() {
         _uiState.value = _uiState.value.copy(
             thumbValues = _uiState.value.thumbValues.dropLast(1)
         )
+        persistThumbValues()
     }
 
     fun addNewThumbValue(range: IntRange) {
@@ -127,6 +156,7 @@ open class TimerViewModel constructor(
         if (thumbValues.size < (range.last - range.first)) {
             thumbValues.add(findNextFreeThumbSpot(range, thumbValues))
             _uiState.value = _uiState.value.copy(thumbValues = thumbValues)
+            persistThumbValues()
         }
     }
 
@@ -134,6 +164,7 @@ open class TimerViewModel constructor(
         _uiState.value = _uiState.value.copy(
             thumbValues = _uiState.value.thumbValues.map { it.roundToInt().toFloat() }
         )
+        persistThumbValues()
     }
 
     // --- Timer lifecycle ---

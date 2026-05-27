@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
+import se.kjellstrand.fieldshootingtimer.persistence.rememberSettingsStore
 import se.kjellstrand.fieldshootingtimer.platform.KeepScreenOn
 import se.kjellstrand.fieldshootingtimer.platform.rememberAudioPlayer
 import se.kjellstrand.fieldshootingtimer.platform.rememberHaptics
@@ -34,7 +35,8 @@ internal fun dispatchPlayButtonClick(
 
 @Composable
 fun MainScreen() {
-    val timerViewModel: TimerViewModel = viewModel { TimerViewModel() }
+    val settingsStore = rememberSettingsStore()
+    val timerViewModel: TimerViewModel = viewModel { TimerViewModel(settingsStore = settingsStore) }
 
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerRunningState.NotStarted, context = Dispatchers.Main

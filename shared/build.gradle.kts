@@ -40,6 +40,8 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.androidx.datastore.preferences.core)
+            implementation(libs.androidx.datastore.core.okio)
         }
         androidMain.dependencies {
             implementation(libs.androidx.core.ktx)
