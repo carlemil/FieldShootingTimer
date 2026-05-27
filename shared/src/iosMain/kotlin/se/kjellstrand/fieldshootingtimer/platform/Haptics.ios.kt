@@ -2,11 +2,16 @@ package se.kjellstrand.fieldshootingtimer.platform
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import platform.UIKit.UIImpactFeedbackGenerator
+import platform.UIKit.UIImpactFeedbackStyle
 
-// Stub; real UIImpactFeedbackGenerator-backed version lands in ios/platform-actuals.
-private object IosHapticsStub : Haptics {
-    override fun shortTick() {}
+class IosHaptics : Haptics {
+    private val generator = UIImpactFeedbackGenerator(style = UIImpactFeedbackStyle.UIImpactFeedbackStyleMedium)
+
+    override fun shortTick() {
+        generator.impactOccurred()
+    }
 }
 
 @Composable
-actual fun rememberHaptics(): Haptics = remember { IosHapticsStub }
+actual fun rememberHaptics(): Haptics = remember { IosHaptics() }
