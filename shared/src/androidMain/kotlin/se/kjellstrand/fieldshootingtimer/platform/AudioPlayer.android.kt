@@ -7,10 +7,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import org.jetbrains.compose.resources.ExperimentalResourceApi
+import se.kjellstrand.fieldshootingtimer.resources.Res
 import se.kjellstrand.fieldshootingtimer.ui.Command
+import java.io.File
 
 private const val TAG = "AudioPlayer"
 
+@OptIn(ExperimentalResourceApi::class)
 class AndroidAudioPlayer(private val context: Context) : AudioPlayer {
     private val soundPool: SoundPool = SoundPool.Builder()
         .setMaxStreams(5)
@@ -19,12 +23,14 @@ class AndroidAudioPlayer(private val context: Context) : AudioPlayer {
 
     override suspend fun preload(cues: List<Command>) {
         cues.forEach { cue ->
-            // TODO: load audio bytes via Res.readBytes(cue.audioPath) once
-            // shared/compose-resources wires the asset pipeline. Until then
-            // audioResId is the legacy R.raw.* int (currently 0 / placeholder
-            // from the Command move) so we skip loading.
-            if (cue.audioResId > 0) {
-                soundMap[cue] = soundPool.load(context, cue.audioResId, 1)
+            val path = cue.audioPath ?: return@forEach
+            try {
+                val bytes = Res.readBytes(path)
+                val cacheFile = File(context.cacheDir, path.substringAfterLast('/'))
+                cacheFile.writeBytes(bytes)
+                soundMap[cue] = soundPool.load(cacheFile.absolutePath, 1)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to preload $cue from $path", e)
             }
         }
     }
@@ -34,7 +40,7 @@ class AndroidAudioPlayer(private val context: Context) : AudioPlayer {
         if (soundId != null) {
             soundPool.play(soundId, 1f, 1f, 1, 0, 1f)
         } else {
-            Log.d(TAG, "Sound not loaded for cue: $command (resources not yet wired)")
+            Log.d(TAG, "Sound not loaded for cue: $command")
         }
     }
 

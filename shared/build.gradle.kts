@@ -64,3 +64,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+
+compose.resources {
+    publicResClass = true
+    packageOfResClass = "se.kjellstrand.fieldshootingtimer.resources"
+}

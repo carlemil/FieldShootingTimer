@@ -47,10 +47,10 @@ class CommandTest {
     }
 
     @Test
-    fun `every audibleCommand has a valid audio resource id`() {
+    fun `every audibleCommand has a non-null audio path`() {
         assertTrue("audibleCommands must not be empty", Command.audibleCommands.isNotEmpty())
         Command.audibleCommands.forEach { cmd ->
-            assertTrue("${cmd.name} must have audioResId != -1", cmd.audioResId != -1)
+            assertTrue("${cmd.name} must have a non-null audioPath", cmd.audioPath != null)
         }
     }
 
@@ -62,10 +62,10 @@ class CommandTest {
     }
 
     @Test
-    fun `display-only commands carry -1 for duration and audioResId`() {
+    fun `display-only commands carry -1 for duration and null audioPath`() {
         listOf(Command.Load, Command.AllReady, Command.Mark).forEach { cmd ->
             assertEquals("${cmd.name} duration", -1, cmd.duration)
-            assertEquals("${cmd.name} audioResId", -1, cmd.audioResId)
+            assertEquals("${cmd.name} audioPath", null, cmd.audioPath)
         }
     }
 }

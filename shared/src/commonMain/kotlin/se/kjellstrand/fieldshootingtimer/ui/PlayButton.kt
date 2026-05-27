@@ -5,10 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -17,6 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
+import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.play_arrow
+import se.kjellstrand.fieldshootingtimer.resources.skip_previous
+import se.kjellstrand.fieldshootingtimer.resources.stop
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
@@ -42,12 +43,9 @@ fun PlayButton(
             )
         ) {
             when (timerRunningState) {
-                // TODO: project vector drawables (R.drawable.play_arrow / stop /
-                // skip_previous) wired back in shared/compose-resources. Using
-                // Material icons as a placeholder for the build to compile.
                 TimerRunningState.NotStarted -> {
                     Icon(
-                        imageVector = Icons.Filled.PlayArrow,
+                        painter = painterResource(Res.drawable.play_arrow),
                         contentDescription = "Play",
                         modifier = Modifier.size(buttonSize * 0.8f)
                     )
@@ -55,7 +53,7 @@ fun PlayButton(
 
                 TimerRunningState.Running -> {
                     Icon(
-                        imageVector = Icons.Filled.Close,
+                        painter = painterResource(Res.drawable.stop),
                         contentDescription = "Stop",
                         modifier = Modifier.size(buttonSize * 0.8f)
                     )
@@ -63,7 +61,7 @@ fun PlayButton(
 
                 TimerRunningState.Finished, TimerRunningState.Stopped -> {
                     Icon(
-                        imageVector = Icons.Filled.Refresh,
+                        painter = painterResource(Res.drawable.skip_previous),
                         contentDescription = "Reset",
                         modifier = Modifier.size(buttonSize * 0.8f)
                     )

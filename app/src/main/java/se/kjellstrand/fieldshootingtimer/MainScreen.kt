@@ -17,7 +17,8 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
-import se.kjellstrand.fieldshootingtimer.audio.AudioManager
+import se.kjellstrand.fieldshootingtimer.platform.rememberAudioPlayer
+import se.kjellstrand.fieldshootingtimer.ui.Command
 import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
@@ -69,12 +70,18 @@ fun MainScreen(
         context = Dispatchers.Main
     )
 
-    val audioManager = remember { AudioManager(context) }
+    val audioPlayer = rememberAudioPlayer()
+    LaunchedEffect(audioPlayer) {
+        audioPlayer.preload(Command.audibleCommands)
+    }
+
     val vibrator = remember { context.getSystemService(android.os.Vibrator::class.java) }
 
     LaunchedEffect(Unit) {
         timerViewModel.cueEventsFlow.collect { command ->
-            audioManager.play(command)
+            if (systemAudioManager.ringerMode == android.media.AudioManager.RINGER_MODE_NORMAL) {
+                audioPlayer.play(command)
+            }
         }
     }
 
@@ -90,12 +97,6 @@ fun MainScreen(
                     )
                 )
             }
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            audioManager.release()
         }
     }
 

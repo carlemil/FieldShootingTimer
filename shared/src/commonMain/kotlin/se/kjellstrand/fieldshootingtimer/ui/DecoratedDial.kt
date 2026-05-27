@@ -170,7 +170,7 @@ fun TickBadges(
     }
 }
 
-internal fun tickBadgePlacements(
+fun tickBadgePlacements(
     ticks: List<Float>,
     fireStart: Float,
     unloadStart: Float
@@ -180,13 +180,13 @@ internal fun tickBadgePlacements(
     return boundaries.zipWithNext { a, b -> ((a + b) / 2f) to (b - a).roundToInt() }
 }
 
-internal fun unloadStartSeconds(fireDuration: Float): Float =
+fun unloadStartSeconds(fireDuration: Float): Float =
     Command.TenSecondsLeft.duration +
         Command.Ready.duration +
         fireDuration +
         Command.CeaseFire.duration
 
-internal fun userTickDisplayPositions(
+fun userTickDisplayPositions(
     ticks: List<Float>,
     fireStart: Float,
     unloadStart: Float
