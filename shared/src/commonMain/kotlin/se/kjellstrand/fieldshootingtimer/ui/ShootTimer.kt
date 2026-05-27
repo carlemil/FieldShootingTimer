@@ -1,19 +1,16 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
@@ -68,24 +65,6 @@ fun ShootTimer(
                 borderColor = BlackColor,
                 handThickness = Paddings.Small,
                 overshootPercent = 0.1f // 10% overshoot
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ShootTimerPreview() {
-    FieldShootingTimerTheme {
-        val tvm = TimerViewModel()
-        val timeInSecondsForEachSegment = listOf(7f, 3f, 2f, 3f, 1f)
-
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            ShootTimer(
-                tvm, timeInSecondsForEachSegment, 200.dp
             )
         }
     }

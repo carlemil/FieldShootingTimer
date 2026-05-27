@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +18,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlin.time.TimeSource
+import se.kjellstrand.fieldshootingtimer.persistence.SettingsStore
 
 data class TimerUiState(
     val shootingDuration: Float = 5f,
@@ -34,16 +35,18 @@ enum class TimerRunningState {
     Finished
 }
 
-open class TimerViewModel @JvmOverloads constructor(
+// Single process-wide monotonic origin used as the default time source.
+// Only ever read via elapsedNow().inWholeMilliseconds, so the absolute value
+// is unobservable — what matters is that deltas are consistent.
+private val MonotonicStart = TimeSource.Monotonic.markNow()
+private fun defaultTimeSourceMs(): Long = MonotonicStart.elapsedNow().inWholeMilliseconds
+
+open class TimerViewModel constructor(
     externalScope: CoroutineScope? = null,
     private val tickMs: Long = 16L,
-    private val savedStateHandle: SavedStateHandle? = null,
-    private val timeSourceMs: () -> Long = { System.nanoTime() / 1_000_000L }
+    private val settingsStore: SettingsStore? = null,
+    private val timeSourceMs: () -> Long = ::defaultTimeSourceMs
 ) : ViewModel() {
-
-    // Picked up by SavedStateViewModelFactory (the default factory behind
-    // `by viewModels()`) because it's a single-arg SavedStateHandle ctor.
-    constructor(handle: SavedStateHandle) : this(savedStateHandle = handle)
 
     private val scope: CoroutineScope = externalScope ?: viewModelScope
 
@@ -86,18 +89,8 @@ open class TimerViewModel @JvmOverloads constructor(
     private var timerJob: Job? = null
 
     init {
-        savedStateHandle?.let { handle ->
-            val savedShooting = handle.get<Float>(KEY_SHOOTING_DURATION)
-            val savedThumbs = handle.get<FloatArray>(KEY_THUMB_VALUES)?.toList()
-            if (savedShooting != null || savedThumbs != null) {
-                _uiState.update { current ->
-                    current.copy(
-                        shootingDuration = savedShooting ?: current.shootingDuration,
-                        thumbValues = savedThumbs ?: current.thumbValues
-                    )
-                }
-            }
-        }
+        // Persistence (settingsStore-backed) is wired up in
+        // task shared/persistence-datastore.
     }
 
     fun setShootingTime(shootingDuration: Float) {
@@ -109,8 +102,6 @@ open class TimerViewModel @JvmOverloads constructor(
                 thumbValues = it.thumbValues.filter { t -> t.roundToInt() in newRange }
             )
         }
-        savedStateHandle?.set(KEY_SHOOTING_DURATION, shootingDuration)
-        persistThumbValues()
     }
 
     fun setTimerState(timerState: TimerRunningState) {
@@ -123,14 +114,12 @@ open class TimerViewModel @JvmOverloads constructor(
 
     fun setThumbValues(thumbValues: List<Float>) {
         _uiState.update { it.copy(thumbValues = thumbValues) }
-        persistThumbValues()
     }
 
     fun dropLastThumbValue() {
         _uiState.value = _uiState.value.copy(
             thumbValues = _uiState.value.thumbValues.dropLast(1)
         )
-        persistThumbValues()
     }
 
     fun addNewThumbValue(range: IntRange) {
@@ -138,7 +127,6 @@ open class TimerViewModel @JvmOverloads constructor(
         if (thumbValues.size < (range.last - range.first)) {
             thumbValues.add(findNextFreeThumbSpot(range, thumbValues))
             _uiState.value = _uiState.value.copy(thumbValues = thumbValues)
-            persistThumbValues()
         }
     }
 
@@ -146,11 +134,6 @@ open class TimerViewModel @JvmOverloads constructor(
         _uiState.value = _uiState.value.copy(
             thumbValues = _uiState.value.thumbValues.map { it.roundToInt().toFloat() }
         )
-        persistThumbValues()
-    }
-
-    private fun persistThumbValues() {
-        savedStateHandle?.set(KEY_THUMB_VALUES, _uiState.value.thumbValues.toFloatArray())
     }
 
     // --- Timer lifecycle ---
@@ -246,9 +229,6 @@ open class TimerViewModel @JvmOverloads constructor(
     }
 
     companion object {
-        private const val KEY_SHOOTING_DURATION = "shooting_duration"
-        private const val KEY_THUMB_VALUES = "thumb_values"
-
         private fun buildSegmentDurations(shootingDuration: Float): List<Float> =
             Command.timedCommands.map {
                 if (it == Command.Fire) shootingDuration else it.duration.toFloat()
