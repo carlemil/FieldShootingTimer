@@ -21,4 +21,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "FieldShootingTimer"
 include(":app")
+include(":shared")
  
