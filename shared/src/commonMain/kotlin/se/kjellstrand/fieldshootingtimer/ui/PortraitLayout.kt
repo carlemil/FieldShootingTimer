@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 
@@ -50,26 +48,4 @@ fun PortraitLayout(
         Spacer(modifier = Modifier.padding(Paddings.Medium))
         statelessSettingsComposable()
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PortraitLayoutPreview() {
-    val tvm = TimerViewModel()
-    tvm.setShootingTime(5f)
-    tvm.setCurrentTime(0f)
-    tvm.setTimerState(TimerRunningState.NotStarted)
-
-    val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    val settings: @Composable () -> Unit = {
-        SettingsPanel(tvm, IntRange(5, 12), segmentDurations)
-    }
-    PortraitLayout(
-        tvm,
-        segmentDurations,
-        {},
-        TimerRunningState.NotStarted,
-        settings,
-        300.dp
-    )
 }

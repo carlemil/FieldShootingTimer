@@ -7,14 +7,16 @@ import java.io.File
 
 class MainScreenSplitTest {
 
-    private val sourceRoot: File = run {
-        val candidates = listOf(
-            File("src/main/java/se/kjellstrand/fieldshootingtimer"),
-            File("app/src/main/java/se/kjellstrand/fieldshootingtimer")
-        )
-        candidates.firstOrNull { it.isDirectory }
-            ?: error("source root not found. cwd=${System.getProperty("user.dir")}")
-    }
+    private val sourceRoots: List<File> = listOf(
+        File("src/main/java/se/kjellstrand/fieldshootingtimer"),
+        File("app/src/main/java/se/kjellstrand/fieldshootingtimer"),
+        File("src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+        File("shared/src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+        File("../shared/src/commonMain/kotlin/se/kjellstrand/fieldshootingtimer"),
+    ).filter { it.isDirectory }
+        .ifEmpty { error("no source root found. cwd=${System.getProperty("user.dir")}") }
+
+    private val sourceRoot: File = sourceRoots.first()
 
     private val manifestFile: File = run {
         val candidates = listOf(
@@ -25,7 +27,11 @@ class MainScreenSplitTest {
             ?: error("AndroidManifest.xml not found. cwd=${System.getProperty("user.dir")}")
     }
 
-    private fun read(relative: String): String = File(sourceRoot, relative).readText()
+    private fun findFile(relative: String): File? =
+        sourceRoots.map { File(it, relative) }.firstOrNull { it.isFile }
+
+    private fun read(relative: String): String =
+        findFile(relative)?.readText() ?: error("file not found: $relative")
 
     // --- Fixed behavior: the extracted files exist with the expected symbols ---
 
@@ -41,8 +47,8 @@ class MainScreenSplitTest {
 
     @Test
     fun `PortraitLayout_kt exists and declares PortraitLayout composable`() {
-        val file = File(sourceRoot, "ui/PortraitLayout.kt")
-        assertTrue("ui/PortraitLayout.kt must exist", file.isFile)
+        val file = findFile("ui/PortraitLayout.kt")
+            ?: error("ui/PortraitLayout.kt must exist in some source root")
         assertTrue(
             "must declare 'fun PortraitLayout('",
             file.readText().contains("fun PortraitLayout(")
@@ -51,8 +57,8 @@ class MainScreenSplitTest {
 
     @Test
     fun `LandscapeLayout_kt exists and declares LandscapeLayout composable`() {
-        val file = File(sourceRoot, "ui/LandscapeLayout.kt")
-        assertTrue("ui/LandscapeLayout.kt must exist", file.isFile)
+        val file = findFile("ui/LandscapeLayout.kt")
+            ?: error("ui/LandscapeLayout.kt must exist in some source root")
         assertTrue(
             "must declare 'fun LandscapeLayout('",
             file.readText().contains("fun LandscapeLayout(")
@@ -61,8 +67,8 @@ class MainScreenSplitTest {
 
     @Test
     fun `SettingsPanel_kt exists and declares SettingsPanel composable`() {
-        val file = File(sourceRoot, "ui/SettingsPanel.kt")
-        assertTrue("ui/SettingsPanel.kt must exist", file.isFile)
+        val file = findFile("ui/SettingsPanel.kt")
+            ?: error("ui/SettingsPanel.kt must exist in some source root")
         assertTrue(
             "must declare 'fun SettingsPanel('",
             file.readText().contains("fun SettingsPanel(")

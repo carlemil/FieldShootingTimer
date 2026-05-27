@@ -13,11 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
@@ -47,7 +45,8 @@ fun CommandList(
     ) {
         items(commands.size) { index ->
             Text(
-                text = stringResource(commands[index].stringResId),
+                // TODO: real Compose-MP stringResource wired in shared/compose-resources.
+                text = commands[index].name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { selected = (index == hlIndex) }
@@ -62,10 +61,4 @@ fun CommandList(
             )
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun CommandListPreview() {
-    CommandList(3)
 }

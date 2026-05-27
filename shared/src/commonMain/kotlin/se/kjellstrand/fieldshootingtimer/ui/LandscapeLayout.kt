@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
@@ -65,32 +63,4 @@ fun LandscapeLayout(
             statelessSettingsComposable()
         }
     }
-}
-
-@Preview(
-    uiMode = Configuration.UI_MODE_TYPE_NORMAL,
-    widthDp = 640,
-    heightDp = 360,
-    showBackground = true,
-    name = "Landscape Preview"
-)
-@Composable
-fun LandscapeLayoutPreview() {
-    val tvm = TimerViewModel()
-    tvm.setShootingTime(5f)
-    tvm.setCurrentTime(0f)
-    tvm.setTimerState(TimerRunningState.NotStarted)
-
-    val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
-    val settings: @Composable () -> Unit = {
-        SettingsPanel(tvm, IntRange(5, 12), segmentDurations)
-    }
-    LandscapeLayout(
-        tvm,
-        segmentDurations,
-        {},
-        TimerRunningState.NotStarted,
-        settings,
-        280.dp
-    )
 }
