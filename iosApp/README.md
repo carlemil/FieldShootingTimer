@@ -13,40 +13,46 @@ A minimal SwiftUI app that embeds the Compose Multiplatform UI exposed by
 - `iosApp/iosApp/Info.plist` — portrait + both landscape orientations
   enabled; no background audio mode (intentional).
 
+- `iosApp/project.yml` — the [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+  spec. Running `xcodegen generate` produces `iosApp.xcodeproj` deterministically.
+
 ## What's NOT committed
 
-- The Xcode project file (`iosApp.xcodeproj/project.pbxproj`). Its format
-  is fragile to hand-author across Xcode versions, so we create it once
-  on a Mac (instructions below).
+- The Xcode project file (`iosApp.xcodeproj`). Its `project.pbxproj` is fragile
+  to hand-author and noisy across Xcode versions, so it is **generated** from
+  `project.yml` and gitignored. Regenerate it with `xcodegen generate`.
 
 ## First-time setup on a Mac
 
-1. Build the shared framework so it exists for Xcode to link:
-   ```
-   ./gradlew :shared:embedAndSignAppleFrameworkForXcode
-   # or for ad-hoc framework only:
-   ./gradlew :shared:assembleSharedXCFramework
-   ```
-2. In Xcode, **File → New → Project → iOS → App**. Settings:
-   - Product Name: `iosApp`
-   - Bundle Identifier: `se.kjellstrand.fieldshootingtimer`
-   - Interface: SwiftUI
-   - Language: Swift
-   - Deployment Target: iOS 16.0
-3. Save the project into this `iosApp/` directory. Delete the auto-generated
-   `iosAppApp.swift`, `ContentView.swift`, and `Info.plist` from Xcode
-   and **drag the committed copies in their place**.
-4. **Add the Kotlin framework**:
-   - In project Build Phases, add a new **Run Script Build Phase** *before*
-     the "Compile Sources" phase with:
-     ```sh
-     cd "$SRCROOT/.."
-     ./gradlew :shared:embedAndSignAppleFrameworkForXcode
-     ```
-   - In Build Settings, set **Framework Search Paths** to
-     `$(SRCROOT)/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)`.
-   - Add **`-framework Shared`** to **Other Linker Flags**.
-5. Build & Run on the iOS 16+ simulator.
+```sh
+brew install xcodegen          # one-time
+cd iosApp && xcodegen generate # produces iosApp.xcodeproj (gitignored)
+open iosApp.xcodeproj           # then build for an iOS 16+ simulator
+```
+
+Building the app automatically (re)builds the shared framework — `project.yml`
+adds a pre-build Run Script phase that calls
+`./gradlew :shared:embedAndSignAppleFrameworkForXcode`. To build the framework
+manually first (e.g. for a headless `xcodebuild`):
+
+```sh
+./gradlew :shared:embedAndSignAppleFrameworkForXcode
+# or, for a standalone fat artifact (not used by the app build):
+./gradlew :shared:assembleSharedXCFramework
+```
+
+## How the framework gets linked
+
+`project.yml` wires the static `Shared` framework into the app without any
+manual Xcode clicks:
+
+- a **pre-build Run Script** phase runs
+  `./gradlew :shared:embedAndSignAppleFrameworkForXcode` (it builds only the arch
+  Xcode is currently targeting and writes it under
+  `iosApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)`);
+- **`FRAMEWORK_SEARCH_PATHS`** points at that directory;
+- **`OTHER_LDFLAGS`** adds `-framework Shared`. The framework is *static*, so it
+  is linked, not embedded (no Copy Frameworks phase).
 
 ## Manual acceptance criteria
 
@@ -60,5 +66,8 @@ A minimal SwiftUI app that embeds the Compose Multiplatform UI exposed by
 ## Out of scope for v1
 
 - App Store / TestFlight pipeline (no fastlane / Xcode Cloud yet).
-- iOS-only CI workflow.
+- App icon asset catalog (a simulator build works without one).
 - Localized iOS app name beyond `CFBundleDisplayName` in Info.plist.
+
+CI does build and test iOS — see `.github/workflows/ci.yml` (the `ios` job runs
+the shared unit tests on a simulator target and `xcodebuild`s the app).

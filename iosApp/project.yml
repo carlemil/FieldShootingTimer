@@ -1,0 +1,54 @@
+name: iosApp
+options:
+  bundleIdPrefix: se.kjellstrand
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    # The shared Kotlin/Native framework is STATIC: link it explicitly and do
+    # not embed/copy it. embedAndSignAppleFrameworkForXcode writes the slice for
+    # the arch Xcode is building into the path below.
+    FRAMEWORK_SEARCH_PATHS:
+      - $(inherited)
+      - $(SRCROOT)/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)
+    OTHER_LDFLAGS:
+      - $(inherited)
+      - -framework
+      - Shared
+    SWIFT_VERSION: "5.0"
+
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      # Don't let XcodeGen author/overwrite the committed Info.plist (the `info:`
+      # key would do that and strip CFBundleDisplayName/orientations). We point
+      # INFOPLIST_FILE at the committed plist instead. Exclude it from the build
+      # phases so it isn't also copied in as a bundle resource.
+      - path: iosApp
+        excludes:
+          - "Info.plist"
+      - path: iosApp/Info.plist
+        buildPhase: none
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: se.kjellstrand.fieldshootingtimer
+        INFOPLIST_FILE: iosApp/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+    # Emit a shared scheme so headless `xcodebuild -scheme iosApp` works in CI
+    # (Xcode only auto-creates schemes when the project is opened in the IDE).
+    scheme:
+      testTargets: []
+    preBuildScripts:
+      - name: "Build & sign Shared framework (Kotlin/Native)"
+        script: |
+          cd "$SRCROOT/.."
+          ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+        basedOnDependencyAnalysis: false
+        outputFiles:
+          - $(SRCROOT)/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)/Shared.framework

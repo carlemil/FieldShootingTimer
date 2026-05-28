@@ -15,9 +15,10 @@ Three modules:
   shared `MainScreen()`. Owns the release-signing config and the Gradle Play
   Publisher plugin. Compose UI deps are transitive via `:shared` (`api{}`-exposed).
 - **`iosApp/`** — SwiftUI Xcode project. Wraps `MainViewControllerKt.MainViewController()`
-  (from `Shared.framework`) in a `UIViewControllerRepresentable`. The `project.pbxproj`
-  is intentionally not committed; see `iosApp/README.md` for the one-time setup
-  on a Mac.
+  (from `Shared.framework`) in a `UIViewControllerRepresentable`. The Xcode project
+  is driven by a committed XcodeGen spec (`iosApp/project.yml`); the generated
+  `iosApp.xcodeproj` is gitignored. Run `xcodegen generate` in `iosApp/` to
+  (re)create it — see `iosApp/README.md`.
 
 ## Build & Run
 
@@ -39,11 +40,14 @@ flavor-less `installDebug`, `testDebugUnitTest`, or `connectedDebugAndroidTest`.
 
 iOS (macOS only):
 
-- Build the framework so Xcode can link it:
-  `./gradlew :shared:embedAndSignAppleFrameworkForXcode`
-- XCFramework artifact (release): `./gradlew :shared:assembleSharedXCFramework`
-- Open `iosApp/iosApp.xcodeproj` (after first-time setup per `iosApp/README.md`)
-  and build for an iOS 16+ simulator.
+- Generate the Xcode project from the committed spec:
+  `brew install xcodegen` (once), then `cd iosApp && xcodegen generate`.
+- Open `iosApp/iosApp.xcodeproj` and build for an iOS 16+ simulator. Building
+  auto-runs `:shared:embedAndSignAppleFrameworkForXcode` as a pre-build phase
+  (single-arch, fast), so no manual framework step is needed.
+- Run the shared logic tests on an iOS slice: `./gradlew :shared:iosSimulatorArm64Test`.
+- XCFramework artifact (standalone, not used by the app build):
+  `./gradlew :shared:assembleSharedXCFramework`.
 
 Release signing reads from `keystore.properties` (gitignored). The keystore file
 `fst-release-key.jks` is in the project root.
@@ -54,6 +58,23 @@ the `appVersionCode` / `appVersionName` vals at the top of `app/build.gradle.kts
 `app/build.gradle.kts`) uploads an AAB to the Play "internal" track, reading
 credentials from `play-account.json` (gitignored). Build the bundle with
 `./gradlew :app:bundleProdRelease`.
+
+## CI
+
+`.github/workflows/ci.yml` runs on push to `main` and on PRs, with two jobs:
+
+- **android** (`ubuntu-latest`): `:app:assembleProdDebug`, `:app:testProdDebugUnitTest`,
+  and `:shared:testDebugUnitTest`.
+- **ios** (`macos-15`): `:shared:iosSimulatorArm64Test` (the shared logic tests
+  on the arm64 simulator slice), then `xcodegen generate` and an `xcodebuild`
+  simulator build of the `iosApp` scheme.
+
+Both jobs use **JDK 17** — the Gradle wrapper (9.3.1) and AGP (9.1.1) require it
+to *run*. The `JvmTarget.JVM_11` / `JavaVersion.VERSION_11` settings in the build
+scripts only set the output bytecode level, not the JVM that runs Gradle, so do
+not downgrade CI to JDK 11. The iOS job caches `~/.konan` (the Kotlin/Native
+toolchain) and pins `macos-15` (not `macos-latest`) so the simulator arch matches
+the `iosSimulatorArm64` slice.
 
 ## Architecture
 
@@ -147,6 +168,9 @@ support via the new `com.android.kotlin.multiplatform.library` plugin, remove
 the bypass and switch `:shared` to the new plugin. `:app` explicitly applies
 `kotlin-android` because that bypass disables AGP's auto-applied Kotlin
 language plugin.
+
+CI relies on these same `gradle.properties` flags (no extra CLI flags are passed
+in `ci.yml`), so the bypass must stay until that migration lands.
 
 ## Localization
 
