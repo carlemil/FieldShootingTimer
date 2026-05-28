@@ -1,3 +1,5 @@
+@file:OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
@@ -51,6 +53,11 @@ kotlin {
         commonTest.dependencies {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
+        }
+        // Compose UI test API (runComposeUiTest) only on iOS, where the UI tests
+        // run via iosSimulatorArm64Test. Kept off the Android unit-test classpath.
+        iosTest.dependencies {
+            implementation(compose.uiTest)
         }
     }
 }
