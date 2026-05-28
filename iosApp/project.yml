@@ -48,6 +48,11 @@ targets:
       - name: "Build & sign Shared framework (Kotlin/Native)"
         script: |
           cd "$SRCROOT/.."
+          # Xcode runs build phases with a minimal PATH/env that often lacks a
+          # JDK. Resolve one via java_home so ./gradlew works from the GUI.
+          if [ -z "$JAVA_HOME" ] && /usr/libexec/java_home >/dev/null 2>&1; then
+            export JAVA_HOME="$(/usr/libexec/java_home)"
+          fi
           ./gradlew :shared:embedAndSignAppleFrameworkForXcode
         basedOnDependencyAnalysis: false
         outputFiles:
