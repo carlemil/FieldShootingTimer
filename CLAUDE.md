@@ -21,16 +21,20 @@ Three modules:
 
 ## Build & Run
 
-Android (Gradle wrapper; PowerShell calls bash wrapper via git-bash):
+Android (Gradle wrapper; PowerShell calls bash wrapper via git-bash). `:app`
+declares a single product flavor `prod` (dimension `env`), so app variant tasks
+are flavor-qualified (`prodDebug` / `prodRelease`). `assembleDebug` /
+`assembleRelease` / `bundleRelease` exist as aggregate anchors, but there is no
+flavor-less `installDebug`, `testDebugUnitTest`, or `connectedDebugAndroidTest`.
 
-- Debug APK: `./gradlew :app:assembleDebug`
-- Release AAB: `./gradlew :app:bundleRelease` (needs `keystore.properties` in project root)
-- Install on device: `./gradlew :app:installDebug`
+- Debug APK: `./gradlew :app:assembleProdDebug`
+- Release AAB: `./gradlew :app:bundleProdRelease` (needs `keystore.properties` in project root)
+- Install on device: `./gradlew :app:installProdDebug`
 - Multiplatform unit tests (shared module, every target compilable on host):
   `./gradlew :shared:allTests`
-- Android-side unit tests (incl. tests still in :app): `./gradlew :app:testDebugUnitTest`
-- Android instrumented tests: `./gradlew :app:connectedDebugAndroidTest`
-- Single unit test:
+- Android-side unit tests (incl. tests still in :app): `./gradlew :app:testProdDebugUnitTest`
+- Android instrumented tests: `./gradlew :app:connectedProdDebugAndroidTest`
+- Single shared unit test:
   `./gradlew :shared:testDebugUnitTest --tests "se.kjellstrand.fieldshootingtimer.ui.CommandTest"`
 
 iOS (macOS only):
@@ -44,10 +48,12 @@ iOS (macOS only):
 Release signing reads from `keystore.properties` (gitignored). The keystore file
 `fst-release-key.jks` is in the project root.
 
-The `/release` slash command (`.claude/commands/release.md`) currently only
-ships Android (no iOS pipeline in v1). It still references the older
-`appVersionCode`/`appVersionName` pattern from before the migration; double-check
-before invoking.
+Release shipping is Android-only (no iOS pipeline in v1). The version is set by
+the `appVersionCode` / `appVersionName` vals at the top of `app/build.gradle.kts`
+(currently 8 / "1.7.0"). The Gradle Play Publisher plugin (`play { }` block in
+`app/build.gradle.kts`) uploads an AAB to the Play "internal" track, reading
+credentials from `play-account.json` (gitignored). Build the bundle with
+`./gradlew :app:bundleProdRelease`.
 
 ## Architecture
 
