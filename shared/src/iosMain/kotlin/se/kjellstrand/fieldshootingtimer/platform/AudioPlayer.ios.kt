@@ -19,7 +19,7 @@ private fun ByteArray.toNSData(): NSData = usePinned { pinned ->
     NSData.create(bytes = pinned.addressOf(0), length = this.size.toULong())
 }
 
-@OptIn(ExperimentalResourceApi::class)
+@OptIn(ExperimentalResourceApi::class, ExperimentalForeignApi::class)
 class IosAudioPlayer : AudioPlayer {
     private val players: MutableMap<Command, AVAudioPlayer> = mutableMapOf()
 
