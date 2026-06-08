@@ -1,0 +1,76 @@
+default_platform(:ios)
+
+# Fastlane auto-loads iosApp/fastlane/.env (gitignored). Keep
+# ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH there.
+
+platform :ios do
+
+  # Every archive uses `git rev-list --count HEAD` as the build number so
+  # uploads never collide. Stored on a private @build_number to share across
+  # lanes within one fastlane run.
+  before_all do
+    @build_number = `git rev-list --count HEAD`.strip
+    UI.message("Using build number #{@build_number}")
+  end
+
+  desc "Regenerate Xcode project from project.yml (idempotent)."
+  lane :gen do
+    sh("cd .. && DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodegen generate")
+  end
+
+  desc "Build a signed App Store archive and upload to TestFlight."
+  lane :beta do
+    gen
+    api_key = app_store_connect_api_key(
+      key_id:      ENV.fetch("ASC_KEY_ID"),
+      issuer_id:   ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH"),
+      in_house:    false,
+    )
+    build_app(
+      xcargs: "CURRENT_PROJECT_VERSION=#{@build_number}",
+    )
+    upload_to_testflight(
+      api_key:                       api_key,
+      skip_waiting_for_build_processing: true,
+      changelog:                     File.read("metadata/sv-SE/release_notes.txt").strip,
+    )
+  end
+
+  desc "Build a signed App Store archive and submit to the App Store (not for review)."
+  lane :release do
+    gen
+    api_key = app_store_connect_api_key(
+      key_id:      ENV.fetch("ASC_KEY_ID"),
+      issuer_id:   ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH"),
+      in_house:    false,
+    )
+    build_app(
+      xcargs: "CURRENT_PROJECT_VERSION=#{@build_number}",
+    )
+    upload_to_app_store(
+      api_key:           api_key,
+      skip_screenshots:  false,
+      skip_metadata:     false,
+      submit_for_review: false,
+    )
+  end
+
+  desc "Push App Store metadata (text + screenshots) without uploading a binary."
+  lane :metadata do
+    api_key = app_store_connect_api_key(
+      key_id:      ENV.fetch("ASC_KEY_ID"),
+      issuer_id:   ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH"),
+      in_house:    false,
+    )
+    upload_to_app_store(
+      api_key:            api_key,
+      skip_binary_upload: true,
+      skip_screenshots:   false,
+      skip_metadata:      false,
+      submit_for_review:  false,
+    )
+  end
+end

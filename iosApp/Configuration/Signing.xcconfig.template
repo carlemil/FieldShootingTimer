@@ -1,0 +1,14 @@
+// Copy this file to Signing.xcconfig (gitignored) and fill in the real values.
+// Referenced from iosApp/project.yml via `configFiles:`.
+//
+// DEVELOPMENT_TEAM is the 10-char Apple Team ID — find it in App Store
+// Connect → Membership, or at developer.apple.com/account.
+//
+// PROVISIONING_PROFILE_SPECIFIER must match the name (not UUID) of an
+// "App Store" provisioning profile in Xcode's Accounts pane, OR — if
+// you use fastlane match — leave it pointing at "match AppStore <bundle id>".
+
+DEVELOPMENT_TEAM = ABCDE12345
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = Apple Distribution
+PROVISIONING_PROFILE_SPECIFIER = Fieldshootingtimer App Store

@@ -34,12 +34,26 @@ targets:
           - "Info.plist"
       - path: iosApp/Info.plist
         buildPhase: none
+    # Signing.xcconfig is gitignored (per-developer team ID / profile). Copy
+    # Configuration/Signing.xcconfig.template → Signing.xcconfig and fill in.
+    # Simulator builds in CI still work because the workflow passes
+    # CODE_SIGNING_ALLOWED=NO on the xcodebuild command line.
+    configFiles:
+      Debug: Configuration/Signing.xcconfig
+      Release: Configuration/Signing.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: se.kjellstrand.fieldshootingtimer
         INFOPLIST_FILE: iosApp/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # CFBundleVersion in Info.plist is $(CURRENT_PROJECT_VERSION). Default
+        # to 1 for local Debug builds; fastlane's `gym` overrides it via
+        # `xcargs CURRENT_PROJECT_VERSION=<git rev-count>` at archive time so
+        # every uploaded build has a unique number.
+        CURRENT_PROJECT_VERSION: 1
+        VERSIONING_SYSTEM: apple-generic
     # Emit a shared scheme so headless `xcodebuild -scheme iosApp` works in CI
     # (Xcode only auto-creates schemes when the project is opened in the IDE).
     scheme:

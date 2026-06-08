@@ -1,0 +1,12 @@
+Fältskyttetimer är en enkel timer för svensk fältskytte och precisionsskytte med standardiserade röstkommandon: "Tio sekunder kvar", "Färdiga", "Eld", "Eld upphör", "Patron ur, visitation".
+
+Funktioner:
+- Ställbar eldtid med skjutregel
+- Tydlig urtavla som visar var i kommandosekvensen du är
+- Svenska röstkommandon
+- Haptisk återkoppling när timern passerar markörer
+- Skärmen slocknar inte under pågående timer
+- Stöder porträtt och liggande läge
+- Ljudet styrs av telefonens ringläge — på "ljudlös" hörs ingenting
+
+Appen samlar inte in några data, kräver inga behörigheter och fungerar helt offline.

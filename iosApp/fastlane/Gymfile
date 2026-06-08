@@ -1,0 +1,10 @@
+project           "iosApp.xcodeproj"
+scheme            "iosApp"
+configuration     "Release"
+output_directory  "build/ios"
+output_name       "iosApp"
+export_method     "app-store"
+export_options    "./fastlane/ExportOptions.plist"
+clean             true
+include_bitcode   false
+include_symbols   true

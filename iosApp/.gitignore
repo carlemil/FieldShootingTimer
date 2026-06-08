@@ -6,3 +6,13 @@ xcuserdata/
 DerivedData/
 build/
 *.xcuserstate
+
+# Per-developer signing (team ID, profile name). Templated alongside.
+Configuration/Signing.xcconfig
+
+# Fastlane local credentials + state (App Store Connect API key path, run logs).
+fastlane/.env
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+fastlane/README.md

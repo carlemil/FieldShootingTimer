@@ -1,0 +1,1 @@
+No login required. The app is a single-screen timer for Swedish field-shooting drills. Voice commands are in Swedish; default fire duration is 5 seconds and can be adjusted with the slider on the settings screen. Toggle the silent switch on the device to silence the voice cues.

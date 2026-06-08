@@ -52,12 +52,25 @@ iOS (macOS only):
 Release signing reads from `keystore.properties` (gitignored). The keystore file
 `fst-release-key.jks` is in the project root.
 
-Release shipping is Android-only (no iOS pipeline in v1). The version is set by
-the `appVersionCode` / `appVersionName` vals at the top of `app/build.gradle.kts`
-(currently 8 / "1.7.0"). The Gradle Play Publisher plugin (`play { }` block in
+**Android release shipping.** The version is set by the `appVersionCode` /
+`appVersionName` vals at the top of `app/build.gradle.kts` (currently 8 /
+"1.7.0"). The Gradle Play Publisher plugin (`play { }` block in
 `app/build.gradle.kts`) uploads an AAB to the Play "internal" track, reading
 credentials from `play-account.json` (gitignored). Build the bundle with
 `./gradlew :app:bundleProdRelease`.
+
+**iOS release shipping.** Local fastlane pipeline under `iosApp/fastlane/` —
+`bundle exec fastlane beta` archives + uploads to TestFlight, `... release`
+uploads to the App Store (not submitted for review), `... metadata` pushes
+Swedish ASC text + screenshots only. Per-developer signing lives in
+`iosApp/Configuration/Signing.xcconfig` (gitignored, template alongside) and
+ASC API credentials in `iosApp/fastlane/.env` (gitignored, template alongside).
+`CFBundleVersion` is `$(CURRENT_PROJECT_VERSION)`; fastlane overrides it via
+`xcargs` to `git rev-list --count HEAD` so every archive has a unique build
+number. Marketing version (`CFBundleShortVersionString`) is bumped manually in
+`iosApp/iosApp/Info.plist` — keep it aligned with `appVersionName` on Android.
+App icons are regenerated from the single 1024×1024 source in
+`AppIcon.appiconset/` via `bash iosApp/scripts/generate-app-icons.sh`.
 
 ## CI
 

@@ -1,0 +1,6 @@
+source "https://rubygems.org"
+
+# Fastlane drives the iOS release pipeline (build → archive → upload). The
+# lock file pins the exact version that's been validated against this
+# project; bump intentionally. Ruby 3.0+ is required by current fastlane.
+gem "fastlane", "~> 2.224"
