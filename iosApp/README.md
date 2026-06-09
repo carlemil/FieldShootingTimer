@@ -106,6 +106,20 @@ Store provisioning profile — the `beta`/`release` lanes call fastlane's
 `get_certificates` and `get_provisioning_profile` actions on first run, which
 create both via the ASC API key and install them in your login keychain.
 
+**One-time keychain step after the first cert install.** macOS won't let
+`codesign` use a newly imported private key until its partition list grants
+that access, and setting the partition list requires your Mac login password.
+After the first `fastlane beta` (which will fail at the codesign step with
+`errSecInternalComponent`), run once in a terminal:
+
+```sh
+security set-key-partition-list -S apple-tool:,apple:,codesign:,productbuild: \
+    -s -k '<your-mac-password>' ~/Library/Keychains/login.keychain-db
+```
+
+Then re-run `fastlane beta` — it picks up the existing cert + profile and
+proceeds past codesign. Subsequent runs need no further keychain steps.
+
 Then:
 
 ```sh
