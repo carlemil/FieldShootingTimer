@@ -27,8 +27,9 @@ A minimal SwiftUI app that embeds the Compose Multiplatform UI exposed by
   `PROVISIONING_PROFILE_SPECIFIER`.
 - `iosApp/fastlane/` — `Fastfile` lanes for TestFlight (`beta`),
   App Store (`release`), and metadata-only (`metadata`) uploads.
-  `metadata/sv-SE/` holds Swedish-first ASC text under git;
-  `screenshots/sv-SE/` is where 6.7" iPhone screenshots go.
+  `metadata/sv/` holds Swedish-first ASC text under git;
+  `screenshots/sv/` is where 6.7"/6.9" iPhone screenshots go.
+  (ASC uses `sv`, not `sv-SE`.)
 
 - `iosApp/project.yml` — the [XcodeGen](https://github.com/yonaskolb/XcodeGen)
   spec. Running `xcodegen generate` produces `iosApp.xcodeproj` deterministically.
@@ -125,7 +126,7 @@ Then:
 ```sh
 fastlane beta        # archive + upload to TestFlight
 fastlane release     # archive + upload to App Store (not submitted for review)
-fastlane metadata    # push sv-SE ASC text + screenshots without a binary
+fastlane metadata    # push sv ASC text + screenshots without a binary
 ```
 
 `fastlane beta` stamps `CFBundleVersion` with `git rev-list --count HEAD` so

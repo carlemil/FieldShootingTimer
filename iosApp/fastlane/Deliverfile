@@ -3,4 +3,4 @@ force                  true            # skip preview HTML confirmation
 submit_for_review      false           # promote to review manually the first time
 automatic_release      false
 precheck_include_in_app_purchases false
-languages              ["sv-SE"]
+languages              ["sv"]

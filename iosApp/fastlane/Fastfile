@@ -71,7 +71,7 @@ platform :ios do
     upload_to_testflight(
       api_key:                            api_key,
       skip_waiting_for_build_processing:  true,
-      changelog:                          File.read("metadata/sv-SE/release_notes.txt").strip,
+      changelog:                          File.read("metadata/sv/release_notes.txt").strip,
     )
   end
 
