@@ -86,11 +86,11 @@ The iOS release pipeline runs **locally from a Mac** (not from CI). CI keeps its
 simulator-build-only role. One-time setup on a Mac with Xcode 16+:
 
 ```sh
-cd iosApp
-bundle install                                       # installs fastlane (Gemfile pin)
+brew install fastlane                                # one-time
 
+cd iosApp
 cp Configuration/Signing.xcconfig.template Configuration/Signing.xcconfig
-$EDITOR Configuration/Signing.xcconfig               # fill in DEVELOPMENT_TEAM + profile
+$EDITOR Configuration/Signing.xcconfig               # set DEVELOPMENT_TEAM
 
 cp fastlane/.env.template fastlane/.env
 $EDITOR fastlane/.env                                # fill in ASC API key + Apple ID
@@ -98,23 +98,26 @@ $EDITOR fastlane/.env                                # fill in ASC API key + App
 
 The ASC API key (`ASC_KEY_ID`, `ASC_ISSUER_ID`, `.p8` path in `ASC_KEY_PATH`)
 is generated at [appstoreconnect.apple.com/access/api](https://appstoreconnect.apple.com/access/api).
-The provisioning profile in `Signing.xcconfig` must already exist in your
-Apple Developer account (created manually in Xcode → Settings → Accounts →
-Manage Certificates, or via `fastlane match` — match is not configured here
-because this is a solo-developer repo).
+Apple only lets you download the `.p8` once — store it somewhere safe
+(`~/.appstoreconnect/` with `chmod 700` is the convention used here).
+
+You do **not** need to pre-create the Apple Distribution certificate or App
+Store provisioning profile — the `beta`/`release` lanes call fastlane's
+`get_certificates` and `get_provisioning_profile` actions on first run, which
+create both via the ASC API key and install them in your login keychain.
 
 Then:
 
 ```sh
-bundle exec fastlane beta        # archive + upload to TestFlight
-bundle exec fastlane release     # archive + upload to App Store (not submitted for review)
-bundle exec fastlane metadata    # push sv-SE ASC text + screenshots without a binary
+fastlane beta        # archive + upload to TestFlight
+fastlane release     # archive + upload to App Store (not submitted for review)
+fastlane metadata    # push sv-SE ASC text + screenshots without a binary
 ```
 
 `fastlane beta` stamps `CFBundleVersion` with `git rev-list --count HEAD` so
 every archive has a unique build number. Marketing version (`CFBundleShortVersionString`)
-is bumped manually in `iosApp/Info.plist` for each release — keep it aligned
-with the Android `appVersionName` in `app/build.gradle.kts`.
+is bumped manually in `iosApp/iosApp/Info.plist` for each release — keep it
+aligned with the Android `appVersionName` in `app/build.gradle.kts`.
 
 ### Regenerating app icons
 

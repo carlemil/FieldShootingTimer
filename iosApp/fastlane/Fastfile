@@ -1,13 +1,16 @@
 default_platform(:ios)
+opt_out_usage
 
 # Fastlane auto-loads iosApp/fastlane/.env (gitignored). Keep
 # ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH there.
 
+APP_ID = "se.kjellstrand.fieldshootingtimer"
+
 platform :ios do
 
   # Every archive uses `git rev-list --count HEAD` as the build number so
-  # uploads never collide. Stored on a private @build_number to share across
-  # lanes within one fastlane run.
+  # uploads never collide. Stored on @build_number to share across lanes
+  # within one fastlane run.
   before_all do
     @build_number = `git rev-list --count HEAD`.strip
     UI.message("Using build number #{@build_number}")
@@ -18,37 +21,64 @@ platform :ios do
     sh("cd .. && DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodegen generate")
   end
 
+  # Build the ASC API key, fetch (or create) an Apple Distribution cert and
+  # an App Store provisioning profile for APP_ID, then archive via gym.
+  # Returns the resolved profile name so the caller can decide what to upload.
+  private_lane :archive_for_app_store do
+    api_key = app_store_connect_api_key(
+      key_id:       ENV.fetch("ASC_KEY_ID"),
+      issuer_id:    ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH"),
+      in_house:     false,
+    )
+
+    # Creates an Apple Distribution cert + installs it in the login keychain
+    # if one doesn't exist. Skips if a valid cert is already present. Default
+    # is iOS distribution (development: false); no other params needed.
+    get_certificates(
+      api_key: api_key,
+    )
+
+    # Creates an App Store distribution profile for APP_ID if missing,
+    # downloads it locally, installs it. Defaults (adhoc=false,
+    # development=false) already mean App Store; setting both explicitly
+    # trips a conflict check, so let them default.
+    get_provisioning_profile(
+      api_key:        api_key,
+      app_identifier: APP_ID,
+    )
+    profile_name = lane_context[SharedValues::SIGH_NAME]
+
+    build_app(
+      xcargs: %(CURRENT_PROJECT_VERSION=#{@build_number} PROVISIONING_PROFILE_SPECIFIER="#{profile_name}"),
+      export_options: {
+        method:         "app-store",
+        signingStyle:   "manual",
+        teamID:         ENV.fetch("FASTLANE_TEAM_ID"),
+        uploadBitcode:  false,
+        uploadSymbols:  true,
+        provisioningProfiles: { APP_ID => profile_name },
+      },
+    )
+
+    api_key
+  end
+
   desc "Build a signed App Store archive and upload to TestFlight."
   lane :beta do
     gen
-    api_key = app_store_connect_api_key(
-      key_id:      ENV.fetch("ASC_KEY_ID"),
-      issuer_id:   ENV.fetch("ASC_ISSUER_ID"),
-      key_filepath: ENV.fetch("ASC_KEY_PATH"),
-      in_house:    false,
-    )
-    build_app(
-      xcargs: "CURRENT_PROJECT_VERSION=#{@build_number}",
-    )
+    api_key = archive_for_app_store
     upload_to_testflight(
-      api_key:                       api_key,
-      skip_waiting_for_build_processing: true,
-      changelog:                     File.read("metadata/sv-SE/release_notes.txt").strip,
+      api_key:                            api_key,
+      skip_waiting_for_build_processing:  true,
+      changelog:                          File.read("metadata/sv-SE/release_notes.txt").strip,
     )
   end
 
   desc "Build a signed App Store archive and submit to the App Store (not for review)."
   lane :release do
     gen
-    api_key = app_store_connect_api_key(
-      key_id:      ENV.fetch("ASC_KEY_ID"),
-      issuer_id:   ENV.fetch("ASC_ISSUER_ID"),
-      key_filepath: ENV.fetch("ASC_KEY_PATH"),
-      in_house:    false,
-    )
-    build_app(
-      xcargs: "CURRENT_PROJECT_VERSION=#{@build_number}",
-    )
+    api_key = archive_for_app_store
     upload_to_app_store(
       api_key:           api_key,
       skip_screenshots:  false,
@@ -60,10 +90,10 @@ platform :ios do
   desc "Push App Store metadata (text + screenshots) without uploading a binary."
   lane :metadata do
     api_key = app_store_connect_api_key(
-      key_id:      ENV.fetch("ASC_KEY_ID"),
-      issuer_id:   ENV.fetch("ASC_ISSUER_ID"),
+      key_id:       ENV.fetch("ASC_KEY_ID"),
+      issuer_id:    ENV.fetch("ASC_ISSUER_ID"),
       key_filepath: ENV.fetch("ASC_KEY_PATH"),
-      in_house:    false,
+      in_house:     false,
     )
     upload_to_app_store(
       api_key:            api_key,

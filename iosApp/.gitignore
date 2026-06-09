@@ -16,3 +16,11 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/test_output/
 fastlane/README.md
+
+# Code-signing artifacts that fastlane / Xcode may drop in this dir during an
+# archive. All are reproducible (fetchable via ASC API) and the .p12 contains
+# the private key — keep them out of the repo entirely.
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.p12
