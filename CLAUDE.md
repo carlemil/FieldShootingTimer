@@ -120,7 +120,7 @@ all derive from it.
 (default 5s) replaces `Command.Fire.duration` when building `segmentDurations`
 and `audioCues` in the ViewModel. Everything else is fixed by the enum.
 
-**Platform expects (`commonMain/.../platform/`):** Five abstraction points,
+**Platform expects (`commonMain/.../platform/`):** Six abstraction points,
 each with Android + iOS actuals.
 
 | Expect | Android actual | iOS actual |
@@ -130,6 +130,12 @@ each with Android + iOS actuals.
 | `PlatformAudioPolicy` via `rememberPlatformAudioPolicy()` | reads `ringerMode` (NORMAL ⇒ play, !SILENT ⇒ vibrate) | always `true`/`true` (silent switch handled by `AVAudioSession(.ambient)` set in `iosAppApp.swift`) |
 | `KeepScreenOn(enabled)` @Composable | toggles `Window.FLAG_KEEP_SCREEN_ON` via `DisposableEffect` | toggles `UIApplication.idleTimerDisabled` |
 | `dynamicColorScheme(dark)` @Composable | `dynamic{Light,Dark}ColorScheme(ctx)` on Android 12+, else `null` | always `null` (falls back to static `Light/DarkColorScheme`) |
+| `Sharer` via `rememberSharer()` | `ACTION_SEND` `text/plain` chooser (`FLAG_ACTIVITY_NEW_TASK`) | `UIActivityViewController` presented from the topmost VC |
+
+The `ShareButton` (`ui/ShareButton.kt`) is overlaid by `MainScreen` in the
+`BoxWithConstraints` — top-end in portrait, top-start in landscape (so it
+clears the right-hand settings column) — and shares the GitHub Pages landing
+page (`SHARE_URL` in `MainScreen.kt`).
 
 **Persistence (`commonMain/.../persistence/`):** `SettingsStore` interface +
 `DataStoreSettingsStore` (multiplatform `datastore-preferences-core` +
