@@ -96,7 +96,8 @@ platform :ios do
       key_filepath: ENV.fetch("ASC_KEY_PATH"),
       in_house:     false,
     )
-    app_version = `/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" iosApp/Info.plist`.strip
+    plist = File.expand_path("../iosApp/Info.plist", __dir__)
+    app_version = `/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "#{plist}"`.strip
     UI.message("Selecting build #{@build_number} for App Store version #{app_version}")
     upload_to_app_store(
       api_key:            api_key,
