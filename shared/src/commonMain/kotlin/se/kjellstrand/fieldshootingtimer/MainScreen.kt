@@ -17,7 +17,7 @@ import se.kjellstrand.fieldshootingtimer.platform.KeepScreenOn
 import se.kjellstrand.fieldshootingtimer.platform.rememberAudioPlayer
 import se.kjellstrand.fieldshootingtimer.platform.rememberHaptics
 import se.kjellstrand.fieldshootingtimer.platform.rememberPlatformAudioPolicy
-import se.kjellstrand.fieldshootingtimer.platform.rememberSharer
+import se.kjellstrand.fieldshootingtimer.platform.rememberUrlOpener
 import se.kjellstrand.fieldshootingtimer.ui.Command
 import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
@@ -62,7 +62,7 @@ fun MainScreen() {
     val audioPlayer = rememberAudioPlayer()
     val haptics = rememberHaptics()
     val audioPolicy = rememberPlatformAudioPolicy()
-    val sharer = rememberSharer()
+    val urlOpener = rememberUrlOpener()
 
     LaunchedEffect(audioPlayer) {
         audioPlayer.preload(Command.audibleCommands)
@@ -123,7 +123,7 @@ fun MainScreen() {
         // Top-right in portrait; top-left in landscape so it never overlaps the
         // settings column that fills the right half in landscape.
         ShareButton(
-            onClick = { sharer.share(SHARE_URL) },
+            onClick = { urlOpener.openUrl(SHARE_URL) },
             modifier = Modifier
                 .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)
                 .systemBarsPadding()
