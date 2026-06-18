@@ -1,3 +1,2 @@
-• Användarmarkörer visas nu utanför ringen och pekar utåt för bättre synlighet.
-• Ny markör när eldkommandot startar och när patron ur börjar.
-• Tidsintervallen numreras nu i mitten av varje intervall.
+• Ny delningsknapp – dela appen enkelt med vänner.
+• Mindre förbättringar och buggfixar.

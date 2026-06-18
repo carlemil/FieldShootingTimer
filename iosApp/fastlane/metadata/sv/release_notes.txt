@@ -1,1 +1,2 @@
-Första utgåvan på App Store.
+• Ny delningsknapp – dela appen enkelt med vänner.
+• Mindre förbättringar och buggfixar.
