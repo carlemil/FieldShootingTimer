@@ -127,7 +127,7 @@ fun MainScreen() {
             modifier = Modifier
                 .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)
                 .systemBarsPadding()
-                .padding(Paddings.Small)
+                .padding(Paddings.Medium)
         )
     }
 }
