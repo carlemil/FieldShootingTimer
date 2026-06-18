@@ -4,7 +4,12 @@ Enhance your shooting practice with the Field Shooting Timer—a precise and cus
 
 ![Screenshot from the app](https://github.com/carlemil/FieldShootingTimer/blob/main/originals/play_feature_image.png)
 
-https://play.google.com/store/apps/details?id=se.kjellstrand.fieldshootingtimer
+## Download
+
+**[Download page with QR codes →](https://carlemil.github.io/FieldShootingTimer/)**
+
+- [Android — Google Play](https://play.google.com/store/apps/details?id=se.kjellstrand.fieldshootingtimer)
+- [iPhone — App Store](https://apps.apple.com/se/app/f%C3%A4ltskyttetimer/id6778128329)
 
 https://www.youtube.com/watch?v=E-AQSUt9uac&ab_channel=Carl-EmilKjellstrand
 
