@@ -9,6 +9,10 @@ import kotlin.math.roundToInt
  * whole schedule is verifiable with plain unit tests on any target.
  */
 
+/** Second at which the Fire segment starts (end of the pre-fire commands). */
+internal fun fireStartSeconds(): Float =
+    (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()
+
 internal fun buildSegmentDurations(shootingDuration: Float): List<Float> =
     Command.timedCommands.map {
         if (it == Command.Fire) shootingDuration else it.duration.toFloat()

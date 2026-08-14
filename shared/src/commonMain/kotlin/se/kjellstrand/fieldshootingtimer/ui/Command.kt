@@ -36,5 +36,8 @@ enum class Command(
     companion object {
         val timedCommands: List<Command> = entries.filter { it.duration >= 0 }
         val audibleCommands: List<Command> = entries.filter { it.audioPath != null }
+
+        /** Index of the Fire segment in [timedCommands]-ordered lists. */
+        val fireSegmentIndex: Int = timedCommands.indexOf(Fire)
     }
 }

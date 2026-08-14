@@ -67,14 +67,3 @@ fun SettingsPanel(
     Spacer(modifier = Modifier.padding(Paddings.Small))
     CommandList(highlightedIndex)
 }
-
-private fun calculateHighlightedIndex(currentTime: Float, highlightDurations: List<Float>): Int {
-    var accumulatedTime = 0f
-    highlightDurations.forEachIndexed { index, duration ->
-        accumulatedTime += duration
-        if (currentTime < accumulatedTime) {
-            return index + Command.TenSecondsLeft.ordinal
-        }
-    }
-    return Command.Visitation.ordinal
-}
