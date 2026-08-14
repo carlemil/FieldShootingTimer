@@ -19,6 +19,10 @@ kotlin {
         }
     }
 
+    // Host-test-only target: lets logic and Compose UI tests run on the dev
+    // host (and CI) without an emulator. Nothing ships from jvmMain.
+    jvm()
+
     val xcf = XCFramework("Shared")
     listOf(
         iosX64(),
@@ -54,11 +58,23 @@ kotlin {
             implementation(kotlin("test"))
             implementation(libs.kotlinx.coroutines.test)
         }
-        // Compose UI test API (runComposeUiTest) only on iOS, where the UI tests
-        // run via iosSimulatorArm64Test. Kept off the Android unit-test classpath.
-        iosTest.dependencies {
-            implementation(compose.uiTest)
+        jvmTest.dependencies {
+            // Skiko runtime for the current host so runComposeUiTest can render
+            // headlessly, plus Dispatchers.Main (Swing) for viewModelScope.
+            implementation(compose.desktop.currentOs)
+            implementation(libs.kotlinx.coroutines.swing)
         }
+        // Compose UI tests (runComposeUiTest) shared between the jvm and iOS
+        // test compilations. Deliberately kept off the Android unit-test
+        // classpath, which cannot execute them.
+        val uiTest by creating {
+            dependsOn(commonTest.get())
+            dependencies {
+                implementation(compose.uiTest)
+            }
+        }
+        jvmTest.get().dependsOn(uiTest)
+        iosTest.get().dependsOn(uiTest)
     }
 }
 

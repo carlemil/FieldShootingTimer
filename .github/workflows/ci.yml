@@ -23,6 +23,7 @@ jobs:
       - run: ./gradlew :app:assembleProdDebug --stacktrace
       - run: ./gradlew :app:testProdDebugUnitTest --stacktrace
       - run: ./gradlew :shared:testDebugUnitTest --stacktrace
+      - run: ./gradlew :shared:jvmTest --stacktrace
 
   ios:
     name: iOS build & tests (macOS)
