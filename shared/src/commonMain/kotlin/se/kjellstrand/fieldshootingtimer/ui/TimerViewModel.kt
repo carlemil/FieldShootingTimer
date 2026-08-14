@@ -19,6 +19,12 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.TimeSource
+import se.kjellstrand.fieldshootingtimer.domain.buildAudioCues
+import se.kjellstrand.fieldshootingtimer.domain.buildRange
+import se.kjellstrand.fieldshootingtimer.domain.buildSegmentDurations
+import se.kjellstrand.fieldshootingtimer.domain.findNextFreeThumbSpot
+import se.kjellstrand.fieldshootingtimer.domain.newlyCrossedThumbs
+import se.kjellstrand.fieldshootingtimer.domain.newlyPassedIndices
 import se.kjellstrand.fieldshootingtimer.persistence.SettingsStore
 
 data class TimerUiState(
@@ -41,7 +47,7 @@ enum class TimerRunningState {
 private val MonotonicStart = TimeSource.Monotonic.markNow()
 private fun defaultTimeSourceMs(): Long = MonotonicStart.elapsedNow().inWholeMilliseconds
 
-open class TimerViewModel constructor(
+class TimerViewModel(
     externalScope: CoroutineScope? = null,
     private val tickMs: Long = 16L,
     private val settingsStore: SettingsStore? = null,
@@ -61,14 +67,6 @@ open class TimerViewModel constructor(
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration) }
         .stateIn(scope, SharingStarted.Eagerly, buildSegmentDurations(_uiState.value.shootingDuration))
-
-    val totalDurationFlow: StateFlow<Float> = segmentDurationsFlow
-        .map { it.sum() }
-        .stateIn(scope, SharingStarted.Eagerly, segmentDurationsFlow.value.sum())
-
-    val audioCuesFlow: StateFlow<List<Pair<Float, Command>>> = _uiState
-        .map { buildAudioCues(it.shootingDuration) }
-        .stateIn(scope, SharingStarted.Eagerly, buildAudioCues(_uiState.value.shootingDuration))
 
     val rangeFlow: StateFlow<IntRange> = _uiState
         .map { buildRange(it.shootingDuration) }
@@ -224,65 +222,16 @@ open class TimerViewModel constructor(
     }
 
     private fun emitPassedCues(time: Float, cues: List<Pair<Float, Command>>) {
-        cues.forEachIndexed { index, (cueTime, cmd) ->
-            if (time >= cueTime && index !in playedCueIndices) {
-                playedCueIndices.add(index)
-                _cueEventsFlow.tryEmit(cmd)
-            }
+        newlyPassedIndices(time, cues, playedCueIndices).forEach { index ->
+            playedCueIndices.add(index)
+            _cueEventsFlow.tryEmit(cues[index].second)
         }
     }
 
     private fun emitPassedThumbs(time: Float, thumbs: List<Float>) {
-        thumbs.forEach { t ->
-            if (time >= t && t !in crossedThumbs) {
-                crossedThumbs.add(t)
-                _thumbCrossedFlow.tryEmit(t)
-            }
-        }
-    }
-
-    // --- Helpers ---
-
-    private fun findNextFreeThumbSpot(range: IntRange, thumbValues: List<Float>): Float {
-        val center = (range.first + range.last) / 2
-        val maxDistance = (range.last - range.first) / 2
-        for (distance in 0..maxDistance) {
-            val forward = center + distance
-            val backward = center - distance
-            if (forward in range && thumbValues.find { it.roundToInt() == forward } == null) {
-                return forward.toFloat()
-            }
-            if (backward in range && thumbValues.find { it.roundToInt() == backward } == null) {
-                return backward.toFloat()
-            }
-        }
-        return center.toFloat()
-    }
-
-    companion object {
-        private fun buildSegmentDurations(shootingDuration: Float): List<Float> =
-            Command.timedCommands.map {
-                if (it == Command.Fire) shootingDuration else it.duration.toFloat()
-            }
-
-        private fun buildAudioCues(shootingDuration: Float): List<Pair<Float, Command>> {
-            val cues = mutableListOf<Pair<Float, Command>>()
-            var time = 0f
-            cues.add(time to Command.TenSecondsLeft); time += Command.TenSecondsLeft.duration
-            cues.add(time to Command.Ready); time += Command.Ready.duration
-            cues.add(time to Command.Fire); time += shootingDuration.toInt().toFloat()
-            cues.add(time to Command.CeaseFire); time += Command.CeaseFire.duration
-            cues.add(time to Command.UnloadWeapon); time += Command.UnloadWeapon.duration
-            cues.add(time to Command.Visitation)
-            return cues
-        }
-
-        private fun buildRange(shootingDuration: Float): IntRange {
-            val offset = Command.TenSecondsLeft.duration + Command.Ready.duration
-            return IntRange(
-                offset + 1,
-                (shootingDuration + offset + Command.CeaseFire.duration - 1).toInt()
-            )
+        newlyCrossedThumbs(time, thumbs, crossedThumbs).forEach { t ->
+            crossedThumbs.add(t)
+            _thumbCrossedFlow.tryEmit(t)
         }
     }
 }
