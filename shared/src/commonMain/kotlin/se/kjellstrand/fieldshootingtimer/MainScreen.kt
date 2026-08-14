@@ -18,7 +18,7 @@ import se.kjellstrand.fieldshootingtimer.platform.rememberAudioPlayer
 import se.kjellstrand.fieldshootingtimer.platform.rememberHaptics
 import se.kjellstrand.fieldshootingtimer.platform.rememberPlatformAudioPolicy
 import se.kjellstrand.fieldshootingtimer.platform.rememberSharer
-import se.kjellstrand.fieldshootingtimer.ui.Command
+import se.kjellstrand.fieldshootingtimer.domain.Command
 import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
@@ -110,21 +110,21 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
         val isLandscape = maxWidth > maxHeight
         if (isLandscape) {
             LandscapeLayout(
-                timerViewModel,
-                segmentDurations,
-                onClickPlayButton,
-                timerRunningState,
-                statelessSettingsComposable,
-                280.dp
+                timerViewModel = timerViewModel,
+                segmentDurations = segmentDurations,
+                onClickPlayButton = onClickPlayButton,
+                timerRunningState = timerRunningState,
+                statelessSettingsComposable = statelessSettingsComposable,
+                timerSize = 280.dp
             )
         } else {
             PortraitLayout(
-                timerViewModel,
-                segmentDurations,
-                onClickPlayButton,
-                timerRunningState,
-                statelessSettingsComposable,
-                300.dp
+                timerViewModel = timerViewModel,
+                segmentDurations = segmentDurations,
+                onClickPlayButton = onClickPlayButton,
+                timerRunningState = timerRunningState,
+                statelessSettingsComposable = statelessSettingsComposable,
+                timerSize = 300.dp
             )
         }
         // Top-right in portrait; top-left in landscape so it never overlaps the

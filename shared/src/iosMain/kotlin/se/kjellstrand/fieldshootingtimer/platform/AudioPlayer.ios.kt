@@ -12,7 +12,7 @@ import platform.AVFAudio.AVAudioPlayer
 import platform.Foundation.NSData
 import platform.Foundation.create
 import se.kjellstrand.fieldshootingtimer.resources.Res
-import se.kjellstrand.fieldshootingtimer.ui.Command
+import se.kjellstrand.fieldshootingtimer.domain.Command
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private fun ByteArray.toNSData(): NSData = usePinned { pinned ->

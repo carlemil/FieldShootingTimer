@@ -1,5 +1,7 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import se.kjellstrand.fieldshootingtimer.domain.Command
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope

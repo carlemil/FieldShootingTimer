@@ -1,5 +1,7 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import se.kjellstrand.fieldshootingtimer.domain.Command
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable

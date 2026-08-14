@@ -1,5 +1,7 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import se.kjellstrand.fieldshootingtimer.domain.Command
+
 /**
  * Index into [Command.entries] of the command to highlight in the command
  * list at [currentTime]. Maps the running segment back through

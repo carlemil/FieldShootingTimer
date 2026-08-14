@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import se.kjellstrand.fieldshootingtimer.resources.Res
-import se.kjellstrand.fieldshootingtimer.ui.Command
+import se.kjellstrand.fieldshootingtimer.domain.Command
 import java.io.File
 
 private const val TAG = "AudioPlayer"

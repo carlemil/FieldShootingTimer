@@ -1,4 +1,4 @@
-package se.kjellstrand.fieldshootingtimer.ui
+package se.kjellstrand.fieldshootingtimer.domain
 
 import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.StringResource

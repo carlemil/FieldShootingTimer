@@ -1,7 +1,6 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,19 +31,16 @@ fun PortraitLayout(
             .systemBarsPadding()
     ) {
         Spacer(modifier = Modifier.padding(Paddings.Small))
-        Box(
-            contentAlignment = Alignment.Center,
+        TimerWithPlayButton(
+            timerViewModel = timerViewModel,
+            segmentDurations = segmentDurations,
+            onClickPlayButton = onClickPlayButton,
+            timerRunningState = timerRunningState,
+            timerSize = timerSize,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = Paddings.Large)
-        ) {
-            ShootTimer(timerViewModel, segmentDurations, timerSize)
-            PlayButton(
-                onClickPlayButton = onClickPlayButton,
-                timerRunningState = timerRunningState,
-                timerSize = timerSize
-            )
-        }
+        )
         Spacer(modifier = Modifier.padding(Paddings.Medium))
         statelessSettingsComposable()
     }

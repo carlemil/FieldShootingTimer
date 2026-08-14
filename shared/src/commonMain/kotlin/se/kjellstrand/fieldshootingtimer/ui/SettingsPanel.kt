@@ -1,8 +1,10 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -48,22 +50,25 @@ fun SettingsPanel(
     }
     val enabled = timerRunningState == TimerRunningState.NotStarted
 
-    Spacer(modifier = Modifier.padding(Paddings.Small))
-    ShootTimeAdjuster(
-        shootingDuration = shootingDuration,
-        enabled = enabled,
-        onValueChange = onShootTimeAdjusterValueChange
-    )
-    Spacer(modifier = Modifier.padding(Paddings.Small))
-    TicksAdjuster(
-        thumbValues = thumbValues,
-        range = range,
-        enabled = enabled,
-        setThumbValuesMinusOne = setThumbValuesMinusOne,
-        setThumbValuesPlusOne = setThumbValuesPlusOne,
-        onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
-        onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues
-    )
-    Spacer(modifier = Modifier.padding(Paddings.Small))
-    CommandList(highlightedIndex)
+    // Owns its column so callers don't have to provide a specific layout.
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Spacer(modifier = Modifier.padding(Paddings.Small))
+        ShootTimeAdjuster(
+            shootingDuration = shootingDuration,
+            enabled = enabled,
+            onValueChange = onShootTimeAdjusterValueChange
+        )
+        Spacer(modifier = Modifier.padding(Paddings.Small))
+        TicksAdjuster(
+            thumbValues = thumbValues,
+            range = range,
+            enabled = enabled,
+            setThumbValuesMinusOne = setThumbValuesMinusOne,
+            setThumbValuesPlusOne = setThumbValuesPlusOne,
+            onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
+            onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues
+        )
+        Spacer(modifier = Modifier.padding(Paddings.Small))
+        CommandList(highlightedIndex)
+    }
 }

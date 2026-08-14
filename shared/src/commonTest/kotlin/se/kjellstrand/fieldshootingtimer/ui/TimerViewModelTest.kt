@@ -1,5 +1,7 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import se.kjellstrand.fieldshootingtimer.domain.Command
+
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

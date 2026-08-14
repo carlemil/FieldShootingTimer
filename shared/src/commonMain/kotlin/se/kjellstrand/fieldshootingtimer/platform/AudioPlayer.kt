@@ -1,7 +1,7 @@
 package se.kjellstrand.fieldshootingtimer.platform
 
 import androidx.compose.runtime.Composable
-import se.kjellstrand.fieldshootingtimer.ui.Command
+import se.kjellstrand.fieldshootingtimer.domain.Command
 
 /**
  * Plays the project's audio cues (Swedish voice clips for each Command).

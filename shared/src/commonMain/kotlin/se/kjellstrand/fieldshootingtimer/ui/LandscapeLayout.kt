@@ -2,7 +2,6 @@ package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 
@@ -38,20 +36,16 @@ fun LandscapeLayout(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(start = 8.dp)
+                .padding(start = Paddings.Medium)
                 .navigationBarsPadding()
         ) {
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
-                ShootTimer(timerViewModel, segmentDurations, timerSize)
-                PlayButton(
-                    onClickPlayButton = onClickPlayButton,
-                    timerRunningState = timerRunningState,
-                    timerSize = timerSize
-                )
-            }
-
+            TimerWithPlayButton(
+                timerViewModel = timerViewModel,
+                segmentDurations = segmentDurations,
+                onClickPlayButton = onClickPlayButton,
+                timerRunningState = timerRunningState,
+                timerSize = timerSize
+            )
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer.domain
 
-import se.kjellstrand.fieldshootingtimer.ui.Command
 import kotlin.math.roundToInt
 
 /**

@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer.domain
 
-import se.kjellstrand.fieldshootingtimer.ui.Command
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
