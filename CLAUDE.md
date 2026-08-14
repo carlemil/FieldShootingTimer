@@ -11,6 +11,8 @@ Three modules:
   integrations (SoundPool, Vibrator, WindowManager, dynamic Material You colors)
   live in `androidMain` as `actual` implementations. iOS counterparts
   (AVAudioPlayer, UIImpactFeedbackGenerator, `idleTimerDisabled`) live in `iosMain`.
+  A `jvm()` target exists purely for host-side testing — `jvmMain` holds no-op
+  actuals (and an in-memory `SettingsStore`); nothing ships from it.
 - **`:app`** — Android-only entrypoint. `MainActivity` (≈20 lines) hosts the
   shared `MainScreen()`. Owns the release-signing config and the Gradle Play
   Publisher plugin. Compose UI deps are transitive via `:shared` (`api{}`-exposed).
@@ -31,12 +33,31 @@ flavor-less `installDebug`, `testDebugUnitTest`, or `connectedDebugAndroidTest`.
 - Debug APK: `./gradlew :app:assembleProdDebug`
 - Release AAB: `./gradlew :app:bundleProdRelease` (needs `keystore.properties` in project root)
 - Install on device: `./gradlew :app:installProdDebug`
-- Multiplatform unit tests (shared module, every target compilable on host):
-  `./gradlew :shared:allTests`
-- Android-side unit tests (incl. tests still in :app): `./gradlew :app:testProdDebugUnitTest`
-- Android instrumented tests: `./gradlew :app:connectedProdDebugAndroidTest`
+- Host verification (what CI's android job runs; all work on Windows):
+  `./gradlew :shared:testDebugUnitTest :shared:jvmTest :app:testProdDebugUnitTest :app:assembleProdDebug`
 - Single shared unit test:
-  `./gradlew :shared:testDebugUnitTest --tests "se.kjellstrand.fieldshootingtimer.ui.CommandTest"`
+  `./gradlew :shared:testDebugUnitTest --tests "se.kjellstrand.fieldshootingtimer.domain.CommandTest"`
+- Don't rely on `:shared:allTests` for coverage claims: on a non-mac host the
+  three iOS targets are silently skipped (`kotlin.native.ignoreDisabledTargets`),
+  so it reports green while running only the Android-unit and jvm slices.
+
+### Testing strategy
+
+- **`commonTest`** — logic tests (`kotlin.test` + coroutines-test). Compiles and
+  runs on every target: Android unit (`:shared:testDebugUnitTest`), jvm
+  (`:shared:jvmTest`), and the iOS slices on macOS. All pure functions and the
+  `TimerViewModel` state machine are covered here — put new logic tests here.
+- **`uiTest` source set** — Compose UI tests via `runComposeUiTest`, shared
+  between `jvmTest` (headless skiko, runs on Windows/Linux) and `iosTest`.
+  Select nodes by the `testTag` constants defined next to each composable
+  (`PLAY_BUTTON_TAG`, `TICKS_PLUS_TAG`, `SLIDER_THUMB_TAG`…), not by text or
+  contentDescription. Keep this source set free of JVM-only APIs — it also
+  compiles for iOS.
+- **`jvmTest`** — jvm-only extras, e.g. `MainScreenSmokeTest`, which forces
+  portrait/landscape via the desktop-only `runDesktopComposeUiTest(width, height)`.
+  `MainScreen(timerViewModel)` is an internal seam so tests can seed a ViewModel.
+- **No instrumented tests** (`app/src/androidTest` was deliberately removed —
+  nothing needs a device; don't add emulator-only tests).
 
 iOS (macOS only):
 
@@ -79,7 +100,7 @@ App icons are regenerated from the single 1024×1024 source in
 `.github/workflows/ci.yml` runs on push to `main` and on PRs, with two jobs:
 
 - **android** (`ubuntu-latest`): `:app:assembleProdDebug`, `:app:testProdDebugUnitTest`,
-  and `:shared:testDebugUnitTest`.
+  `:shared:testDebugUnitTest`, and `:shared:jvmTest` (headless Compose UI tests).
 - **ios** (`macos-15`): `:shared:iosSimulatorArm64Test` (the shared logic tests
   on the arm64 simulator slice), then `xcodegen generate` and an `xcodebuild`
   simulator build of the `iosApp` scheme.
@@ -107,7 +128,7 @@ frames don't accumulate drift. Emits to `cueEventsFlow` (audio cues) and
 `thumbCrossedFlow` (haptics) as the timer crosses each boundary. `MainScreen`
 collects both flows and routes them to the platform `AudioPlayer` / `Haptics`.
 
-**The `Command` enum (`ui/Command.kt`) is the heart of the domain model.**
+**The `Command` enum (`domain/Command.kt`) is the heart of the domain model.**
 Each entry bundles `audioPath: String?` (e.g. `"files/eld.mp3"`),
 `stringRes: StringResource` (e.g. `Res.string.command_eld`), a `duration` in
 seconds, and a `color`. The ordered `Command.entries` list with `duration >= 0`
@@ -115,15 +136,17 @@ defines the timer's sequence: `TenSecondsLeft (7s) → Ready (3s) → Fire
 (configurable) → CeaseFire (3s) → UnloadWeapon (4s) → Visitation (2s)`.
 `Load`, `AllReady`, and `Mark` have `duration = -1` and a `null` audioPath —
 they're shown in the command list only. To add or reorder a command, edit
-this enum; `segmentDurations`, `audioCues`, `range`, and the dial rendering
-all derive from it.
+this enum; everything else derives from it via the pure functions in
+`domain/TimerPlan.kt` (`buildSegmentDurations`, `buildAudioCues` — cue times
+are the cumulative segment boundaries — `buildRange`, crossing predicates),
+all covered by `commonTest/domain/TimerPlanTest`.
 
 **Fire duration is the only user-configurable segment.** `shootingDuration`
 (default 5s) replaces `Command.Fire.duration` when building `segmentDurations`
-and `audioCues` in the ViewModel. Everything else is fixed by the enum.
+and `audioCues`. Everything else is fixed by the enum.
 
 **Platform expects (`commonMain/.../platform/`):** Six abstraction points,
-each with Android + iOS actuals.
+each with Android + iOS actuals (plus no-op jvm stubs for host tests).
 
 | Expect | Android actual | iOS actual |
 |---|---|---|
@@ -148,12 +171,17 @@ iOS under `NSDocumentDirectory/settings.preferences_pb`.
 **Dial rendering (`ui/DecoratedDial.kt`, `Dial.kt`, `DialHand.kt`)** is pure
 multiplatform Canvas drawing. Text on badges is rendered via Compose's
 `TextMeasurer` + `DrawScope.rotate { drawText(...) }` (no platform-specific
-Paint usage). `thumbValues` (user-placed "ticks" on the slider) render both
-as triangles on the ring and as numbered badges; their displayed time is
-offset by `TenSecondsLeft.duration + Ready.duration` so users see time
-relative to the start of the Fire phase. Per-second small ticks are drawn
-for every integer second *except* on segment boundaries (avoids visual
-clash with dividers).
+Paint usage). All geometry (sweep angles, per-second tick placement, polar
+conversion, ring radii) lives as pure functions in `ui/DialGeometry.kt`,
+covered by `DialGeometryTest`/`DialOverlayGeometryTest` — the composables are
+thin draw loops over precomputed values, so change the geometry functions,
+not the Canvas lambdas. `thumbValues` (user-placed "ticks" on the slider)
+render both as blocks on the ring and as numbered badges; their displayed
+time is offset by `TenSecondsLeft.duration + Ready.duration` so users see
+time relative to the start of the Fire phase. Per-second small ticks are
+drawn for every integer second *except* on segment boundaries (avoids visual
+clash with dividers). The slider's value↔pixel mapping is the inverse pair
+in `ui/SliderGeometry.kt`.
 
 **Portrait vs. landscape** are two sibling composables (`PortraitLayout`,
 `LandscapeLayout` in `commonMain/.../ui`) selected by
