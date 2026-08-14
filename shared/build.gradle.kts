@@ -36,6 +36,12 @@ kotlin {
         }
     }
 
+    // The custom uiTest source set below adds explicit dependsOn edges, which
+    // makes Kotlin skip the default hierarchy template — silently detaching
+    // iosTest from the iOS test compilations. Re-apply it explicitly so both
+    // the template wiring and the custom edges coexist.
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
         commonMain.dependencies {
             api(compose.runtime)
