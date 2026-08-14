@@ -4,13 +4,12 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerViewModelTimingTest {
@@ -27,7 +26,7 @@ class TimerViewModelTimingTest {
         runCurrent()
 
         val t = vm.uiStateFlow.value.currentTime
-        assertTrue("currentTime should have advanced ~0.5s, got $t", t in 0.4f..0.6f)
+        assertTrue(t in 0.4f..0.6f, "currentTime should have advanced ~0.5s, got $t")
     }
 
     @Test
@@ -35,8 +34,8 @@ class TimerViewModelTimingTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(2f)
         runCurrent() // let stateIn-backed flows observe the new shootingDuration
-        val total = vm.totalDurationFlow.value
-        assertTrue("totalDuration should be > 0, got $total", total > 0f)
+        val total = vm.segmentDurationsFlow.value.sum()
+        assertTrue(total > 0f, "totalDuration should be > 0, got $total")
 
         vm.start()
         advanceTimeBy((total * 1000).toLong() + 500)
@@ -95,8 +94,8 @@ class TimerViewModelTimingTest {
         runCurrent()
 
         assertTrue(
-            "late subscriber should not receive any past cues, got $collected",
-            collected.isEmpty()
+            collected.isEmpty(),
+            "late subscriber should not receive any past cues, got $collected"
         )
         job.cancel()
     }
@@ -138,8 +137,8 @@ class TimerViewModelTimingTest {
 
         assertEquals(TimerRunningState.Stopped, vm.uiStateFlow.value.timerRunningState)
         assertEquals(
-            "currentTime should not advance after stop()",
-            atStop, vm.uiStateFlow.value.currentTime, 0.01f
+            atStop, vm.uiStateFlow.value.currentTime, 0.01f,
+            "currentTime should not advance after stop()"
         )
     }
 
@@ -156,7 +155,7 @@ class TimerViewModelTimingTest {
         vm.reset()
         runCurrent()
 
-        assertEquals(0f, vm.uiStateFlow.value.currentTime, 0f)
+        assertEquals(0f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
     }
 
@@ -199,12 +198,12 @@ class TimerViewModelTimingTest {
     }
 
     @Test
-    fun `totalDurationFlow equals the sum of segment durations`() = runTest {
+    fun `segment durations sum to the expected total`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope)
         vm.setShootingTime(5f)
         runCurrent()
         // 7 + 3 + 5 + 3 + 4 + 2 = 24
-        assertEquals(24f, vm.totalDurationFlow.value, 0f)
+        assertEquals(24f, vm.segmentDurationsFlow.value.sum())
     }
 
     @Test

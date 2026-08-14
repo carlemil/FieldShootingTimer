@@ -1,72 +1,60 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerViewModelTest {
 
     private lateinit var viewModel: TimerViewModel
 
-    @Before
+    @BeforeTest
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         viewModel = TimerViewModel()
     }
 
-    @After
+    @AfterTest
     fun tearDown() {
         Dispatchers.resetMain()
     }
 
-    private fun captureStdout(block: () -> Unit): String {
-        val original = System.out
-        val buffer = ByteArrayOutputStream()
-        System.setOut(PrintStream(buffer))
-        try {
-            block()
-        } finally {
-            System.setOut(original)
+    // --- Fixed behavior: mutators must not fire cue/haptic events ---
+
+    @Test
+    fun `mutators do not emit cue or thumb-crossed events`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope)
+        val cues = mutableListOf<Command>()
+        val crossings = mutableListOf<Float>()
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.cueEventsFlow.collect { cues += it }
         }
-        return buffer.toString()
-    }
+        backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.thumbCrossedFlow.collect { crossings += it }
+        }
+        runCurrent()
 
-    // --- Fixed behavior: mutations must not print to stdout ---
-    // (should FAIL before removing logStateChange, PASS after)
+        vm.setShootingTime(7f)
+        vm.setTimerState(TimerRunningState.Running)
+        vm.setThumbValues(listOf(5f, 7f))
+        vm.addNewThumbValue(4..12)
+        runCurrent()
 
-    @Test
-    fun `setShootingTime does not print to stdout`() {
-        val printed = captureStdout { viewModel.setShootingTime(7f) }
-        assertEquals("", printed)
-    }
-
-    @Test
-    fun `setTimerState does not print to stdout`() {
-        val printed = captureStdout { viewModel.setTimerState(TimerRunningState.Running) }
-        assertEquals("", printed)
-    }
-
-    @Test
-    fun `setThumbValues does not print to stdout`() {
-        val printed = captureStdout { viewModel.setThumbValues(listOf(5f, 7f)) }
-        assertEquals("", printed)
-    }
-
-    @Test
-    fun `addNewThumbValue does not print to stdout`() {
-        val printed = captureStdout { viewModel.addNewThumbValue(4..12) }
-        assertEquals("", printed)
+        assertTrue(cues.isEmpty(), "mutators must not emit cues, got $cues")
+        assertTrue(crossings.isEmpty(), "mutators must not emit crossings, got $crossings")
     }
 
     // --- setShootingTime ---
@@ -74,18 +62,18 @@ class TimerViewModelTest {
     @Test
     fun `setShootingTime updates shootingDuration`() {
         viewModel.setShootingTime(7f)
-        assertEquals(7f, viewModel.uiStateFlow.value.shootingDuration, 0f)
+        assertEquals(7f, viewModel.uiStateFlow.value.shootingDuration)
     }
 
     @Test
     fun `setShootingTime accepts zero`() {
         viewModel.setShootingTime(0f)
-        assertEquals(0f, viewModel.uiStateFlow.value.shootingDuration, 0f)
+        assertEquals(0f, viewModel.uiStateFlow.value.shootingDuration)
     }
 
     @Test
     fun `setShootingTime throws on negative input`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             viewModel.setShootingTime(-1f)
         }
     }
@@ -124,7 +112,7 @@ class TimerViewModelTest {
     @Test
     fun `setCurrentTime updates currentTime`() {
         viewModel.setCurrentTime(12.5f)
-        assertEquals(12.5f, viewModel.uiStateFlow.value.currentTime, 0f)
+        assertEquals(12.5f, viewModel.uiStateFlow.value.currentTime)
     }
 
     // --- setThumbValues ---
@@ -135,7 +123,7 @@ class TimerViewModelTest {
         assertEquals(listOf(3f, 5f, 7f), viewModel.uiStateFlow.value.thumbValues)
 
         viewModel.setThumbValues(emptyList())
-        assertEquals(emptyList<Float>(), viewModel.uiStateFlow.value.thumbValues)
+        assertEquals(emptyList(), viewModel.uiStateFlow.value.thumbValues)
     }
 
     // --- dropLastThumbValue ---
@@ -151,7 +139,7 @@ class TimerViewModelTest {
     fun `dropLastThumbValue is a no-op on empty list`() {
         viewModel.setThumbValues(emptyList())
         viewModel.dropLastThumbValue()
-        assertEquals(emptyList<Float>(), viewModel.uiStateFlow.value.thumbValues)
+        assertEquals(emptyList(), viewModel.uiStateFlow.value.thumbValues)
     }
 
     // --- addNewThumbValue ---
@@ -172,8 +160,8 @@ class TimerViewModelTest {
 
         val thumbs = viewModel.uiStateFlow.value.thumbValues
         assertEquals(2, thumbs.size)
-        assertTrue("expected 8f to remain", thumbs.contains(8f))
-        assertTrue("expected next free spot adjacent to center", thumbs.contains(9f))
+        assertTrue(thumbs.contains(8f), "expected 8f to remain")
+        assertTrue(thumbs.contains(9f), "expected next free spot adjacent to center")
     }
 
     @Test
@@ -187,9 +175,9 @@ class TimerViewModelTest {
 
         viewModel.addNewThumbValue(range)
         assertEquals(
-            "third add should be refused once at capacity",
             sizeAtCap,
-            viewModel.uiStateFlow.value.thumbValues.size
+            viewModel.uiStateFlow.value.thumbValues.size,
+            "third add should be refused once at capacity"
         )
     }
 
@@ -206,6 +194,6 @@ class TimerViewModelTest {
     fun `roundThumbValues on empty list stays empty`() {
         viewModel.setThumbValues(emptyList())
         viewModel.roundThumbValues()
-        assertEquals(emptyList<Float>(), viewModel.uiStateFlow.value.thumbValues)
+        assertEquals(emptyList(), viewModel.uiStateFlow.value.thumbValues)
     }
 }
