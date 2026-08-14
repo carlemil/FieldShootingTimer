@@ -11,6 +11,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
@@ -21,6 +22,11 @@ import se.kjellstrand.fieldshootingtimer.resources.stop
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
+
+internal const val PLAY_BUTTON_TAG = "PlayButton"
+internal const val PLAY_ICON_TAG = "PlayButtonIconPlay"
+internal const val STOP_ICON_TAG = "PlayButtonIconStop"
+internal const val RESET_ICON_TAG = "PlayButtonIconReset"
 
 @Composable
 fun PlayButton(
@@ -34,7 +40,9 @@ fun PlayButton(
         val buttonSize = timerSize / 3f
         OutlinedButton(
             onClick = onClickPlayButton,
-            modifier = Modifier.size(buttonSize),
+            modifier = Modifier
+                .size(buttonSize)
+                .testTag(PLAY_BUTTON_TAG),
             shape = CircleShape,
             contentPadding = PaddingValues(0.dp),
             border = BorderStroke(Paddings.Tiny, BlackColor),
@@ -47,7 +55,9 @@ fun PlayButton(
                     Icon(
                         painter = painterResource(Res.drawable.play_arrow),
                         contentDescription = "Play",
-                        modifier = Modifier.size(buttonSize * 0.8f)
+                        modifier = Modifier
+                            .size(buttonSize * 0.8f)
+                            .testTag(PLAY_ICON_TAG)
                     )
                 }
 
@@ -55,7 +65,9 @@ fun PlayButton(
                     Icon(
                         painter = painterResource(Res.drawable.stop),
                         contentDescription = "Stop",
-                        modifier = Modifier.size(buttonSize * 0.8f)
+                        modifier = Modifier
+                            .size(buttonSize * 0.8f)
+                            .testTag(STOP_ICON_TAG)
                     )
                 }
 
@@ -63,7 +75,9 @@ fun PlayButton(
                     Icon(
                         painter = painterResource(Res.drawable.skip_previous),
                         contentDescription = "Reset",
-                        modifier = Modifier.size(buttonSize * 0.8f)
+                        modifier = Modifier
+                            .size(buttonSize * 0.8f)
+                            .testTag(RESET_ICON_TAG)
                     )
                 }
             }

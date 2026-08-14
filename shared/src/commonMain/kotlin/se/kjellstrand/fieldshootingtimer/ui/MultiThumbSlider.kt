@@ -21,11 +21,15 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.roundToInt
+
+// Draggable thumb handles are tagged "$SLIDER_THUMB_TAG$index" in list order.
+internal const val SLIDER_THUMB_TAG = "MultiThumbSliderThumb"
 
 @Composable
 fun MultiThumbSlider(
@@ -141,6 +145,7 @@ fun MultiThumbSlider(
         if (enabled) {
             currentThumbValues.forEachIndexed { index, value ->
                 Box(modifier = Modifier
+                    .testTag("$SLIDER_THUMB_TAG$index")
                     .offset {
                         IntOffset(
                             x = (toThumbOffset(

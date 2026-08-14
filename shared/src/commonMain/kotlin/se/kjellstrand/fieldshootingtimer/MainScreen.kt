@@ -46,7 +46,14 @@ internal fun dispatchPlayButtonClick(
 fun MainScreen() {
     val settingsStore = rememberSettingsStore()
     val timerViewModel: TimerViewModel = viewModel { TimerViewModel(settingsStore = settingsStore) }
+    MainScreen(timerViewModel)
+}
 
+// Seam for host-side UI tests: lets a test seed its own TimerViewModel while
+// the public no-arg entry point (used by MainActivity and MainViewController)
+// keeps owning the real one.
+@Composable
+internal fun MainScreen(timerViewModel: TimerViewModel) {
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerRunningState.NotStarted, context = Dispatchers.Main
     )

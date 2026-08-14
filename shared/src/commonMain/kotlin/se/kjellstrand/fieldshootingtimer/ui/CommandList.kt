@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +23,9 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
+
+// Row tags are "$COMMAND_LIST_ROW_TAG$index" over Command.entries indices.
+internal const val COMMAND_LIST_ROW_TAG = "CommandListRow"
 
 @Composable
 fun CommandList(
@@ -49,6 +53,7 @@ fun CommandList(
                 text = stringResource(commands[index].stringRes),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .testTag("$COMMAND_LIST_ROW_TAG$index")
                     .semantics { selected = (index == hlIndex) }
                     .background(if (index == hlIndex) PaleGreenColor else Color.Transparent)
                     .padding(Paddings.Small),
