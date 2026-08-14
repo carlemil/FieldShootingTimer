@@ -53,8 +53,8 @@ Release signing reads from `keystore.properties` (gitignored). The keystore file
 `fst-release-key.jks` is in the project root.
 
 **Android release shipping.** The version is set by the `appVersionCode` /
-`appVersionName` vals at the top of `app/build.gradle.kts` (currently 8 /
-"1.7.0"). The Gradle Play Publisher plugin (`play { }` block in
+`appVersionName` vals at the top of `app/build.gradle.kts`. The Gradle Play
+Publisher plugin (`play { }` block in
 `app/build.gradle.kts`) uploads an AAB to the Play "internal" track, reading
 credentials from `play-account.json` (gitignored). Build the bundle with
 `./gradlew :app:bundleProdRelease`.
@@ -62,7 +62,9 @@ credentials from `play-account.json` (gitignored). Build the bundle with
 **iOS release shipping.** Local fastlane pipeline under `iosApp/fastlane/` —
 `bundle exec fastlane beta` archives + uploads to TestFlight, `... release`
 uploads to the App Store (not submitted for review), `... metadata` pushes
-Swedish ASC text + screenshots only. Per-developer signing lives in
+Swedish ASC text + screenshots only, and `... select_build` attaches an
+already-uploaded, processed build to the current App Store version (API only,
+no binary/metadata upload). Per-developer signing lives in
 `iosApp/Configuration/Signing.xcconfig` (gitignored, template alongside) and
 ASC API credentials in `iosApp/fastlane/.env` (gitignored, template alongside).
 `CFBundleVersion` is `$(CURRENT_PROJECT_VERSION)`; fastlane overrides it via
@@ -163,11 +165,11 @@ the `statelessSettingsComposable` so settings UI is identical in both.
 Live in `shared/src/commonMain/composeResources/`:
 
 - `files/*.mp3` — 6 Swedish voice clips, one per audible Command.
-- `values/strings.xml` — 10 of 11 strings (Swedish only). `app_name`
-  stays in `:app/src/main/res/values/strings.xml` because the Android
+- `values/strings.xml` — all UI strings (Swedish only), except `app_name`,
+  which stays in `:app/src/main/res/values/strings.xml` because the Android
   launcher reads it from there.
-- `drawable/play_arrow.xml`, `stop.xml`, `skip_previous.xml` — the
-  PlayButton icons (project-owned, not Material defaults).
+- `drawable/play_arrow.xml`, `stop.xml`, `skip_previous.xml`, `share.xml` —
+  the PlayButton/ShareButton icons (project-owned, not Material defaults).
 
 Access via the generated `Res` object in package
 `se.kjellstrand.fieldshootingtimer.resources` (configured in
