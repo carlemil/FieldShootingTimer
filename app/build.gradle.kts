@@ -59,6 +59,9 @@ android {
     }
 
     buildTypes {
+        getByName("debug") {
+            versionNameSuffix = "-debug"
+        }
         getByName("release") {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false  // Set to true if you have ProGuard/R8 rules
