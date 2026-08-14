@@ -1,16 +1,15 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
 /**
- * Value↔pixel mappings for [MultiThumbSlider].
+ * Value↔pixel mappings for [MultiThumbSlider]. The two functions are exact
+ * inverses, so the drawn thumb position and the drag gesture's notion of a
+ * thumb's position always agree.
  *
- * NOTE: the render mapping ([sliderValueToOffsetPx]) and the drag pair
- * ([sliderDragValueToOffsetPx]/[sliderDragOffsetToValue]) are NOT inverses of
- * each other — render insets the track by half a segment at each end, drag
- * normalizes over the full width. This mismatch is pinned by
- * SliderGeometryTest and fixed in the follow-up commit.
+ * The track is inset by [endInsetPx] (half an integer-segment) at each end,
+ * matching where the per-second markers are drawn.
  */
 
-/** Where a thumb with [value] is drawn, in px from the slider's left edge. */
+/** Where a thumb with [value] sits, in px from the slider's left edge. */
 internal fun sliderValueToOffsetPx(
     value: Float,
     range: IntRange,
@@ -19,18 +18,11 @@ internal fun sliderValueToOffsetPx(
 ): Float =
     ((value - range.first) / (range.last - range.first)) * trackWidthPx + endInsetPx
 
-/** The drag gesture's notion of a thumb's current pixel offset. */
-internal fun sliderDragValueToOffsetPx(
-    value: Float,
-    range: IntRange,
-    fullWidthPx: Float
-): Float =
-    ((value - range.first) / (range.last - range.first)) * fullWidthPx
-
-/** The drag gesture's mapping from a pixel offset back to a value. */
-internal fun sliderDragOffsetToValue(
+/** Exact inverse of [sliderValueToOffsetPx]. */
+internal fun sliderOffsetToValue(
     offsetPx: Float,
     range: IntRange,
-    fullWidthPx: Float
+    trackWidthPx: Float,
+    endInsetPx: Float
 ): Float =
-    (offsetPx / fullWidthPx) * (range.last - range.first) + range.first
+    ((offsetPx - endInsetPx) / trackWidthPx) * (range.last - range.first) + range.first

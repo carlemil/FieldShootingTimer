@@ -63,7 +63,7 @@ fun MultiThumbSlider(
     ) {
         val maxWidth = constraints.maxWidth
         val maxHeight = constraints.maxHeight
-        val segmentWidth = maxWidth / ((currentRange.last + 1) - currentRange.first)
+        val segmentWidth = maxWidth.toFloat() / ((currentRange.last + 1) - currentRange.first)
         val firstAndLastSegmentWidth = segmentWidth / 2f
         val trackWidth = maxWidth - segmentWidth
         val integerMarkers = currentRange.first..currentRange.last + 1
@@ -76,7 +76,7 @@ fun MultiThumbSlider(
             // Calculate spaces indicating whole seconds (and extra space where we have thumbs).
             integerMarkers.forEach { marker ->
                 var markerOffset = sliderValueToOffsetPx(
-                    marker.toFloat(), currentRange, trackWidth.toFloat(), firstAndLastSegmentWidth
+                    marker.toFloat(), currentRange, trackWidth, firstAndLastSegmentWidth
                 )
                 if (markerOffset < 0) markerOffset = 0f
 
@@ -95,8 +95,10 @@ fun MultiThumbSlider(
 
             // End bit inside the edge to not drawRoundedCap outside bounding box.
             lineSegments = lineSegments.toMutableList().apply {
-                val lastSegment = removeAt(lastIndex)
-                add(lastSegment.first to lastSegment.second - trackHeightPx / 2f)
+                if (isNotEmpty()) {
+                    val lastSegment = removeAt(lastIndex)
+                    add(lastSegment.first to lastSegment.second - trackHeightPx / 2f)
+                }
             }
 
             // Draw start cap
@@ -131,7 +133,7 @@ fun MultiThumbSlider(
             }
 
             currentThumbValues.map { value ->
-                sliderValueToOffsetPx(value, currentRange, trackWidth.toFloat(), firstAndLastSegmentWidth)
+                sliderValueToOffsetPx(value, currentRange, trackWidth, firstAndLastSegmentWidth)
             }.forEach { thumbOffset ->
                 drawLine(
                     color = if (enabled) thumbColor else inactiveColor,
@@ -152,7 +154,7 @@ fun MultiThumbSlider(
                             x = (sliderValueToOffsetPx(
                                 value,
                                 currentRange,
-                                trackWidth.toFloat(),
+                                trackWidth,
                                 firstAndLastSegmentWidth
                             ) - thumbWidthPx * 1.5).roundToInt(),
                             y = (maxHeight / 2 - thumbHeightPx).toInt()
@@ -162,14 +164,15 @@ fun MultiThumbSlider(
                     .pointerInput(Unit) {
                         detectHorizontalDragGestures(onHorizontalDrag = { change, _ ->
                             change.consume()
-                            val currentThumbOffset = sliderDragValueToOffsetPx(
-                                currentThumbValues[index], currentRange, maxWidth.toFloat()
+                            val currentThumbOffset = sliderValueToOffsetPx(
+                                currentThumbValues[index], currentRange, trackWidth, firstAndLastSegmentWidth
                             )
                             val newOffset = (currentThumbOffset + change.position.x).coerceIn(
-                                0f, maxWidth.toFloat()
+                                firstAndLastSegmentWidth, firstAndLastSegmentWidth + trackWidth
                             )
-                            val newValue =
-                                sliderDragOffsetToValue(newOffset, currentRange, maxWidth.toFloat())
+                            val newValue = sliderOffsetToValue(
+                                newOffset, currentRange, trackWidth, firstAndLastSegmentWidth
+                            )
 
                             val updatedValues =
                                 currentThumbValues
