@@ -183,6 +183,16 @@ drawn for every integer second *except* on segment boundaries (avoids visual
 clash with dividers). The slider's value↔pixel mapping is the inverse pair
 in `ui/SliderGeometry.kt`.
 
+**User ticks are draggable in two places:** on the `MultiThumbSlider`, and
+directly on the dial ring via `ui/DialTicksDragOverlay.kt` — a transparent
+gesture surface `ShootTimer` stacks over the dial. Its touch→value math
+(angle from center, the inverse of `tickAngle`, ring-band hit test, arc-px
+grab tolerance) is pure functions in `ui/DialGeometry.kt`, covered by
+`DialDragGeometryTest`; end-to-end drags are covered in
+`uiTest/.../DialTicksDragTest`. Both drag paths share the same ViewModel
+contract: `setThumbValues` live during the drag, `roundThumbValues` on
+release, disabled unless the timer is `NotStarted`.
+
 **Portrait vs. landscape** are two sibling composables (`PortraitLayout`,
 `LandscapeLayout` in `commonMain/.../ui`) selected by
 `BoxWithConstraints { maxWidth > maxHeight }` in `MainScreen.kt`. They share

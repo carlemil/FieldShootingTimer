@@ -3,6 +3,7 @@ package se.kjellstrand.fieldshootingtimer.ui
 import androidx.compose.ui.geometry.Offset
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -53,6 +54,67 @@ internal fun polarToCartesian(center: Offset, radius: Float, angleDeg: Float): O
 /** Half-width of a tick wedge in radians, scaled from the border width. */
 internal fun tickWedgeHalfWidthRadians(borderWidthPx: Float): Float =
     (borderWidthPx / (PI * 360) * 3).toFloat()
+
+/** Angle of [position] as seen from [center], in degrees normalized to [0, 360). */
+internal fun angleFromCenterDegrees(center: Offset, position: Offset): Float {
+    val deg = atan2(
+        (position.y - center.y).toDouble(),
+        (position.x - center.x).toDouble()
+    ) * 180.0 / PI
+    return (((deg % 360.0) + 360.0) % 360.0).toFloat()
+}
+
+/**
+ * Inverse of [DialGeometry.tickAngle]: the tick value whose marker sits at
+ * [angleDeg]. Angles inside the bottom gap snap to the nearer end (0 or
+ * [ticksMax]), so a finger sliding past the dial's end doesn't wrap around.
+ */
+internal fun dialAngleToTickValue(angleDeg: Float, ticksMax: Float, gapDegrees: Float): Float {
+    val avail = DialGeometry.availableAngle(gapDegrees)
+    var rel = (((angleDeg - DialGeometry.startAngle(gapDegrees)) % 360f) + 360f) % 360f
+    if (rel > avail) {
+        rel = if (rel - avail <= 360f - rel) avail else 0f
+    }
+    return rel / avail * ticksMax
+}
+
+/** Index of the tick in [ticks] nearest [value], or null if none is within [toleranceSeconds]. */
+internal fun nearestTickIndex(value: Float, ticks: List<Float>, toleranceSeconds: Float): Int? =
+    ticks.withIndex()
+        .minByOrNull { abs(it.value - value) }
+        ?.takeIf { abs(it.value - value) <= toleranceSeconds }
+        ?.index
+
+/**
+ * True when a touch at [distanceFromCenterPx] falls on the draggable ring
+ * band: from half a ring inside the ring's inner edge (fat fingers) out past
+ * the tick blocks that sit outside the ring. Keeps drags that start on the
+ * dial face or the center play button from grabbing a tick.
+ */
+internal fun isWithinRingBand(
+    distanceFromCenterPx: Float,
+    canvasSizePx: Float,
+    ringThicknessPx: Float
+): Boolean {
+    val outerRadius = canvasSizePx / 2f
+    return distanceFromCenterPx >= outerRadius - ringThicknessPx * 1.5f &&
+        distanceFromCenterPx <= outerRadius + ringThicknessPx
+}
+
+/**
+ * Seconds of tick-value tolerance corresponding to [touchSlopPx] of arc length
+ * at [arcRadiusPx] — so the grab distance feels the same regardless of how
+ * many seconds the dial spans.
+ */
+internal fun tickDragToleranceSeconds(
+    touchSlopPx: Float,
+    arcRadiusPx: Float,
+    ticksMax: Float,
+    gapDegrees: Float
+): Float {
+    val availRad = DialGeometry.availableAngle(gapDegrees) * (PI.toFloat() / 180f)
+    return ticksMax * touchSlopPx / (availRad * arcRadiusPx)
+}
 
 /** The radii DecoratedDial's overlays hang off, all derived from the ring. */
 internal data class DialRadii(

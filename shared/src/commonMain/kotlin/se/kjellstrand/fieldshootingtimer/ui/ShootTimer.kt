@@ -28,12 +28,19 @@ fun ShootTimer(
     val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
         initial = listOf(), context = Dispatchers.Main
     )
+    val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
+        initial = TimerRunningState.NotStarted, context = Dispatchers.Main
+    )
+    val range by timerViewModel.rangeFlow.collectAsState(
+        context = Dispatchers.Main
+    )
     Box(
         contentAlignment = Alignment.Center
     ) {
         val segmentColors = Command.timedCommands.map { it.color }
         val gapAngleDegrees = 30f
         val borderWidth = 2.dp
+        val ringThickness = 60.dp
 
         val totalSeconds = segmentDurations.sum()
 
@@ -50,7 +57,7 @@ fun ShootTimer(
                 gapAngleDegrees = gapAngleDegrees,
                 segments = segmentDurations,
                 ticks = thumbValues,
-                ringThickness = 60.dp,
+                ringThickness = ringThickness,
                 borderColor = BlackColor,
                 borderWidth = borderWidth,
                 size = timerSize,
@@ -67,6 +74,18 @@ fun ShootTimer(
                 borderColor = BlackColor,
                 handThickness = Paddings.Small,
                 overshootPercent = 0.1f // 10% overshoot
+            )
+
+            DialTicksDragOverlay(
+                size = timerSize,
+                ticks = thumbValues,
+                ticksMax = totalSeconds.toInt(),
+                range = range,
+                gapAngleDegrees = gapAngleDegrees,
+                ringThickness = ringThickness,
+                enabled = timerRunningState == TimerRunningState.NotStarted,
+                onDragSetTicks = timerViewModel::setThumbValues,
+                onDragRoundTicks = timerViewModel::roundThumbValues
             )
         }
     }
