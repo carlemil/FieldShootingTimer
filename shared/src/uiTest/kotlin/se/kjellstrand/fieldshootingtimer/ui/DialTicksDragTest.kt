@@ -33,7 +33,7 @@ class DialTicksDragTest {
                 ShootTimer(vm, segmentDurations, timerSize = 300.dp)
             }
         }
-        onNodeWithTag(DIAL_TICKS_TAG).performTouchInput {
+        onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             down(ringPointAt(14f))
             listOf(14.5f, 15f, 15.5f, 16f).forEach { moveTo(ringPointAt(it)) }
             up()
@@ -51,7 +51,7 @@ class DialTicksDragTest {
             }
         }
         // Drag the tick down past the start of the allowed range (11).
-        onNodeWithTag(DIAL_TICKS_TAG).performTouchInput {
+        onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             down(ringPointAt(12f))
             listOf(11f, 10f, 8f).forEach { moveTo(ringPointAt(it)) }
             up()
@@ -69,7 +69,7 @@ class DialTicksDragTest {
                 ShootTimer(vm, segmentDurations, timerSize = 300.dp)
             }
         }
-        onNodeWithTag(DIAL_TICKS_TAG).performTouchInput {
+        onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             down(ringPointAt(14f))
             listOf(15f, 16f).forEach { moveTo(ringPointAt(it)) }
             up()
@@ -87,7 +87,7 @@ class DialTicksDragTest {
             }
         }
         // Start on the ring but far (in seconds) from the tick at 12.
-        onNodeWithTag(DIAL_TICKS_TAG).performTouchInput {
+        onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             down(ringPointAt(17f))
             listOf(16f, 15f).forEach { moveTo(ringPointAt(it)) }
             up()

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import se.kjellstrand.fieldshootingtimer.domain.fireStartSeconds
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
@@ -76,16 +77,19 @@ fun ShootTimer(
                 overshootPercent = 0.1f // 10% overshoot
             )
 
-            DialTicksDragOverlay(
+            DialGestureOverlay(
                 size = timerSize,
                 ticks = thumbValues,
                 ticksMax = totalSeconds.toInt(),
                 range = range,
+                fireStart = fireStartSeconds(),
+                fireDuration = segmentDurations.getOrNull(Command.fireSegmentIndex) ?: 0f,
                 gapAngleDegrees = gapAngleDegrees,
                 ringThickness = ringThickness,
                 enabled = timerRunningState == TimerRunningState.NotStarted,
                 onDragSetTicks = timerViewModel::setThumbValues,
-                onDragRoundTicks = timerViewModel::roundThumbValues
+                onDragRoundTicks = timerViewModel::roundThumbValues,
+                onPinchSetShootingDuration = timerViewModel::setShootingTime
             )
         }
     }

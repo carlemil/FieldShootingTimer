@@ -22,6 +22,11 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.TransparentGreenColor
 
 internal const val SHOOT_TIME_SLIDER_TAG = "ShootTimeAdjusterSlider"
 
+// Allowed shooting (Fire) duration in seconds — shared by this slider and the
+// pinch gesture on the dial's Fire segment.
+internal const val SHOOT_TIME_MIN = 1
+internal const val SHOOT_TIME_MAX = 27
+
 @Composable
 fun ShootTimeAdjuster(
     shootingDuration: Float, enabled: Boolean, onValueChange: (List<Float>) -> Unit
@@ -33,7 +38,7 @@ fun ShootTimeAdjuster(
             thumbValues = listOf(shootingDuration),
             onHorizontalDragSetThumbValues = onValueChange,
             enabled = enabled,
-            range = IntRange(1, 27),
+            range = IntRange(SHOOT_TIME_MIN, SHOOT_TIME_MAX),
             thumbColor = PaleGreenColor,
             trackColor = LightGreenColor,
             inactiveColor = TransparentGreenColor,

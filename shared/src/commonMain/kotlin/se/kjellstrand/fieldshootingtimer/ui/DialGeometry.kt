@@ -102,6 +102,18 @@ internal fun isWithinRingBand(
 }
 
 /**
+ * True when [tickValue] falls inside the wedge spanning [wedgeStart]..[wedgeEnd]
+ * seconds, widened by [slackSeconds] at both ends so a short wedge (e.g. a 1s
+ * Fire segment) can still fit two pinching fingers.
+ */
+internal fun isWithinWedge(
+    tickValue: Float,
+    wedgeStart: Float,
+    wedgeEnd: Float,
+    slackSeconds: Float
+): Boolean = tickValue >= wedgeStart - slackSeconds && tickValue <= wedgeEnd + slackSeconds
+
+/**
  * Seconds of tick-value tolerance corresponding to [touchSlopPx] of arc length
  * at [arcRadiusPx] — so the grab distance feels the same regardless of how
  * many seconds the dial spans.

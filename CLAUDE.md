@@ -183,15 +183,22 @@ drawn for every integer second *except* on segment boundaries (avoids visual
 clash with dividers). The slider's value↔pixel mapping is the inverse pair
 in `ui/SliderGeometry.kt`.
 
-**User ticks are draggable in two places:** on the `MultiThumbSlider`, and
-directly on the dial ring via `ui/DialTicksDragOverlay.kt` — a transparent
-gesture surface `ShootTimer` stacks over the dial. Its touch→value math
-(angle from center, the inverse of `tickAngle`, ring-band hit test, arc-px
+**The dial is touch-interactive** via `ui/DialGestureOverlay.kt` — a
+transparent gesture surface `ShootTimer` stacks over the dial. One finger on
+the ring near a user tick drags that tick (the ticks are also draggable on
+the `MultiThumbSlider`); two fingers on the Fire (green) segment pinch the
+shooting duration (also settable via `ShootTimeAdjuster`, whose 1..27 range
+— `SHOOT_TIME_MIN`/`MAX` — the pinch shares). The gesture is hand-rolled
+(`awaitEachGesture`) because the stock detectors eat touch slop before
+reporting a start position, and because a second finger must be able to
+convert a started tick drag into a pinch. The touch→value math (angle from
+center, the inverse of `tickAngle`, ring-band and wedge hit tests, arc-px
 grab tolerance) is pure functions in `ui/DialGeometry.kt`, covered by
-`DialDragGeometryTest`; end-to-end drags are covered in
-`uiTest/.../DialTicksDragTest`. Both drag paths share the same ViewModel
-contract: `setThumbValues` live during the drag, `roundThumbValues` on
-release, disabled unless the timer is `NotStarted`.
+`DialDragGeometryTest`; end-to-end gestures are covered in
+`uiTest/.../DialTicksDragTest` and `DialPinchTest`. All gesture paths share
+the ViewModel contract: live updates during the gesture (`setThumbValues` /
+`setShootingTime`), `roundThumbValues` on tick-drag release, everything
+disabled unless the timer is `NotStarted`.
 
 **Portrait vs. landscape** are two sibling composables (`PortraitLayout`,
 `LandscapeLayout` in `commonMain/.../ui`) selected by

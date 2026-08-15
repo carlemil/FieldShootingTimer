@@ -73,6 +73,16 @@ class DialDragGeometryTest {
     }
 
     @Test
+    fun `isWithinWedge honors slack at both ends`() {
+        // Fire wedge 10..15 with 2s slack: accepts 8..17.
+        assertTrue(isWithinWedge(8f, 10f, 15f, slackSeconds = 2f))
+        assertTrue(isWithinWedge(12f, 10f, 15f, slackSeconds = 2f))
+        assertTrue(isWithinWedge(17f, 10f, 15f, slackSeconds = 2f))
+        assertTrue(!isWithinWedge(7.9f, 10f, 15f, slackSeconds = 2f))
+        assertTrue(!isWithinWedge(17.1f, 10f, 15f, slackSeconds = 2f))
+    }
+
+    @Test
     fun `tickDragToleranceSeconds converts arc pixels to seconds`() {
         // Full available arc length at radius r spans ticksMax seconds, so a
         // slop of the whole arc must equal ticksMax.
