@@ -233,6 +233,12 @@ class TimerViewModel(
 
     fun stop() {
         if (_uiState.value.timerRunningState != TimerRunningState.Running) return
+        // Stopping during the competition preparation countdown cancels it
+        // outright — there is nothing worth resuming mid-countdown.
+        if (_uiState.value.currentTime < 0f) {
+            reset()
+            return
+        }
         timerJob?.cancel()
         timerJob = null
         setTimerState(TimerRunningState.Stopped)

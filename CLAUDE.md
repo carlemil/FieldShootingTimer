@@ -211,10 +211,11 @@ sequence immediately and hides the `Load`/`AllReady` rows from the command
 list. Competition prefixes the run with a 60s preparation countdown,
 **modeled as `currentTime` running from -60 to 0** (constants in
 `domain/TimerPlan.kt`) — this reuses the whole timer loop untouched: every
-cue time is ≥ 0 so nothing fires until the countdown ends, and
-stop/resume/reset just work. Renderers clamp: the dial hand coerces to ≥ 0;
-while time is negative the play button shows `ceil(-currentTime)` as
-countdown digits instead of the stop icon (still tappable to stop). The command-list highlight
+cue time is ≥ 0 so nothing fires until the countdown ends. `stop()` during
+the countdown (negative time) cancels it back to `NotStarted`; after 0 it
+pauses normally. Renderers clamp: the dial hand coerces to ≥ 0; while time
+is negative the play button turns white and shows `ceil(-currentTime)` as
+countdown digits instead of the stop icon (tap = cancel). The command-list highlight
 (`ui/CommandHighlight.kt`, `highlightedCommand(...)`) returns `Load` before
 the start and through most of the countdown, `AllReady` for the final 10s,
 then follows the running segment. Covered by `TimerViewModelCountdownTest`

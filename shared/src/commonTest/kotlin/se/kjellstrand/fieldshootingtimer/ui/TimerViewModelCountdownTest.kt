@@ -85,7 +85,7 @@ class TimerViewModelCountdownTest {
     }
 
     @Test
-    fun `stop mid-countdown keeps the negative time and resume continues it`() = runTest {
+    fun `stop mid-countdown cancels it back to NotStarted at zero`() = runTest {
         val vm = competitionVm()
         vm.start()
         advanceTimeBy(20_000)
@@ -93,14 +93,29 @@ class TimerViewModelCountdownTest {
         vm.stop()
         runCurrent()
 
-        val stoppedAt = vm.uiStateFlow.value.currentTime
-        assertTrue(stoppedAt < -35f && stoppedAt > -45f, "expected ~-40, got $stoppedAt")
+        assertEquals(0f, vm.uiStateFlow.value.currentTime)
+        assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
 
+        // Starting again begins a fresh full countdown.
         vm.start()
-        advanceTimeBy(10_000)
         runCurrent()
-        val resumedTo = vm.uiStateFlow.value.currentTime
-        assertTrue(resumedTo in (stoppedAt + 9f)..(stoppedAt + 11f), "expected ~${stoppedAt + 10f}, got $resumedTo")
+        assertTrue(
+            vm.uiStateFlow.value.currentTime <= -59.9f,
+            "expected a fresh -60 countdown, got ${vm.uiStateFlow.value.currentTime}"
+        )
+    }
+
+    @Test
+    fun `stop after the countdown still pauses the sequence normally`() = runTest {
+        val vm = competitionVm()
+        vm.start()
+        advanceTimeBy(65_000) // 5s into the sequence
+        runCurrent()
+        vm.stop()
+        runCurrent()
+
+        assertEquals(TimerRunningState.Stopped, vm.uiStateFlow.value.timerRunningState)
+        assertTrue(vm.uiStateFlow.value.currentTime in 4f..6f)
     }
 
     @Test
