@@ -206,7 +206,7 @@ math (angle from center, the inverse of `tickAngle`, ring-band and wedge hit
 tests, arc-px grab tolerance) is pure functions in `ui/DialGeometry.kt`,
 covered by `DialDragGeometryTest`; end-to-end gestures are covered in
 `uiTest/.../DialTicksDragTest` and `DialPinchTest`. Ticks are added/removed
-with the `TicksAdjuster` +/- buttons in the dial's lower-left corner
+with the `TicksAdjuster` +/- buttons in the dial's lower-right corner
 (hosted by `TimerWithPlayButton`). All gesture paths share the ViewModel
 contract: live updates during the gesture (`setThumbValues` /
 `setShootingTime`), `roundThumbValues` on tick-drag release, everything

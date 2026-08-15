@@ -41,8 +41,12 @@ internal const val MENU_ITEM_MODE_TAG = "RadialMenuItemMode"
 internal const val MENU_ITEM_TUTORIAL_TAG = "RadialMenuItemTutorial"
 internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
-/** Distance from the menu button's center to each fanned-out item's center. */
-private val MenuItemRadius = 72.dp
+/**
+ * Distance from the menu button's center to each fanned-out item's center.
+ * With three items 35° apart, adjacent centers sit ~2·r·sin(17.5°) apart —
+ * keep that comfortably above the 48dp button size.
+ */
+private val MenuItemRadius = 120.dp
 
 /**
  * A circular menu button whose items fan out on an arc when opened. The items
