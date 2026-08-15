@@ -45,6 +45,12 @@ jobs:
         run: ./gradlew :shared:iosSimulatorArm64Test --stacktrace
       - name: Install XcodeGen
         run: brew install xcodegen
+      # Signing.xcconfig is per-developer and gitignored; xcodegen validates
+      # the path, and the simulator build runs with CODE_SIGNING_ALLOWED=NO,
+      # so the committed placeholder template works as-is on CI.
+      - name: Provide placeholder signing config
+        working-directory: iosApp
+        run: cp Configuration/Signing.xcconfig.template Configuration/Signing.xcconfig
       - name: Generate Xcode project
         working-directory: iosApp
         run: xcodegen generate
