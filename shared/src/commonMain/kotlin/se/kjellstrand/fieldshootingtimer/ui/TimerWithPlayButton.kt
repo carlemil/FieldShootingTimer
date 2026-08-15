@@ -13,6 +13,10 @@ import kotlinx.coroutines.Dispatchers
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.ceil
 
+/** Remaining whole countdown seconds while [currentTime] is negative, else null. */
+internal fun countdownSecondsOrNull(currentTime: Float): Int? =
+    if (currentTime < 0f) ceil(-currentTime).toInt() else null
+
 /**
  * The dial with the play/stop/reset button overlaid at its center and the
  * tick +/- buttons hanging below the lower-left corner. During a
@@ -47,7 +51,7 @@ internal fun TimerWithPlayButton(
             onClickPlayButton = onClickPlayButton,
             timerRunningState = timerRunningState,
             timerSize = timerSize,
-            countdownSeconds = if (currentTime < 0f) ceil(-currentTime).toInt() else null
+            countdownSeconds = countdownSecondsOrNull(currentTime)
         )
         TicksAdjuster(
             enabled = timerRunningState == TimerRunningState.NotStarted,

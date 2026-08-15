@@ -2,6 +2,7 @@ package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
@@ -51,6 +52,27 @@ class PlayButtonTest {
             }
         }
         onNodeWithTag(RESET_ICON_TAG, useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `countdown shows digits and keeps the stop icon visible`() = runComposeUiTest {
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                PlayButton({}, TimerRunningState.Running, 300.dp, countdownSeconds = 43)
+            }
+        }
+        onNodeWithTag(COUNTDOWN_TEXT_TAG, useUnmergedTree = true).assertTextEquals("43")
+        onNodeWithTag(STOP_ICON_TAG, useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `no countdown digits without a countdown`() = runComposeUiTest {
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                PlayButton({}, TimerRunningState.Running, 300.dp, countdownSeconds = null)
+            }
+        }
+        onNodeWithTag(COUNTDOWN_TEXT_TAG, useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
