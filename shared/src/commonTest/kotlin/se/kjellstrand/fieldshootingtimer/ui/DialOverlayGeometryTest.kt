@@ -17,7 +17,7 @@ class DialOverlayGeometryTest {
     }
 
     @Test
-    fun `sweepAngles of an all-zero segment list are zero, not NaN`() {
+    fun `sweepAngles of an all-zero segment list are zero rather than NaN`() {
         assertEquals(listOf(0f, 0f), sweepAngles(listOf(0f, 0f), 30f))
     }
 

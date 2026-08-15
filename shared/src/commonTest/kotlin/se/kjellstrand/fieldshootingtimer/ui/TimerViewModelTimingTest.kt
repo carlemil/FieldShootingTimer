@@ -162,7 +162,7 @@ class TimerViewModelTimingTest {
     }
 
     @Test
-    fun `currentTime tracks wall clock, not tick count, when ticks are slow`() = runTest {
+    fun `currentTime tracks wall clock rather than tick count when ticks are slow`() = runTest {
         // Simulates a stalled main thread: virtual scheduler ticks once, but
         // the wall-clock time source has jumped a full second. currentTime
         // must reflect the wall clock (regression: previously incremented by
