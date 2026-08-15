@@ -1,5 +1,11 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.TouchInjectionScope
@@ -10,30 +16,61 @@ import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
+/**
+ * Drives [DialGestureOverlay] directly (no ViewModel flows — see the note in
+ * [DialTicksDragTest]). Dial matches the default plan: total 24s, Fire (green)
+ * spans 10..15.
+ */
 @OptIn(ExperimentalTestApi::class)
 class DialPinchTest {
 
-    // Default 5s Fire: total 24s, Fire (green) spans seconds 10..15 on the dial.
-    private val segmentDurations = listOf(7f, 3f, 5f, 3f, 4f, 2f)
     private val gap = 30f
     private val total = 24f
 
-    // A point on the dial ring at the angle where [tickValue]'s marker sits,
-    // in the 24s-total scale captured when the gesture starts.
+    // A point on the dial ring at the angle where [tickValue]'s marker sits.
     private fun TouchInjectionScope.ringPointAt(tickValue: Float): Offset {
         val ringRadius = (width / 2f) * 0.85f
         return polarToCartesian(center, ringRadius, DialGeometry.tickAngle(tickValue, total, gap))
     }
 
-    @Test
-    fun `pinching the fire segment apart lengthens the shooting time`() = runComposeUiTest {
-        val vm = TimerViewModel()
+    private class PinchState {
+        var duration by mutableStateOf<Float?>(null)
+        var ticks by mutableStateOf(listOf<Float>())
+        var rounds = 0
+    }
+
+    private fun androidx.compose.ui.test.ComposeUiTest.setOverlayContent(
+        state: PinchState,
+        enabled: Boolean = true
+    ) {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                ShootTimer(vm, segmentDurations, timerSize = 300.dp)
+                Box(Modifier.size(300.dp)) {
+                    DialGestureOverlay(
+                        size = 300.dp,
+                        ticks = state.ticks,
+                        ticksMax = total.toInt(),
+                        range = 11..17,
+                        fireStart = 10f,
+                        fireDuration = 5f,
+                        gapAngleDegrees = gap,
+                        ringThickness = 60.dp,
+                        enabled = enabled,
+                        onDragSetTicks = { state.ticks = it },
+                        onDragRoundTicks = { state.rounds++ },
+                        onPinchSetShootingDuration = { state.duration = it }
+                    )
+                }
             }
         }
+    }
+
+    @Test
+    fun `pinching the fire segment apart lengthens the shooting time`() = runComposeUiTest {
+        val state = PinchState()
+        setOverlayContent(state)
         onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             // Both fingers on the green arc, 3s apart; spread to 6s apart.
             down(0, ringPointAt(11f))
@@ -45,17 +82,13 @@ class DialPinchTest {
             up(0)
             up(1)
         }
-        assertEquals(8f, vm.uiStateFlow.value.shootingDuration)
+        assertEquals(8f, state.duration)
     }
 
     @Test
     fun `pinching the fire segment together shortens the shooting time`() = runComposeUiTest {
-        val vm = TimerViewModel()
-        setContent {
-            FieldShootingTimerTheme(dynamicColor = false) {
-                ShootTimer(vm, segmentDurations, timerSize = 300.dp)
-            }
-        }
+        val state = PinchState()
+        setOverlayContent(state)
         onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             // Fingers 4s apart squeeze to 2s apart: 5s Fire becomes 3s.
             down(0, ringPointAt(10.5f))
@@ -65,17 +98,13 @@ class DialPinchTest {
             up(0)
             up(1)
         }
-        assertEquals(3f, vm.uiStateFlow.value.shootingDuration)
+        assertEquals(3f, state.duration)
     }
 
     @Test
     fun `pinch is clamped to the minimum shooting time`() = runComposeUiTest {
-        val vm = TimerViewModel()
-        setContent {
-            FieldShootingTimerTheme(dynamicColor = false) {
-                ShootTimer(vm, segmentDurations, timerSize = 300.dp)
-            }
-        }
+        val state = PinchState()
+        setOverlayContent(state)
         onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             // Squeeze 5s of span down to nothing: clamps at SHOOT_TIME_MIN.
             down(0, ringPointAt(10f))
@@ -85,17 +114,13 @@ class DialPinchTest {
             up(0)
             up(1)
         }
-        assertEquals(SHOOT_TIME_MIN.toFloat(), vm.uiStateFlow.value.shootingDuration)
+        assertEquals(SHOOT_TIME_MIN.toFloat(), state.duration)
     }
 
     @Test
     fun `pinching outside the fire segment does nothing`() = runComposeUiTest {
-        val vm = TimerViewModel()
-        setContent {
-            FieldShootingTimerTheme(dynamicColor = false) {
-                ShootTimer(vm, segmentDurations, timerSize = 300.dp)
-            }
-        }
+        val state = PinchState()
+        setOverlayContent(state)
         onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             // Both fingers on the first (TenSecondsLeft) segment's arc.
             down(0, ringPointAt(2f))
@@ -105,18 +130,13 @@ class DialPinchTest {
             up(0)
             up(1)
         }
-        assertEquals(5f, vm.uiStateFlow.value.shootingDuration)
+        assertNull(state.duration)
     }
 
     @Test
-    fun `pinch does nothing while the timer is running`() = runComposeUiTest {
-        val vm = TimerViewModel()
-        vm.setTimerState(TimerRunningState.Running)
-        setContent {
-            FieldShootingTimerTheme(dynamicColor = false) {
-                ShootTimer(vm, segmentDurations, timerSize = 300.dp)
-            }
-        }
+    fun `pinch does nothing while disabled`() = runComposeUiTest {
+        val state = PinchState()
+        setOverlayContent(state, enabled = false)
         onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             down(0, ringPointAt(11f))
             down(1, ringPointAt(14f))
@@ -125,18 +145,14 @@ class DialPinchTest {
             up(0)
             up(1)
         }
-        assertEquals(5f, vm.uiStateFlow.value.shootingDuration)
+        assertNull(state.duration)
     }
 
     @Test
     fun `a second finger on the fire segment turns a tick drag into a pinch`() = runComposeUiTest {
-        val vm = TimerViewModel()
-        vm.setThumbValues(listOf(14f))
-        setContent {
-            FieldShootingTimerTheme(dynamicColor = false) {
-                ShootTimer(vm, segmentDurations, timerSize = 300.dp)
-            }
-        }
+        val state = PinchState()
+        state.ticks = listOf(14f)
+        setOverlayContent(state)
         onNodeWithTag(DIAL_GESTURE_TAG).performTouchInput {
             // First finger lands on the tick at 14, second joins on the green
             // arc; spreading adjusts the duration instead of moving the tick.
@@ -147,7 +163,7 @@ class DialPinchTest {
             up(0)
             up(1)
         }
-        assertEquals(7f, vm.uiStateFlow.value.shootingDuration)
-        assertEquals(listOf(14f), vm.uiStateFlow.value.thumbValues)
+        assertEquals(7f, state.duration)
+        assertEquals(listOf(14f), state.ticks)
     }
 }
