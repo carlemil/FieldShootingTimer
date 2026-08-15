@@ -63,7 +63,7 @@ internal fun TimerWithPlayButton(
             onClick = { timerViewModel.addNewThumbValue(range) },
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(horizontal = Paddings.Medium)
+                .padding(horizontal = Paddings.Large)
                 .offset(y = Paddings.Large)
         )
         TickAdjustButton(
@@ -73,7 +73,7 @@ internal fun TimerWithPlayButton(
             onClick = timerViewModel::dropLastThumbValue,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(horizontal = Paddings.Medium)
+                .padding(horizontal = Paddings.Large)
                 .offset(y = Paddings.Large)
         )
     }
