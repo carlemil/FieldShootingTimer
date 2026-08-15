@@ -164,7 +164,7 @@ interior (`openTowardsStart`). Its items animate out on an arc with a
 slightly underdamped spring, composed beneath the menu button so they hide
 under it at rest. Items: share (the GitHub Pages landing page, `SHARE_URL`
 in `MainScreen.kt`) and the competition/training mode toggle. The open
-state is hoisted to `MainScreen`, which puts a 30% black scrim between the
+state is hoisted to `MainScreen`, which puts a 50% black scrim between the
 app and the open menu — it swallows all presses and closes the menu on tap.
 
 **Tutorial (`ui/Tutorial.kt`).** Four modal cards (`tutorialSteps`) teaching
@@ -206,7 +206,7 @@ math (angle from center, the inverse of `tickAngle`, ring-band and wedge hit
 tests, arc-px grab tolerance) is pure functions in `ui/DialGeometry.kt`,
 covered by `DialDragGeometryTest`; end-to-end gestures are covered in
 `uiTest/.../DialTicksDragTest` and `DialPinchTest`. Ticks are added/removed
-with the `TicksAdjuster` +/- buttons in the dial's lower-right corner
+with the `TickAdjustButton`s: + at the dial's lower-left, - at its lower-right
 (hosted by `TimerWithPlayButton`). All gesture paths share the ViewModel
 contract: live updates during the gesture (`setThumbValues` /
 `setShootingTime`), `roundThumbValues` on tick-drag release, everything

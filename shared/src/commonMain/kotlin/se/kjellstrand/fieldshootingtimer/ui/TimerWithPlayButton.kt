@@ -19,7 +19,8 @@ internal fun countdownSecondsOrNull(currentTime: Float): Int? =
 
 /**
  * The dial with the play/stop/reset button overlaid at its center and the
- * tick +/- buttons hanging below the lower-right corner. During a
+ * tick + / - buttons hanging below the lower-left / lower-right corners.
+ * During a
  * competition-mode preparation countdown (negative currentTime) the play
  * button shows the remaining seconds.
  */
@@ -53,14 +54,26 @@ internal fun TimerWithPlayButton(
             timerSize = timerSize,
             countdownSeconds = countdownSecondsOrNull(currentTime)
         )
-        TicksAdjuster(
-            enabled = timerRunningState == TimerRunningState.NotStarted,
-            setThumbValuesMinusOne = timerViewModel::dropLastThumbValue,
-            setThumbValuesPlusOne = { timerViewModel.addNewThumbValue(range) },
+        val adjustEnabled = timerRunningState == TimerRunningState.NotStarted
+        // One button per side, hanging slightly below the dial's lower edge.
+        TickAdjustButton(
+            label = "+",
+            tag = TICKS_PLUS_TAG,
+            enabled = adjustEnabled,
+            onClick = { timerViewModel.addNewThumbValue(range) },
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(horizontal = Paddings.Medium)
+                .offset(y = Paddings.Large)
+        )
+        TickAdjustButton(
+            label = "-",
+            tag = TICKS_MINUS_TAG,
+            enabled = adjustEnabled,
+            onClick = timerViewModel::dropLastThumbValue,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(horizontal = Paddings.Medium)
-                // Hang slightly below the dial's lower edge, out of its way.
                 .offset(y = Paddings.Large)
         )
     }

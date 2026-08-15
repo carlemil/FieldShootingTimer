@@ -161,7 +161,7 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
         // everything except the menu itself, which is composed on top of it.
         // Tapping the scrim closes the menu.
         val scrimAlpha by animateFloatAsState(
-            targetValue = if (menuOpen) 0.3f else 0f,
+            targetValue = if (menuOpen) 0.5f else 0f,
             label = "menuScrim"
         )
         if (scrimAlpha > 0.005f) {

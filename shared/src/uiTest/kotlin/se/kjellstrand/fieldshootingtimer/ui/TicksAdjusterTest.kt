@@ -1,5 +1,6 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -17,11 +18,10 @@ class TicksAdjusterTest {
         var minus = 0
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                TicksAdjuster(
-                    enabled = true,
-                    setThumbValuesMinusOne = { minus++ },
-                    setThumbValuesPlusOne = { plus++ }
-                )
+                Row {
+                    TickAdjustButton("+", TICKS_PLUS_TAG, enabled = true, onClick = { plus++ })
+                    TickAdjustButton("-", TICKS_MINUS_TAG, enabled = true, onClick = { minus++ })
+                }
             }
         }
         onNodeWithTag(TICKS_PLUS_TAG).performClick()
@@ -36,11 +36,10 @@ class TicksAdjusterTest {
         var minus = 0
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                TicksAdjuster(
-                    enabled = false,
-                    setThumbValuesMinusOne = { minus++ },
-                    setThumbValuesPlusOne = { plus++ }
-                )
+                Row {
+                    TickAdjustButton("+", TICKS_PLUS_TAG, enabled = false, onClick = { plus++ })
+                    TickAdjustButton("-", TICKS_MINUS_TAG, enabled = false, onClick = { minus++ })
+                }
             }
         }
         onNodeWithTag(TICKS_PLUS_TAG).performClick()
