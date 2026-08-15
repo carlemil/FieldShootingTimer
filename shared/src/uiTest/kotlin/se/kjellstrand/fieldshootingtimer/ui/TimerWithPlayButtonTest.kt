@@ -72,7 +72,7 @@ class TimerWithPlayButtonTest {
                 )
             }
         }
-        onNodeWithTag(COUNTDOWN_TEXT_TAG).assertTextEquals("43")
+        onNodeWithTag(COUNTDOWN_TEXT_TAG, useUnmergedTree = true).assertTextEquals("43")
     }
 
     @Test
@@ -89,6 +89,6 @@ class TimerWithPlayButtonTest {
                 )
             }
         }
-        onNodeWithTag(COUNTDOWN_TEXT_TAG).assertDoesNotExist()
+        onNodeWithTag(COUNTDOWN_TEXT_TAG, useUnmergedTree = true).assertDoesNotExist()
     }
 }

@@ -11,9 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -40,6 +37,7 @@ import kotlin.math.roundToInt
 internal const val MENU_BUTTON_TAG = "RadialMenuButton"
 internal const val MENU_ITEM_SHARE_TAG = "RadialMenuItemShare"
 internal const val MENU_ITEM_MODE_TAG = "RadialMenuItemMode"
+internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
 /** Distance from the menu button's center to each fanned-out item's center. */
 private val MenuItemRadius = 72.dp
@@ -54,9 +52,14 @@ private val MenuItemRadius = 72.dp
  * active mode ([modeToggleEnabled] gates it to when the timer is idle).
  * [openTowardsStart] picks the arc direction so the items fan toward the
  * screen's interior from either top corner.
+ *
+ * [open] is hoisted so the caller can put a press-blocking scrim between the
+ * rest of the app and this menu while it is open.
  */
 @Composable
 fun RadialMenu(
+    open: Boolean,
+    onOpenChange: (Boolean) -> Unit,
     timerMode: TimerMode,
     modeToggleEnabled: Boolean,
     onToggleMode: () -> Unit,
@@ -64,7 +67,6 @@ fun RadialMenu(
     openTowardsStart: Boolean,
     modifier: Modifier = Modifier
 ) {
-    var open by remember { mutableStateOf(false) }
     val progress by animateFloatAsState(
         targetValue = if (open) 1f else 0f,
         animationSpec = spring(
@@ -90,7 +92,7 @@ fun RadialMenu(
                 contentDescription = stringResource(Res.string.share_app),
                 tag = MENU_ITEM_SHARE_TAG,
                 onClick = {
-                    open = false
+                    onOpenChange(false)
                     onShare()
                 }
             )
@@ -115,7 +117,7 @@ fun RadialMenu(
             )
         }
         IconButton(
-            onClick = { open = !open },
+            onClick = { onOpenChange(!open) },
             modifier = Modifier
                 .clip(CircleShape)
                 .background(WhiteColor)

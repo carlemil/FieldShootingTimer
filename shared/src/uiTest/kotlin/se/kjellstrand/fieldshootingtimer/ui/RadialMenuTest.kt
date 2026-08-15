@@ -2,6 +2,10 @@ package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
@@ -24,7 +28,10 @@ class RadialMenuTest {
                 // Fixed-size canvas so the fanned-out items stay inside the
                 // compose root and remain clickable.
                 Box(Modifier.size(300.dp)) {
+                    var open by remember { mutableStateOf(false) }
                     RadialMenu(
+                    open = open,
+                    onOpenChange = { open = it },
                     timerMode = TimerMode.Training,
                     modeToggleEnabled = true,
                     onToggleMode = {},
@@ -46,7 +53,10 @@ class RadialMenuTest {
                 // Fixed-size canvas so the fanned-out items stay inside the
                 // compose root and remain clickable.
                 Box(Modifier.size(300.dp)) {
+                    var open by remember { mutableStateOf(false) }
                     RadialMenu(
+                    open = open,
+                    onOpenChange = { open = it },
                     timerMode = TimerMode.Training,
                     modeToggleEnabled = true,
                     onToggleMode = {},
@@ -69,7 +79,10 @@ class RadialMenuTest {
                 // Fixed-size canvas so the fanned-out items stay inside the
                 // compose root and remain clickable.
                 Box(Modifier.size(300.dp)) {
+                    var open by remember { mutableStateOf(false) }
                     RadialMenu(
+                    open = open,
+                    onOpenChange = { open = it },
                     timerMode = TimerMode.Training,
                     modeToggleEnabled = true,
                     onToggleMode = {},
@@ -93,7 +106,10 @@ class RadialMenuTest {
                 // Fixed-size canvas so the fanned-out items stay inside the
                 // compose root and remain clickable.
                 Box(Modifier.size(300.dp)) {
+                    var open by remember { mutableStateOf(false) }
                     RadialMenu(
+                    open = open,
+                    onOpenChange = { open = it },
                     timerMode = TimerMode.Training,
                     modeToggleEnabled = true,
                     onToggleMode = { vm.setTimerMode(TimerMode.Competition) },
@@ -116,7 +132,10 @@ class RadialMenuTest {
                 // Fixed-size canvas so the fanned-out items stay inside the
                 // compose root and remain clickable.
                 Box(Modifier.size(300.dp)) {
+                    var open by remember { mutableStateOf(false) }
                     RadialMenu(
+                    open = open,
+                    onOpenChange = { open = it },
                     timerMode = TimerMode.Training,
                     modeToggleEnabled = false,
                     onToggleMode = { toggles++ },

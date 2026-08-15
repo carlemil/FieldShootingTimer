@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
@@ -27,12 +30,19 @@ internal const val PLAY_BUTTON_TAG = "PlayButton"
 internal const val PLAY_ICON_TAG = "PlayButtonIconPlay"
 internal const val STOP_ICON_TAG = "PlayButtonIconStop"
 internal const val RESET_ICON_TAG = "PlayButtonIconReset"
+internal const val COUNTDOWN_TEXT_TAG = "CountdownText"
 
+/**
+ * While [countdownSeconds] is non-null (competition-mode preparation
+ * countdown) the button shows the remaining seconds instead of an icon;
+ * tapping it still stops the run.
+ */
 @Composable
 fun PlayButton(
     onClickPlayButton: () -> Unit,
     timerRunningState: TimerRunningState,
-    timerSize: Dp
+    timerSize: Dp,
+    countdownSeconds: Int? = null
 ) {
     Box(
         contentAlignment = Alignment.Center
@@ -50,7 +60,16 @@ fun PlayButton(
                 containerColor = LightGreenColor
             )
         ) {
-            when (timerRunningState) {
+            if (countdownSeconds != null) {
+                Text(
+                    text = countdownSeconds.toString(),
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = BlackColor,
+                    modifier = Modifier.testTag(COUNTDOWN_TEXT_TAG)
+                )
+            } else when (timerRunningState) {
                 TimerRunningState.NotStarted -> {
                     Icon(
                         painter = painterResource(Res.drawable.play_arrow),

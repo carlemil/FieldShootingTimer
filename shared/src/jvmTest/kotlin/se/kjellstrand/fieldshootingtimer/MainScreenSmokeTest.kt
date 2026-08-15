@@ -5,6 +5,9 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import se.kjellstrand.fieldshootingtimer.ui.MENU_BUTTON_TAG
+import se.kjellstrand.fieldshootingtimer.ui.MENU_ITEM_SHARE_TAG
+import se.kjellstrand.fieldshootingtimer.ui.MENU_SCRIM_TAG
 import se.kjellstrand.fieldshootingtimer.ui.PLAY_BUTTON_TAG
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
@@ -32,6 +35,26 @@ class MainScreenSmokeTest {
             onNodeWithTag(PLAY_BUTTON_TAG).assertIsDisplayed()
             onNodeWithTag(PLAY_BUTTON_TAG).performClick()
             assertEquals(TimerRunningState.Running, vm.uiStateFlow.value.timerRunningState)
+        }
+
+    @Test
+    fun `open menu shows a scrim that blocks the app and closes on tap`() =
+        runDesktopComposeUiTest(width = 400, height = 800) {
+            val vm = TimerViewModel()
+            setContent {
+                FieldShootingTimerTheme(dynamicColor = false) {
+                    MainScreen(vm)
+                }
+            }
+            onNodeWithTag(MENU_BUTTON_TAG).performClick()
+            onNodeWithTag(MENU_SCRIM_TAG).assertExists()
+
+            // The play button is under the scrim: the press must not reach it —
+            // it lands on the scrim, which closes the menu instead.
+            onNodeWithTag(PLAY_BUTTON_TAG).performClick()
+            assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
+            onNodeWithTag(MENU_ITEM_SHARE_TAG).assertDoesNotExist()
+            onNodeWithTag(MENU_SCRIM_TAG).assertDoesNotExist()
         }
 
     @Test

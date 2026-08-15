@@ -163,7 +163,9 @@ clears the right-hand settings column), fanning its items toward the screen
 interior (`openTowardsStart`). Its items animate out on an arc with a
 slightly underdamped spring, composed beneath the menu button so they hide
 under it at rest. Items: share (the GitHub Pages landing page, `SHARE_URL`
-in `MainScreen.kt`) and the competition/training mode toggle.
+in `MainScreen.kt`) and the competition/training mode toggle. The open
+state is hoisted to `MainScreen`, which puts a 30% black scrim between the
+app and the open menu — it swallows all presses and closes the menu on tap.
 
 **Persistence (`commonMain/.../persistence/`):** `SettingsStore` interface +
 `DataStoreSettingsStore` (multiplatform `datastore-preferences-core` +
@@ -211,8 +213,8 @@ list. Competition prefixes the run with a 60s preparation countdown,
 `domain/TimerPlan.kt`) — this reuses the whole timer loop untouched: every
 cue time is ≥ 0 so nothing fires until the countdown ends, and
 stop/resume/reset just work. Renderers clamp: the dial hand coerces to ≥ 0;
-`TimerWithPlayButton` shows `ceil(-currentTime)` as countdown digits below
-the play button while time is negative. The command-list highlight
+while time is negative the play button shows `ceil(-currentTime)` as
+countdown digits instead of the stop icon (still tappable to stop). The command-list highlight
 (`ui/CommandHighlight.kt`, `highlightedCommand(...)`) returns `Load` before
 the start and through most of the countdown, `AllReady` for the final 10s,
 then follows the running segment. Covered by `TimerViewModelCountdownTest`

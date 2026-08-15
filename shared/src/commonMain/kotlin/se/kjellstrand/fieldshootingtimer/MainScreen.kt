@@ -1,5 +1,9 @@
 package se.kjellstrand.fieldshootingtimer
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -7,8 +11,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +31,7 @@ import se.kjellstrand.fieldshootingtimer.platform.rememberSharer
 import se.kjellstrand.fieldshootingtimer.domain.Command
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
+import se.kjellstrand.fieldshootingtimer.ui.MENU_SCRIM_TAG
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.RadialMenu
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
@@ -107,6 +118,8 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
         SettingsPanel(timerViewModel, segmentDurations)
     }
 
+    var menuOpen by remember { mutableStateOf(false) }
+
     BoxWithConstraints {
         val isLandscape = maxWidth > maxHeight
         if (isLandscape) {
@@ -128,10 +141,30 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 timerSize = 300.dp
             )
         }
+        // While the menu is open, a scrim covers (and swallows presses to)
+        // everything except the menu itself, which is composed on top of it.
+        // Tapping the scrim closes the menu.
+        val scrimAlpha by animateFloatAsState(
+            targetValue = if (menuOpen) 0.3f else 0f,
+            label = "menuScrim"
+        )
+        if (scrimAlpha > 0.005f) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.Black.copy(alpha = scrimAlpha))
+                    .pointerInput(Unit) {
+                        detectTapGestures { menuOpen = false }
+                    }
+                    .testTag(MENU_SCRIM_TAG)
+            )
+        }
         // Top-right in portrait; top-left in landscape so it never overlaps the
         // settings column that fills the right half in landscape. The menu
         // fans its items toward the screen's interior from that corner.
         RadialMenu(
+            open = menuOpen,
+            onOpenChange = { menuOpen = it },
             timerMode = timerMode,
             modeToggleEnabled = timerRunningState == TimerRunningState.NotStarted,
             onToggleMode = {
