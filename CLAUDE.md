@@ -167,6 +167,12 @@ in `MainScreen.kt`) and the competition/training mode toggle. The open
 state is hoisted to `MainScreen`, which puts a 30% black scrim between the
 app and the open menu — it swallows all presses and closes the menu on tap.
 
+**Tutorial (`ui/Tutorial.kt`).** Four modal cards (`tutorialSteps`) teaching
+pinch, +/-, tick drag, and the mode toggle. `MainScreen` shows it when the
+persisted `tutorialSeen` setting is unset (first launch — store-less
+ViewModels default to seen so tests never flash it) and on demand via the
+menu's help item; finishing or skipping calls `markTutorialSeen()`.
+
 **Persistence (`commonMain/.../persistence/`):** `SettingsStore` interface +
 `DataStoreSettingsStore` (multiplatform `datastore-preferences-core` +
 `datastore-core-okio`). Persists `shootingDuration`, `thumbValues`, and

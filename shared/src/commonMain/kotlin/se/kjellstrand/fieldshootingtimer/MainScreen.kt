@@ -37,7 +37,9 @@ import se.kjellstrand.fieldshootingtimer.ui.RadialMenu
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
+import se.kjellstrand.fieldshootingtimer.ui.TutorialOverlay
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
+import se.kjellstrand.fieldshootingtimer.ui.tutorialSteps
 
 private const val SHARE_URL = "https://carlemil.github.io/FieldShootingTimer/"
 
@@ -120,6 +122,20 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
 
     var menuOpen by remember { mutableStateOf(false) }
 
+    // Tutorial: auto-shown once on first launch (persisted via tutorialSeen),
+    // reopenable any time from the menu's help item.
+    val tutorialSeen by timerViewModel.tutorialSeenFlow.collectAsState(
+        initial = true, context = Dispatchers.Main
+    )
+    var tutorialStep by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(tutorialSeen) {
+        if (!tutorialSeen && tutorialStep == null) tutorialStep = 0
+    }
+    val dismissTutorial: () -> Unit = {
+        tutorialStep = null
+        timerViewModel.markTutorialSeen()
+    }
+
     BoxWithConstraints {
         val isLandscape = maxWidth > maxHeight
         if (isLandscape) {
@@ -174,11 +190,22 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 )
             },
             onShare = { sharer.share(SHARE_URL) },
+            onShowTutorial = { tutorialStep = 0 },
             openTowardsStart = !isLandscape,
             modifier = Modifier
                 .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)
                 .systemBarsPadding()
                 .padding(Paddings.Medium)
         )
+        tutorialStep?.let { stepIndex ->
+            TutorialOverlay(
+                stepIndex = stepIndex,
+                onNext = {
+                    if (stepIndex == tutorialSteps.lastIndex) dismissTutorial()
+                    else tutorialStep = stepIndex + 1
+                },
+                onSkip = dismissTutorial
+            )
+        }
     }
 }

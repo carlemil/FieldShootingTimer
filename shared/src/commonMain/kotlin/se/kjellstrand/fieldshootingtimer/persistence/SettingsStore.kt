@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -21,11 +22,14 @@ interface SettingsStore {
     suspend fun saveThumbValues(values: List<Float>)
     suspend fun loadTimerMode(): TimerMode?
     suspend fun saveTimerMode(mode: TimerMode)
+    suspend fun loadTutorialSeen(): Boolean?
+    suspend fun saveTutorialSeen(seen: Boolean)
 }
 
 private val SHOOTING_DURATION = floatPreferencesKey("shooting_duration")
 private val THUMB_VALUES = stringPreferencesKey("thumb_values_csv")
 private val TIMER_MODE = stringPreferencesKey("timer_mode")
+private val TUTORIAL_SEEN = booleanPreferencesKey("tutorial_seen")
 
 class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : SettingsStore {
     override suspend fun loadShootingDuration(): Float? =
@@ -52,6 +56,13 @@ class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : Se
 
     override suspend fun saveTimerMode(mode: TimerMode) {
         dataStore.edit { it[TIMER_MODE] = mode.name }
+    }
+
+    override suspend fun loadTutorialSeen(): Boolean? =
+        dataStore.data.first()[TUTORIAL_SEEN]
+
+    override suspend fun saveTutorialSeen(seen: Boolean) {
+        dataStore.edit { it[TUTORIAL_SEEN] = seen }
     }
 }
 

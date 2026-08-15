@@ -5,10 +5,15 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import se.kjellstrand.fieldshootingtimer.domain.TimerMode
+import se.kjellstrand.fieldshootingtimer.persistence.SettingsStore
 import se.kjellstrand.fieldshootingtimer.ui.MENU_BUTTON_TAG
 import se.kjellstrand.fieldshootingtimer.ui.MENU_ITEM_SHARE_TAG
+import se.kjellstrand.fieldshootingtimer.ui.MENU_ITEM_TUTORIAL_TAG
 import se.kjellstrand.fieldshootingtimer.ui.MENU_SCRIM_TAG
 import se.kjellstrand.fieldshootingtimer.ui.PLAY_BUTTON_TAG
+import se.kjellstrand.fieldshootingtimer.ui.TUTORIAL_OVERLAY_TAG
+import se.kjellstrand.fieldshootingtimer.ui.TUTORIAL_SKIP_TAG
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
@@ -55,6 +60,40 @@ class MainScreenSmokeTest {
             assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
             onNodeWithTag(MENU_ITEM_SHARE_TAG).assertDoesNotExist()
             onNodeWithTag(MENU_SCRIM_TAG).assertDoesNotExist()
+        }
+
+    @Test
+    fun `tutorial shows on first launch and reopens from the menu`() =
+        runDesktopComposeUiTest(width = 400, height = 800) {
+            val store = object : SettingsStore {
+                var tutorialSeen: Boolean? = null
+                override suspend fun loadShootingDuration(): Float? = null
+                override suspend fun saveShootingDuration(value: Float) {}
+                override suspend fun loadThumbValues(): List<Float>? = null
+                override suspend fun saveThumbValues(values: List<Float>) {}
+                override suspend fun loadTimerMode(): TimerMode? = null
+                override suspend fun saveTimerMode(mode: TimerMode) {}
+                override suspend fun loadTutorialSeen(): Boolean? = tutorialSeen
+                override suspend fun saveTutorialSeen(seen: Boolean) {
+                    tutorialSeen = seen
+                }
+            }
+            val vm = TimerViewModel(settingsStore = store)
+            setContent {
+                FieldShootingTimerTheme(dynamicColor = false) {
+                    MainScreen(vm)
+                }
+            }
+            // First launch: the store has no tutorialSeen value.
+            onNodeWithTag(TUTORIAL_OVERLAY_TAG).assertExists()
+            onNodeWithTag(TUTORIAL_SKIP_TAG).performClick()
+            onNodeWithTag(TUTORIAL_OVERLAY_TAG).assertDoesNotExist()
+            assertEquals(true, store.tutorialSeen)
+
+            // Reopen on demand from the menu's help item.
+            onNodeWithTag(MENU_BUTTON_TAG).performClick()
+            onNodeWithTag(MENU_ITEM_TUTORIAL_TAG).performClick()
+            onNodeWithTag(TUTORIAL_OVERLAY_TAG).assertExists()
         }
 
     @Test

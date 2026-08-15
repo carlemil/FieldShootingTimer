@@ -24,6 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.resources.Res
 import se.kjellstrand.fieldshootingtimer.resources.competition
+import se.kjellstrand.fieldshootingtimer.resources.help
 import se.kjellstrand.fieldshootingtimer.resources.menu
 import se.kjellstrand.fieldshootingtimer.resources.mode_competition
 import se.kjellstrand.fieldshootingtimer.resources.mode_training
@@ -37,6 +38,7 @@ import kotlin.math.roundToInt
 internal const val MENU_BUTTON_TAG = "RadialMenuButton"
 internal const val MENU_ITEM_SHARE_TAG = "RadialMenuItemShare"
 internal const val MENU_ITEM_MODE_TAG = "RadialMenuItemMode"
+internal const val MENU_ITEM_TUTORIAL_TAG = "RadialMenuItemTutorial"
 internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
 /** Distance from the menu button's center to each fanned-out item's center. */
@@ -64,6 +66,7 @@ fun RadialMenu(
     modeToggleEnabled: Boolean,
     onToggleMode: () -> Unit,
     onShare: () -> Unit,
+    onShowTutorial: () -> Unit,
     openTowardsStart: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -78,7 +81,11 @@ fun RadialMenu(
     val radiusPx = with(LocalDensity.current) { MenuItemRadius.toPx() }
     // Degrees: 0 = right, 90 = straight down. Fan into the screen from the
     // anchoring corner.
-    val itemAngles = if (openTowardsStart) listOf(110f, 160f) else listOf(70f, 20f)
+    val itemAngles = if (openTowardsStart) {
+        listOf(100f, 135f, 170f)
+    } else {
+        listOf(80f, 45f, 10f)
+    }
 
     Box(modifier = modifier) {
         // Items are composed before (= beneath) the menu button and leave the
@@ -114,6 +121,18 @@ fun RadialMenu(
                 ),
                 tag = MENU_ITEM_MODE_TAG,
                 onClick = { if (modeToggleEnabled) onToggleMode() }
+            )
+            RadialMenuItem(
+                angleDeg = itemAngles[2],
+                progress = progress,
+                radiusPx = radiusPx,
+                icon = Res.drawable.help,
+                contentDescription = stringResource(Res.string.help),
+                tag = MENU_ITEM_TUTORIAL_TAG,
+                onClick = {
+                    onOpenChange(false)
+                    onShowTutorial()
+                }
             )
         }
         IconButton(

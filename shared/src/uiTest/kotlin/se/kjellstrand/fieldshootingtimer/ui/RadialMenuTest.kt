@@ -36,6 +36,7 @@ class RadialMenuTest {
                     modeToggleEnabled = true,
                     onToggleMode = {},
                     onShare = {},
+                    onShowTutorial = {},
                     openTowardsStart = false
                     )
                 }
@@ -61,6 +62,7 @@ class RadialMenuTest {
                     modeToggleEnabled = true,
                     onToggleMode = {},
                     onShare = {},
+                    onShowTutorial = {},
                     openTowardsStart = false
                     )
                 }
@@ -87,6 +89,7 @@ class RadialMenuTest {
                     modeToggleEnabled = true,
                     onToggleMode = {},
                     onShare = { shared++ },
+                    onShowTutorial = {},
                     openTowardsStart = false
                     )
                 }
@@ -114,6 +117,7 @@ class RadialMenuTest {
                     modeToggleEnabled = true,
                     onToggleMode = { vm.setTimerMode(TimerMode.Competition) },
                     onShare = {},
+                    onShowTutorial = {},
                     openTowardsStart = false
                     )
                 }
@@ -122,6 +126,34 @@ class RadialMenuTest {
         onNodeWithTag(MENU_BUTTON_TAG).performClick()
         onNodeWithTag(MENU_ITEM_MODE_TAG).performClick()
         assertEquals(TimerMode.Competition, vm.uiStateFlow.value.timerMode)
+    }
+
+    @Test
+    fun `tutorial item fires the callback and closes the menu`() = runComposeUiTest {
+        var tutorials = 0
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                // Fixed-size canvas so the fanned-out items stay inside the
+                // compose root and remain clickable.
+                Box(Modifier.size(300.dp)) {
+                    var open by remember { mutableStateOf(false) }
+                    RadialMenu(
+                    open = open,
+                    onOpenChange = { open = it },
+                    timerMode = TimerMode.Training,
+                    modeToggleEnabled = true,
+                    onToggleMode = {},
+                    onShare = {},
+                    onShowTutorial = { tutorials++ },
+                    openTowardsStart = false
+                    )
+                }
+            }
+        }
+        onNodeWithTag(MENU_BUTTON_TAG).performClick()
+        onNodeWithTag(MENU_ITEM_TUTORIAL_TAG).performClick()
+        assertEquals(1, tutorials)
+        onNodeWithTag(MENU_ITEM_TUTORIAL_TAG).assertDoesNotExist()
     }
 
     @Test
@@ -140,6 +172,7 @@ class RadialMenuTest {
                     modeToggleEnabled = false,
                     onToggleMode = { toggles++ },
                     onShare = {},
+                    onShowTutorial = {},
                     openTowardsStart = false
                     )
                 }

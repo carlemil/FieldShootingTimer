@@ -158,6 +158,8 @@ class TimerViewModelCountdownTest {
             override suspend fun saveTimerMode(mode: TimerMode) {
                 stored["mode"] = mode
             }
+            override suspend fun loadTutorialSeen(): Boolean? = true
+            override suspend fun saveTutorialSeen(seen: Boolean) {}
         }
         val vm = TimerViewModel(externalScope = backgroundScope, settingsStore = store)
         runCurrent()

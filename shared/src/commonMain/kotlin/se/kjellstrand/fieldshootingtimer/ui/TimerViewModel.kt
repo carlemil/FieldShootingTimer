@@ -36,7 +36,10 @@ data class TimerUiState(
     val timerRunningState: TimerRunningState = TimerRunningState.NotStarted,
     val currentTime: Float = 0f,
     val thumbValues: List<Float> = listOf(),
-    val timerMode: TimerMode = TimerMode.Training
+    val timerMode: TimerMode = TimerMode.Training,
+    // Defaults to true (no tutorial) so store-less ViewModels — tests, previews —
+    // never flash it; a store with no saved value means first launch => false.
+    val tutorialSeen: Boolean = true
 )
 
 enum class TimerRunningState {
@@ -69,6 +72,7 @@ class TimerViewModel(
     val timerRunningStateFlow = uiStateFlow.map { it.timerRunningState }.distinctUntilChanged()
     val thumbValuesFlow = _uiState.map { it.thumbValues }.distinctUntilChanged()
     val timerModeFlow = _uiState.map { it.timerMode }.distinctUntilChanged()
+    val tutorialSeenFlow = _uiState.map { it.tutorialSeen }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration) }
@@ -98,14 +102,14 @@ class TimerViewModel(
                 val savedShooting = store.loadShootingDuration()
                 val savedThumbs = store.loadThumbValues()
                 val savedMode = store.loadTimerMode()
-                if (savedShooting != null || savedThumbs != null || savedMode != null) {
-                    _uiState.update { current ->
-                        current.copy(
-                            shootingDuration = savedShooting ?: current.shootingDuration,
-                            thumbValues = savedThumbs ?: current.thumbValues,
-                            timerMode = savedMode ?: current.timerMode
-                        )
-                    }
+                val savedTutorialSeen = store.loadTutorialSeen()
+                _uiState.update { current ->
+                    current.copy(
+                        shootingDuration = savedShooting ?: current.shootingDuration,
+                        thumbValues = savedThumbs ?: current.thumbValues,
+                        timerMode = savedMode ?: current.timerMode,
+                        tutorialSeen = savedTutorialSeen ?: false
+                    )
                 }
             }
         }
@@ -141,6 +145,13 @@ class TimerViewModel(
         _uiState.update { it.copy(timerMode = mode) }
         settingsStore?.let { store ->
             scope.launch { store.saveTimerMode(mode) }
+        }
+    }
+
+    fun markTutorialSeen() {
+        _uiState.update { it.copy(tutorialSeen = true) }
+        settingsStore?.let { store ->
+            scope.launch { store.saveTutorialSeen(true) }
         }
     }
 

@@ -9,6 +9,7 @@ private class InMemorySettingsStore : SettingsStore {
     private var shootingDuration: Float? = null
     private var thumbValues: List<Float>? = null
     private var timerMode: TimerMode? = null
+    private var tutorialSeen: Boolean? = null
 
     override suspend fun loadShootingDuration(): Float? = shootingDuration
 
@@ -26,6 +27,12 @@ private class InMemorySettingsStore : SettingsStore {
 
     override suspend fun saveTimerMode(mode: TimerMode) {
         timerMode = mode
+    }
+
+    override suspend fun loadTutorialSeen(): Boolean? = tutorialSeen
+
+    override suspend fun saveTutorialSeen(seen: Boolean) {
+        tutorialSeen = seen
     }
 }
 
