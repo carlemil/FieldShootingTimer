@@ -1,0 +1,158 @@
+package se.kjellstrand.fieldshootingtimer.ui
+
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import se.kjellstrand.fieldshootingtimer.domain.TimerMode
+import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.competition
+import se.kjellstrand.fieldshootingtimer.resources.menu
+import se.kjellstrand.fieldshootingtimer.resources.mode_competition
+import se.kjellstrand.fieldshootingtimer.resources.mode_training
+import se.kjellstrand.fieldshootingtimer.resources.share
+import se.kjellstrand.fieldshootingtimer.resources.share_app
+import se.kjellstrand.fieldshootingtimer.resources.training
+import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
+import kotlin.math.roundToInt
+
+internal const val MENU_BUTTON_TAG = "RadialMenuButton"
+internal const val MENU_ITEM_SHARE_TAG = "RadialMenuItemShare"
+internal const val MENU_ITEM_MODE_TAG = "RadialMenuItemMode"
+
+/** Distance from the menu button's center to each fanned-out item's center. */
+private val MenuItemRadius = 72.dp
+
+/**
+ * A circular menu button whose items fan out on an arc when opened. The items
+ * are composed behind the button, so at rest they hide beneath it; a slightly
+ * underdamped spring floats them out to their arc positions with a small
+ * elastic overshoot, and pulls them back in on close.
+ *
+ * Items: share, and a competition/training mode toggle whose icon shows the
+ * active mode ([modeToggleEnabled] gates it to when the timer is idle).
+ * [openTowardsStart] picks the arc direction so the items fan toward the
+ * screen's interior from either top corner.
+ */
+@Composable
+fun RadialMenu(
+    timerMode: TimerMode,
+    modeToggleEnabled: Boolean,
+    onToggleMode: () -> Unit,
+    onShare: () -> Unit,
+    openTowardsStart: Boolean,
+    modifier: Modifier = Modifier
+) {
+    var open by remember { mutableStateOf(false) }
+    val progress by animateFloatAsState(
+        targetValue = if (open) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.6f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "radialMenuFanOut"
+    )
+    val radiusPx = with(LocalDensity.current) { MenuItemRadius.toPx() }
+    // Degrees: 0 = right, 90 = straight down. Fan into the screen from the
+    // anchoring corner.
+    val itemAngles = if (openTowardsStart) listOf(110f, 160f) else listOf(70f, 20f)
+
+    Box(modifier = modifier) {
+        // Items are composed before (= beneath) the menu button and leave the
+        // composition entirely once the closing spring has settled.
+        if (progress > 0.01f) {
+            RadialMenuItem(
+                angleDeg = itemAngles[0],
+                progress = progress,
+                radiusPx = radiusPx,
+                icon = Res.drawable.share,
+                contentDescription = stringResource(Res.string.share_app),
+                tag = MENU_ITEM_SHARE_TAG,
+                onClick = {
+                    open = false
+                    onShare()
+                }
+            )
+            RadialMenuItem(
+                angleDeg = itemAngles[1],
+                progress = progress,
+                radiusPx = radiusPx,
+                icon = if (timerMode == TimerMode.Competition) {
+                    Res.drawable.competition
+                } else {
+                    Res.drawable.training
+                },
+                contentDescription = stringResource(
+                    if (timerMode == TimerMode.Competition) {
+                        Res.string.mode_competition
+                    } else {
+                        Res.string.mode_training
+                    }
+                ),
+                tag = MENU_ITEM_MODE_TAG,
+                onClick = { if (modeToggleEnabled) onToggleMode() }
+            )
+        }
+        IconButton(
+            onClick = { open = !open },
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(WhiteColor)
+                .testTag(MENU_BUTTON_TAG)
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.menu),
+                contentDescription = stringResource(Res.string.menu),
+                tint = BlackColor
+            )
+        }
+    }
+}
+
+@Composable
+private fun RadialMenuItem(
+    angleDeg: Float,
+    progress: Float,
+    radiusPx: Float,
+    icon: DrawableResource,
+    contentDescription: String,
+    tag: String,
+    onClick: () -> Unit
+) {
+    val center = polarToCartesian(Offset.Zero, radiusPx * progress, angleDeg)
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .offset { IntOffset(center.x.roundToInt(), center.y.roundToInt()) }
+            .clip(CircleShape)
+            .background(WhiteColor)
+            .testTag(tag)
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = contentDescription,
+            tint = BlackColor
+        )
+    }
+}

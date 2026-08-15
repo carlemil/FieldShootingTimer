@@ -18,20 +18,32 @@ class CommandListTest {
     fun `highlights exactly one item`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                CommandList(hlIndex = Command.entries.indexOf(Command.Fire))
+                CommandList(commands = Command.entries, highlighted = Command.Fire)
             }
         }
         onAllNodes(isSelected()).assertCountEquals(1)
     }
 
     @Test
-    fun `highlighted row matches the given index`() = runComposeUiTest {
-        val fireIndex = Command.entries.indexOf(Command.Fire)
+    fun `highlighted row matches the given command`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                CommandList(hlIndex = fireIndex)
+                CommandList(commands = Command.entries, highlighted = Command.Fire)
             }
         }
-        onNodeWithTag("$COMMAND_LIST_ROW_TAG$fireIndex").assertIsSelected()
+        onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.Fire.name}").assertIsSelected()
+    }
+
+    @Test
+    fun `only the given commands are shown`() = runComposeUiTest {
+        val withoutPreparation = Command.entries - Command.Load - Command.AllReady
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                CommandList(commands = withoutPreparation, highlighted = Command.Fire)
+            }
+        }
+        onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.Load.name}").assertDoesNotExist()
+        onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.AllReady.name}").assertDoesNotExist()
+        onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.Mark.name}").assertExists()
     }
 }

@@ -9,6 +9,7 @@ import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.first
 import okio.Path.Companion.toPath
+import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 
 /**
  * Persists user-configurable timer settings across process restarts.
@@ -18,10 +19,13 @@ interface SettingsStore {
     suspend fun saveShootingDuration(value: Float)
     suspend fun loadThumbValues(): List<Float>?
     suspend fun saveThumbValues(values: List<Float>)
+    suspend fun loadTimerMode(): TimerMode?
+    suspend fun saveTimerMode(mode: TimerMode)
 }
 
 private val SHOOTING_DURATION = floatPreferencesKey("shooting_duration")
 private val THUMB_VALUES = stringPreferencesKey("thumb_values_csv")
+private val TIMER_MODE = stringPreferencesKey("timer_mode")
 
 class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : SettingsStore {
     override suspend fun loadShootingDuration(): Float? =
@@ -39,6 +43,15 @@ class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : Se
 
     override suspend fun saveThumbValues(values: List<Float>) {
         dataStore.edit { it[THUMB_VALUES] = values.joinToString(",") }
+    }
+
+    override suspend fun loadTimerMode(): TimerMode? =
+        dataStore.data.first()[TIMER_MODE]?.let { stored ->
+            TimerMode.entries.find { it.name == stored }
+        }
+
+    override suspend fun saveTimerMode(mode: TimerMode) {
+        dataStore.edit { it[TIMER_MODE] = mode.name }
     }
 }
 

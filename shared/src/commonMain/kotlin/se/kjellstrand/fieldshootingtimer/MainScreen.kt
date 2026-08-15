@@ -19,10 +19,11 @@ import se.kjellstrand.fieldshootingtimer.platform.rememberHaptics
 import se.kjellstrand.fieldshootingtimer.platform.rememberPlatformAudioPolicy
 import se.kjellstrand.fieldshootingtimer.platform.rememberSharer
 import se.kjellstrand.fieldshootingtimer.domain.Command
+import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
+import se.kjellstrand.fieldshootingtimer.ui.RadialMenu
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
-import se.kjellstrand.fieldshootingtimer.ui.ShareButton
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
@@ -62,8 +63,8 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
         context = Dispatchers.Main
     )
 
-    val range by timerViewModel.rangeFlow.collectAsState(
-        context = Dispatchers.Main
+    val timerMode by timerViewModel.timerModeFlow.collectAsState(
+        initial = TimerMode.Training, context = Dispatchers.Main
     )
 
     val audioPlayer = rememberAudioPlayer()
@@ -103,7 +104,7 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
     }
 
     val statelessSettingsComposable: @Composable () -> Unit = {
-        SettingsPanel(timerViewModel, range, segmentDurations)
+        SettingsPanel(timerViewModel, segmentDurations)
     }
 
     BoxWithConstraints {
@@ -128,9 +129,19 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
             )
         }
         // Top-right in portrait; top-left in landscape so it never overlaps the
-        // settings column that fills the right half in landscape.
-        ShareButton(
-            onClick = { sharer.share(SHARE_URL) },
+        // settings column that fills the right half in landscape. The menu
+        // fans its items toward the screen's interior from that corner.
+        RadialMenu(
+            timerMode = timerMode,
+            modeToggleEnabled = timerRunningState == TimerRunningState.NotStarted,
+            onToggleMode = {
+                timerViewModel.setTimerMode(
+                    if (timerMode == TimerMode.Competition) TimerMode.Training
+                    else TimerMode.Competition
+                )
+            },
+            onShare = { sharer.share(SHARE_URL) },
+            openTowardsStart = !isLandscape,
             modifier = Modifier
                 .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)
                 .systemBarsPadding()

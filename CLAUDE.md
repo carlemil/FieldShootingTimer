@@ -157,15 +157,18 @@ each with Android + iOS actuals (plus no-op jvm stubs for host tests).
 | `dynamicColorScheme(dark)` @Composable | `dynamic{Light,Dark}ColorScheme(ctx)` on Android 12+, else `null` | always `null` (falls back to static `Light/DarkColorScheme`) |
 | `Sharer` via `rememberSharer()` | `ACTION_SEND` `text/plain` chooser (`FLAG_ACTIVITY_NEW_TASK`) | `UIActivityViewController` presented from the topmost VC |
 
-The `ShareButton` (`ui/ShareButton.kt`) is overlaid by `MainScreen` in the
+The `RadialMenu` (`ui/RadialMenu.kt`) is overlaid by `MainScreen` in the
 `BoxWithConstraints` — top-end in portrait, top-start in landscape (so it
-clears the right-hand settings column) — and shares the GitHub Pages landing
-page (`SHARE_URL` in `MainScreen.kt`).
+clears the right-hand settings column), fanning its items toward the screen
+interior (`openTowardsStart`). Its items animate out on an arc with a
+slightly underdamped spring, composed beneath the menu button so they hide
+under it at rest. Items: share (the GitHub Pages landing page, `SHARE_URL`
+in `MainScreen.kt`) and the competition/training mode toggle.
 
 **Persistence (`commonMain/.../persistence/`):** `SettingsStore` interface +
 `DataStoreSettingsStore` (multiplatform `datastore-preferences-core` +
-`datastore-core-okio`). Persists `shootingDuration` and `thumbValues` across
-process restarts. Android stores under `context.filesDir/settings.preferences_pb`;
+`datastore-core-okio`). Persists `shootingDuration`, `thumbValues`, and
+`timerMode` across process restarts. Android stores under `context.filesDir/settings.preferences_pb`;
 iOS under `NSDocumentDirectory/settings.preferences_pb`.
 
 **Dial rendering (`ui/DecoratedDial.kt`, `Dial.kt`, `DialHand.kt`)** is pure
@@ -183,22 +186,37 @@ drawn for every integer second *except* on segment boundaries (avoids visual
 clash with dividers). The slider's value↔pixel mapping is the inverse pair
 in `ui/SliderGeometry.kt`.
 
-**The dial is touch-interactive** via `ui/DialGestureOverlay.kt` — a
-transparent gesture surface `ShootTimer` stacks over the dial. One finger on
-the ring near a user tick drags that tick (the ticks are also draggable on
-the `MultiThumbSlider`); two fingers on the Fire (green) segment pinch the
-shooting duration (also settable via `ShootTimeAdjuster`, whose 1..27 range
-— `SHOOT_TIME_MIN`/`MAX` — the pinch shares). The gesture is hand-rolled
-(`awaitEachGesture`) because the stock detectors eat touch slop before
-reporting a start position, and because a second finger must be able to
-convert a started tick drag into a pinch. The touch→value math (angle from
-center, the inverse of `tickAngle`, ring-band and wedge hit tests, arc-px
-grab tolerance) is pure functions in `ui/DialGeometry.kt`, covered by
-`DialDragGeometryTest`; end-to-end gestures are covered in
-`uiTest/.../DialTicksDragTest` and `DialPinchTest`. All gesture paths share
-the ViewModel contract: live updates during the gesture (`setThumbValues` /
+**The dial is the only place times and ticks are adjusted** (there are no
+sliders), via `ui/DialGestureOverlay.kt` — a transparent gesture surface
+`ShootTimer` stacks over the dial. One finger on the ring near a user tick
+drags that tick; two fingers on the Fire (green) segment pinch the shooting
+duration (range `SHOOT_TIME_MIN`/`MAX`, defined next to the overlay). The
+gesture is hand-rolled (`awaitEachGesture`) because the stock detectors eat
+touch slop before reporting a start position, and because a second finger
+must be able to convert a started tick drag into a pinch. The touch→value
+math (angle from center, the inverse of `tickAngle`, ring-band and wedge hit
+tests, arc-px grab tolerance) is pure functions in `ui/DialGeometry.kt`,
+covered by `DialDragGeometryTest`; end-to-end gestures are covered in
+`uiTest/.../DialTicksDragTest` and `DialPinchTest`. Ticks are added/removed
+with the `TicksAdjuster` +/- buttons in the dial's lower-left corner
+(hosted by `TimerWithPlayButton`). All gesture paths share the ViewModel
+contract: live updates during the gesture (`setThumbValues` /
 `setShootingTime`), `roundThumbValues` on tick-drag release, everything
 disabled unless the timer is `NotStarted`.
+
+**Competition vs training mode (`domain/TimerMode.kt`).** Training runs the
+sequence immediately and hides the `Load`/`AllReady` rows from the command
+list. Competition prefixes the run with a 60s preparation countdown,
+**modeled as `currentTime` running from -60 to 0** (constants in
+`domain/TimerPlan.kt`) — this reuses the whole timer loop untouched: every
+cue time is ≥ 0 so nothing fires until the countdown ends, and
+stop/resume/reset just work. Renderers clamp: the dial hand coerces to ≥ 0;
+`TimerWithPlayButton` shows `ceil(-currentTime)` as countdown digits below
+the play button while time is negative. The command-list highlight
+(`ui/CommandHighlight.kt`, `highlightedCommand(...)`) returns `Load` before
+the start and through most of the countdown, `AllReady` for the final 10s,
+then follows the running segment. Covered by `TimerViewModelCountdownTest`
+and `CommandHighlightTest`.
 
 **Portrait vs. landscape** are two sibling composables (`PortraitLayout`,
 `LandscapeLayout` in `commonMain/.../ui`) selected by
@@ -213,8 +231,9 @@ Live in `shared/src/commonMain/composeResources/`:
 - `values/strings.xml` — all UI strings (Swedish only), except `app_name`,
   which stays in `:app/src/main/res/values/strings.xml` because the Android
   launcher reads it from there.
-- `drawable/play_arrow.xml`, `stop.xml`, `skip_previous.xml`, `share.xml` —
-  the PlayButton/ShareButton icons (project-owned, not Material defaults).
+- `drawable/play_arrow.xml`, `stop.xml`, `skip_previous.xml`, `share.xml`,
+  `menu.xml`, `competition.xml`, `training.xml` — the PlayButton/RadialMenu
+  icons (project-owned, not Material defaults).
 
 Access via the generated `Res` object in package
 `se.kjellstrand.fieldshootingtimer.resources` (configured in

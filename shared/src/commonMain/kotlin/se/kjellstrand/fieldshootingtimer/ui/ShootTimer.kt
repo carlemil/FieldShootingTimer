@@ -66,7 +66,8 @@ fun ShootTimer(
             )
 
             DialHand(
-                currentTime = currentTime,
+                // Negative during a competition countdown; the hand waits at 0.
+                currentTime = currentTime.coerceAtLeast(0f),
                 totalTime = totalSeconds,
                 gapAngleDegrees = gapAngleDegrees,
                 size = timerSize,

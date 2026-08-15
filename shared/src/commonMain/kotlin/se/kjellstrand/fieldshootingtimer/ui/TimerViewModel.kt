@@ -21,6 +21,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.TimeSource
+import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_COUNTDOWN_SECONDS
+import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.domain.buildAudioCues
 import se.kjellstrand.fieldshootingtimer.domain.buildRange
 import se.kjellstrand.fieldshootingtimer.domain.buildSegmentDurations
@@ -33,7 +35,8 @@ data class TimerUiState(
     val shootingDuration: Float = 5f,
     val timerRunningState: TimerRunningState = TimerRunningState.NotStarted,
     val currentTime: Float = 0f,
-    val thumbValues: List<Float> = listOf()
+    val thumbValues: List<Float> = listOf(),
+    val timerMode: TimerMode = TimerMode.Training
 )
 
 enum class TimerRunningState {
@@ -65,6 +68,7 @@ class TimerViewModel(
     val currentTimeFlow = uiStateFlow.map { it.currentTime }.distinctUntilChanged()
     val timerRunningStateFlow = uiStateFlow.map { it.timerRunningState }.distinctUntilChanged()
     val thumbValuesFlow = _uiState.map { it.thumbValues }.distinctUntilChanged()
+    val timerModeFlow = _uiState.map { it.timerMode }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration) }
@@ -93,11 +97,13 @@ class TimerViewModel(
             scope.launch {
                 val savedShooting = store.loadShootingDuration()
                 val savedThumbs = store.loadThumbValues()
-                if (savedShooting != null || savedThumbs != null) {
+                val savedMode = store.loadTimerMode()
+                if (savedShooting != null || savedThumbs != null || savedMode != null) {
                     _uiState.update { current ->
                         current.copy(
                             shootingDuration = savedShooting ?: current.shootingDuration,
-                            thumbValues = savedThumbs ?: current.thumbValues
+                            thumbValues = savedThumbs ?: current.thumbValues,
+                            timerMode = savedMode ?: current.timerMode
                         )
                     }
                 }
@@ -129,6 +135,13 @@ class TimerViewModel(
         }
         persistShootingDuration(shootingDuration)
         persistThumbValues()
+    }
+
+    fun setTimerMode(mode: TimerMode) {
+        _uiState.update { it.copy(timerMode = mode) }
+        settingsStore?.let { store ->
+            scope.launch { store.saveTimerMode(mode) }
+        }
     }
 
     fun setTimerState(timerState: TimerRunningState) {
@@ -171,6 +184,17 @@ class TimerViewModel(
 
     fun start() {
         if (timerJob?.isActive == true) return
+        // Competition prefixes the sequence with a preparation countdown,
+        // modeled as currentTime rising from -COMPETITION_COUNTDOWN_SECONDS
+        // to 0 — every cue time is >= 0, so the normal loop machinery stays
+        // silent until the countdown ends. Seeded only on a fresh start;
+        // resuming from Stopped keeps the (possibly negative) stop time.
+        if (_uiState.value.timerMode == TimerMode.Competition &&
+            _uiState.value.timerRunningState == TimerRunningState.NotStarted &&
+            _uiState.value.currentTime == 0f
+        ) {
+            setCurrentTime(-COMPETITION_COUNTDOWN_SECONDS)
+        }
         setTimerState(TimerRunningState.Running)
         timerJob = scope.launch {
             // Snapshot directly from _uiState — stateIn-derived flows may not have

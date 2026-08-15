@@ -8,6 +8,12 @@ import kotlin.math.roundToInt
  * whole schedule is verifiable with plain unit tests on any target.
  */
 
+/** Competition-mode preparation countdown, run as currentTime -60..0. */
+internal const val COMPETITION_COUNTDOWN_SECONDS = 60f
+
+/** With this many countdown seconds remaining, "Alla klara!" takes the highlight. */
+internal const val COMPETITION_ALL_READY_REMAINING_SECONDS = 10f
+
 /** Second at which the Fire segment starts (end of the pre-fire commands). */
 internal fun fireStartSeconds(): Float =
     (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()

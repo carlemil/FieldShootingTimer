@@ -1,74 +1,47 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import kotlinx.coroutines.Dispatchers
-import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
-import kotlin.math.roundToInt
+import se.kjellstrand.fieldshootingtimer.domain.Command
+import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 
+/**
+ * The command list with the mode-appropriate rows and running highlight.
+ * Training hides the competition-only preparation commands; competition
+ * shows the full list.
+ */
 @Composable
 fun SettingsPanel(
     timerViewModel: TimerViewModel,
-    range: IntRange,
     segmentDurations: List<Float>
 ) {
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
-    val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
-        initial = 0f, context = Dispatchers.Main
-    )
     val timerRunningState by timerViewModel.timerRunningStateFlow.collectAsState(
         initial = TimerRunningState.NotStarted, context = Dispatchers.Main
     )
-    val highlightedIndex = calculateHighlightedIndex(currentTime, segmentDurations)
-
-    val setThumbValuesMinusOne: () -> Unit = {
-        timerViewModel.dropLastThumbValue()
-    }
-    val setThumbValuesPlusOne: () -> Unit = {
-        timerViewModel.addNewThumbValue(range)
-    }
-    val thumbValues by timerViewModel.thumbValuesFlow.collectAsState(
-        initial = listOf(), context = Dispatchers.Main
+    val timerMode by timerViewModel.timerModeFlow.collectAsState(
+        initial = TimerMode.Training, context = Dispatchers.Main
     )
-    val onHorizontalDragSetThumbValues: (List<Float>) -> Unit = { newThumbValues ->
-        timerViewModel.setThumbValues(newThumbValues)
+
+    val visibleCommands = when (timerMode) {
+        TimerMode.Competition -> Command.entries
+        TimerMode.Training -> Command.entries - Command.Load - Command.AllReady
     }
-    val onHorizontalDragRoundThumbValues: () -> Unit = {
-        timerViewModel.roundThumbValues()
-    }
-    val onShootTimeAdjusterValueChange: (List<Float>) -> Unit = { duration ->
-        val shootingTime = if (duration.isEmpty()) 0f else duration.first().roundToInt().toFloat()
-        timerViewModel.setShootingTime(shootingTime)
-    }
-    val enabled = timerRunningState == TimerRunningState.NotStarted
+    val highlighted = highlightedCommand(
+        mode = timerMode,
+        runningState = timerRunningState,
+        currentTime = currentTime,
+        segmentDurations = segmentDurations
+    )
 
     // Owns its column so callers don't have to provide a specific layout.
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Spacer(modifier = Modifier.padding(Paddings.Small))
-        ShootTimeAdjuster(
-            shootingDuration = shootingDuration,
-            enabled = enabled,
-            onValueChange = onShootTimeAdjusterValueChange
-        )
-        Spacer(modifier = Modifier.padding(Paddings.Small))
-        TicksAdjuster(
-            thumbValues = thumbValues,
-            range = range,
-            enabled = enabled,
-            setThumbValuesMinusOne = setThumbValuesMinusOne,
-            setThumbValuesPlusOne = setThumbValuesPlusOne,
-            onHorizontalDragSetThumbValues = onHorizontalDragSetThumbValues,
-            onHorizontalDragRoundThumbValues = onHorizontalDragRoundThumbValues
-        )
-        Spacer(modifier = Modifier.padding(Paddings.Small))
-        CommandList(highlightedIndex)
+        CommandList(commands = visibleCommands, highlighted = highlighted)
     }
 }

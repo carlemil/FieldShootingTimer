@@ -2,11 +2,13 @@ package se.kjellstrand.fieldshootingtimer.persistence
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 
 // In-memory store: host-side tests need determinism, not persistence.
 private class InMemorySettingsStore : SettingsStore {
     private var shootingDuration: Float? = null
     private var thumbValues: List<Float>? = null
+    private var timerMode: TimerMode? = null
 
     override suspend fun loadShootingDuration(): Float? = shootingDuration
 
@@ -18,6 +20,12 @@ private class InMemorySettingsStore : SettingsStore {
 
     override suspend fun saveThumbValues(values: List<Float>) {
         thumbValues = values
+    }
+
+    override suspend fun loadTimerMode(): TimerMode? = timerMode
+
+    override suspend fun saveTimerMode(mode: TimerMode) {
+        timerMode = mode
     }
 }
 

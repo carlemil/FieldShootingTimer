@@ -26,15 +26,17 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
-// Row tags are "$COMMAND_LIST_ROW_TAG$index" over Command.entries indices.
+// Row tags are "$COMMAND_LIST_ROW_TAG${command.name}" — stable even when the
+// displayed command list is mode-filtered.
 internal const val COMMAND_LIST_ROW_TAG = "CommandListRow"
 
 @Composable
 fun CommandList(
-    hlIndex: Int
+    commands: List<Command>,
+    highlighted: Command?
 ) {
-    val commands = Command.entries
     val listState = rememberLazyListState()
+    val hlIndex = commands.indexOf(highlighted)
 
     LaunchedEffect(hlIndex) {
         val centerPosition =
@@ -51,16 +53,18 @@ fun CommandList(
             .background(WhiteColor)
     ) {
         items(commands.size) { index ->
+            val command = commands[index]
+            val isHighlighted = command == highlighted
             Text(
-                text = stringResource(commands[index].stringRes),
+                text = stringResource(command.stringRes),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("$COMMAND_LIST_ROW_TAG$index")
-                    .semantics { selected = (index == hlIndex) }
-                    .background(if (index == hlIndex) PaleGreenColor else Color.Transparent)
+                    .testTag("$COMMAND_LIST_ROW_TAG${command.name}")
+                    .semantics { selected = isHighlighted }
+                    .background(if (isHighlighted) PaleGreenColor else Color.Transparent)
                     .padding(Paddings.Small),
-                color = if (index == hlIndex) BlackColor else GrayColor,
-                style = if (index == hlIndex) {
+                color = if (isHighlighted) BlackColor else GrayColor,
+                style = if (isHighlighted) {
                     MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 } else {
                     MaterialTheme.typography.bodyLarge

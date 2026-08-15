@@ -21,6 +21,11 @@ import kotlin.math.roundToInt
 // Invisible gesture surface covering the dial; tagged for UI tests.
 internal const val DIAL_GESTURE_TAG = "DialGestureSurface"
 
+// Allowed shooting (Fire) duration in seconds, adjusted by pinching the
+// Fire segment.
+internal const val SHOOT_TIME_MIN = 1
+internal const val SHOOT_TIME_MAX = 27
+
 /** How much arc a finger may miss a tick block by and still grab it. */
 private val TickTouchSlop = 24.dp
 
@@ -33,7 +38,7 @@ private const val PinchWedgeSlackSeconds = 2f
  * - **One finger** starting on the ring near a user tick grabs the nearest
  *   tick and follows the finger's angle around the dial. Values update live
  *   via [onDragSetTicks] and are rounded once via [onDragRoundTicks] on
- *   release — the same contract as [MultiThumbSlider]'s thumbs.
+ *   release.
  * - **Two fingers** starting on the Fire (green) segment pinch the shooting
  *   duration: the change in the fingers' angular span, in seconds at the
  *   scale when the pinch began, is added to the duration and reported

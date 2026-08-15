@@ -18,13 +18,9 @@ class TicksAdjusterTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
                 TicksAdjuster(
-                    thumbValues = listOf(12f),
-                    range = 11..17,
                     enabled = true,
                     setThumbValuesMinusOne = { minus++ },
-                    setThumbValuesPlusOne = { plus++ },
-                    onHorizontalDragSetThumbValues = {},
-                    onHorizontalDragRoundThumbValues = {}
+                    setThumbValuesPlusOne = { plus++ }
                 )
             }
         }
@@ -41,13 +37,9 @@ class TicksAdjusterTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
                 TicksAdjuster(
-                    thumbValues = listOf(12f),
-                    range = 11..17,
                     enabled = false,
                     setThumbValuesMinusOne = { minus++ },
-                    setThumbValuesPlusOne = { plus++ },
-                    onHorizontalDragSetThumbValues = {},
-                    onHorizontalDragRoundThumbValues = {}
+                    setThumbValuesPlusOne = { plus++ }
                 )
             }
         }
