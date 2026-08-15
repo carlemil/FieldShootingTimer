@@ -73,6 +73,7 @@ class TimerWithPlayButtonTest {
             }
         }
         onNodeWithTag(COUNTDOWN_TEXT_TAG, useUnmergedTree = true).assertTextEquals("43")
+        onNodeWithTag(STOP_ICON_TAG, useUnmergedTree = true).assertExists()
     }
 
     @Test

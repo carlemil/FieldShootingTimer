@@ -2,6 +2,7 @@ package se.kjellstrand.fieldshootingtimer.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -63,14 +64,25 @@ fun PlayButton(
             )
         ) {
             if (countdownSeconds != null) {
-                Text(
-                    text = countdownSeconds.toString(),
-                    style = MaterialTheme.typography.headlineLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = BlackColor,
-                    modifier = Modifier.testTag(COUNTDOWN_TEXT_TAG)
-                )
+                // Stop icon stays visible above the digits: the tap target
+                // reads as "stop" (it cancels the countdown).
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        painter = painterResource(Res.drawable.stop),
+                        contentDescription = "Stop",
+                        modifier = Modifier
+                            .size(buttonSize * 0.35f)
+                            .testTag(STOP_ICON_TAG)
+                    )
+                    Text(
+                        text = countdownSeconds.toString(),
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = BlackColor,
+                        modifier = Modifier.testTag(COUNTDOWN_TEXT_TAG)
+                    )
+                }
             } else when (timerRunningState) {
                 TimerRunningState.NotStarted -> {
                     Icon(
