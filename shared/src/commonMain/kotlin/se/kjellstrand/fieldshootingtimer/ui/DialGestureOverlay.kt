@@ -24,7 +24,7 @@ internal const val DIAL_GESTURE_TAG = "DialGestureSurface"
 // Allowed shooting (Fire) duration in seconds, adjusted by pinching the
 // Fire segment.
 internal const val SHOOT_TIME_MIN = 1
-internal const val SHOOT_TIME_MAX = 27
+internal const val SHOOT_TIME_MAX = 300
 
 /** How much arc a finger may miss a tick block by and still grab it. */
 private val TickTouchSlop = 24.dp

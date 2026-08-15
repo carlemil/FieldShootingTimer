@@ -51,6 +51,25 @@ class DialOverlayGeometryTest {
     }
 
     @Test
+    fun `tickStepSeconds keeps the tick count readable`() {
+        assertEquals(1, tickStepSeconds(24f))
+        assertEquals(1, tickStepSeconds(60f))
+        assertEquals(5, tickStepSeconds(120f))
+        assertEquals(10, tickStepSeconds(313f)) // 5-minute Fire + fixed segments
+        assertEquals(60, tickStepSeconds(10_000f))
+    }
+
+    @Test
+    fun `long dials tick at the adaptive step instead of every second`() {
+        // 5-minute Fire: 7 + 3 + 300 + 3 = 313s dial => step 10.
+        val segments = listOf(7f, 3f, 300f, 3f)
+        val ticks = perSecondTickSeconds(segments)
+        assertTrue(ticks.all { it.toInt() % 10 == 0 }, "expected only 10s multiples, got $ticks")
+        assertTrue(ticks.size <= 60, "tick count must stay readable, got ${ticks.size}")
+        assertTrue(20f in ticks)
+    }
+
+    @Test
     fun `polarToCartesian handles the cardinal directions`() {
         val center = Offset(100f, 100f)
         val right = polarToCartesian(center, 50f, 0f)

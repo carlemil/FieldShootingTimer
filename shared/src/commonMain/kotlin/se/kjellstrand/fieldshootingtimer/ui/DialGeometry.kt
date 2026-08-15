@@ -30,15 +30,25 @@ internal fun sweepAngles(segments: List<Float>, gapAngleDegrees: Float): List<Fl
 }
 
 /**
- * The whole seconds that get a small per-second tick: every integer second up
- * to the total, except those sitting on a segment boundary (a divider is
- * already drawn there). Boundary matching is epsilon-based so accumulated
- * float error — or fractional segment durations — can't leak boundary ticks.
+ * Seconds between small dial ticks: 1 while everything fits, else the
+ * smallest round step keeping the tick count readable (at most ~60 ticks —
+ * needed since the Fire segment can stretch the dial to minutes).
+ */
+internal fun tickStepSeconds(totalSeconds: Float): Int =
+    listOf(1, 5, 10, 15, 30, 60).firstOrNull { totalSeconds / it <= 60f } ?: 60
+
+/**
+ * The whole seconds that get a small dial tick: every [tickStepSeconds]
+ * multiple up to the total, except those sitting on a segment boundary (a
+ * divider is already drawn there). Boundary matching is epsilon-based so
+ * accumulated float error — or fractional segment durations — can't leak
+ * boundary ticks.
  */
 internal fun perSecondTickSeconds(segments: List<Float>, epsilon: Float = 1e-3f): List<Float> {
     val boundaries = segments.scan(0f) { acc, next -> acc + next }.drop(1)
-    return (1..segments.sum().toInt())
-        .map { it.toFloat() }
+    val step = tickStepSeconds(segments.sum())
+    return (1..segments.sum().toInt() / step)
+        .map { (it * step).toFloat() }
         .filter { second -> boundaries.none { abs(it - second) <= epsilon } }
 }
 
