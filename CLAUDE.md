@@ -135,7 +135,12 @@ seconds, and a `color`. The ordered `Command.entries` list with `duration >= 0`
 defines the timer's sequence: `TenSecondsLeft (7s) → Ready (3s) → Fire
 (configurable) → CeaseFire (3s) → UnloadWeapon (4s) → Visitation (2s)`.
 `Load`, `AllReady`, and `Mark` have `duration = -1` and a `null` audioPath —
-they're shown in the command list only. To add or reorder a command, edit
+they're shown in the command list only. The `onDial` flag marks which timed
+commands are drawn as dial segments (`Command.dialCommands`, the prefix
+through `CeaseFire`); `UnloadWeapon` and `Visitation` still run on the timer
+(audio cues, list highlight) but the dial ends at CeaseFire and the hand
+parks there — `ShootTimer` slices dial durations with
+`take(dialCommands.size)`. To add or reorder a command, edit
 this enum; everything else derives from it via the pure functions in
 `domain/TimerPlan.kt` (`buildSegmentDurations`, `buildAudioCues` — cue times
 are the cumulative segment boundaries — `buildRange`, crossing predicates),

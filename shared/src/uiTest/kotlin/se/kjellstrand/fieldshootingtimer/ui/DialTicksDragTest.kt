@@ -23,13 +23,13 @@ import kotlin.test.assertEquals
  * Compose state — deliberately no ViewModel flows, whose collection timing
  * differs per platform (the iOS test host processes them later than the
  * JVM one, which made ShootTimer-based versions of these tests flaky).
- * The dial matches the default plan: total 24s, Fire 10..15, range 11..17.
+ * The dial matches the default plan: dial total 18s (through CeaseFire), Fire 10..15, range 11..17.
  */
 @OptIn(ExperimentalTestApi::class)
 class DialTicksDragTest {
 
     private val gap = 30f
-    private val total = 24f
+    private val total = 18f
 
     // A point on the dial ring at the angle where [tickValue]'s marker sits.
     private fun TouchInjectionScope.ringPointAt(tickValue: Float): Offset {

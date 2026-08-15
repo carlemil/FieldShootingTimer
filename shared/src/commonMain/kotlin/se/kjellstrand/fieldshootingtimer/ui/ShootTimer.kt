@@ -38,14 +38,20 @@ fun ShootTimer(
     Box(
         contentAlignment = Alignment.Center
     ) {
-        val segmentColors = Command.timedCommands.map { it.color }
+        val segmentColors = Command.dialCommands.map { it.color }
         val gapAngleDegrees = 30f
         val borderWidth = 2.dp
         val ringThickness = 60.dp
 
-        val totalSeconds = segmentDurations.sum()
+        // The dial only draws the segments through CeaseFire; the timer keeps
+        // running past them (UnloadWeapon + Visitation audio cues and list
+        // highlight are unaffected) while the hand parks at the dial's end.
+        // dialCommands is a prefix of timedCommands, so a plain take() slices
+        // the matching durations.
+        val dialSegments = segmentDurations.take(Command.dialCommands.size)
+        val dialSeconds = dialSegments.sum()
 
-        require(totalSeconds > 0) {
+        require(dialSeconds > 0) {
             "Total time must be greater than 0."
         }
 
@@ -56,7 +62,7 @@ fun ShootTimer(
             DecoratedDial(
                 segmentColors = segmentColors,
                 gapAngleDegrees = gapAngleDegrees,
-                segments = segmentDurations,
+                segments = dialSegments,
                 ticks = thumbValues,
                 ringThickness = ringThickness,
                 borderColor = BlackColor,
@@ -66,9 +72,10 @@ fun ShootTimer(
             )
 
             DialHand(
-                // Negative during a competition countdown; the hand waits at 0.
-                currentTime = currentTime.coerceAtLeast(0f),
-                totalTime = totalSeconds,
+                // Negative during a competition countdown (hand waits at 0);
+                // past the dial's end during UnloadWeapon/Visitation (parks).
+                currentTime = currentTime.coerceIn(0f, dialSeconds),
+                totalTime = dialSeconds,
                 gapAngleDegrees = gapAngleDegrees,
                 size = timerSize,
                 borderWidth = borderWidth,
@@ -81,7 +88,7 @@ fun ShootTimer(
             DialGestureOverlay(
                 size = timerSize,
                 ticks = thumbValues,
-                ticksMax = totalSeconds.toInt(),
+                ticksMax = dialSeconds.toInt(),
                 range = range,
                 fireStart = fireStartSeconds(),
                 fireDuration = segmentDurations.getOrNull(Command.fireSegmentIndex) ?: 0f,

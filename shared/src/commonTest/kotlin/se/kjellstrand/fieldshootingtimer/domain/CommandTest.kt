@@ -55,6 +55,25 @@ class CommandTest {
     }
 
     @Test
+    fun `dialCommands is the timedCommands prefix through CeaseFire`() {
+        assertEquals(
+            listOf(
+                Command.TenSecondsLeft,
+                Command.Ready,
+                Command.Fire,
+                Command.CeaseFire
+            ),
+            Command.dialCommands
+        )
+        // ShootTimer slices dial durations with take(dialCommands.size), which
+        // is only correct while dialCommands is a prefix of timedCommands.
+        assertEquals(
+            Command.timedCommands.take(Command.dialCommands.size),
+            Command.dialCommands
+        )
+    }
+
+    @Test
     fun `Command enum has the full set of 9 entries`() {
         assertEquals(9, Command.entries.size)
     }

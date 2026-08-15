@@ -20,14 +20,14 @@ import kotlin.test.assertNull
 
 /**
  * Drives [DialGestureOverlay] directly (no ViewModel flows — see the note in
- * [DialTicksDragTest]). Dial matches the default plan: total 24s, Fire (green)
- * spans 10..15.
+ * [DialTicksDragTest]). Dial matches the default plan: dial total 18s (through
+ * CeaseFire), Fire (green) spans 10..15.
  */
 @OptIn(ExperimentalTestApi::class)
 class DialPinchTest {
 
     private val gap = 30f
-    private val total = 24f
+    private val total = 18f
 
     // A point on the dial ring at the angle where [tickValue]'s marker sits.
     private fun TouchInjectionScope.ringPointAt(tickValue: Float): Offset {

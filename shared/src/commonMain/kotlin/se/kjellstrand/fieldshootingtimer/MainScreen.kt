@@ -195,7 +195,8 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
             modifier = Modifier
                 .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)
                 .systemBarsPadding()
-                .padding(Paddings.Medium)
+                // Same side breathing room as the +/- buttons under the dial.
+                .padding(horizontal = Paddings.Large, vertical = Paddings.Medium)
         )
         tutorialStep?.let { stepIndex ->
             TutorialOverlay(
