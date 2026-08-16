@@ -40,7 +40,10 @@ data class TimerUiState(
     val timerMode: TimerMode = TimerMode.Training,
     // Defaults to true (no tutorial) so store-less ViewModels — tests, previews —
     // never flash it; a store with no saved value means first launch => false.
-    val tutorialSeen: Boolean = true
+    val tutorialSeen: Boolean = true,
+    // Competition only: the countdown has just hit 0 and the timer is parked
+    // there waiting for the "Var alla klara?" dialog to be answered.
+    val awaitingReadyConfirmation: Boolean = false
 )
 
 enum class TimerRunningState {
@@ -74,6 +77,8 @@ class TimerViewModel(
     val thumbValuesFlow = _uiState.map { it.thumbValues }.distinctUntilChanged()
     val timerModeFlow = _uiState.map { it.timerMode }.distinctUntilChanged()
     val tutorialSeenFlow = _uiState.map { it.tutorialSeen }.distinctUntilChanged()
+    val awaitingReadyConfirmationFlow =
+        _uiState.map { it.awaitingReadyConfirmation }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration) }
@@ -233,9 +238,23 @@ class TimerViewModel(
             emitPassedCues(initialTime, cues)
             emitPassedThumbs(initialTime, thumbs)
 
+            // A competition countdown does not roll straight into the timed
+            // sequence: at 0 the timer parks and asks "Var alla klara?".
+            // "Fortsätt" resumes from 0 (firing the 0-second cue then),
+            // "Fråga igen" re-runs the AllReady stretch.
+            val confirmAtZero =
+                _uiState.value.timerMode == TimerMode.Competition && initialTime < 0f
+
             while (isActive && _uiState.value.timerRunningState == TimerRunningState.Running) {
                 delay(tickMs)
                 val elapsed = (timeSourceMs() - startEpochMs) / 1000f
+                if (confirmAtZero && elapsed >= 0f) {
+                    runAnchorEpochMs = null
+                    setCurrentTime(0f)
+                    _uiState.update { it.copy(awaitingReadyConfirmation = true) }
+                    setTimerState(TimerRunningState.Stopped)
+                    break
+                }
                 if (elapsed >= total) {
                     runAnchorEpochMs = null
                     setCurrentTime(total)
@@ -271,8 +290,24 @@ class TimerViewModel(
         runAnchorEpochMs = null
         playedCueIndices.clear()
         crossedThumbs.clear()
+        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
         setCurrentTime(0f)
         setTimerState(TimerRunningState.NotStarted)
+    }
+
+    /** "Fortsätt" in the ready dialog: run the timed sequence from 0. */
+    fun confirmAllReady() {
+        if (!_uiState.value.awaitingReadyConfirmation) return
+        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
+        start()
+    }
+
+    /** "Fråga igen" in the ready dialog: re-run the AllReady stretch. */
+    fun repeatAllReady() {
+        if (!_uiState.value.awaitingReadyConfirmation) return
+        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
+        parkAt(-COMPETITION_ALL_READY_REMAINING_SECONDS, TimerRunningState.NotStarted)
+        start()
     }
 
     /**
@@ -325,6 +360,7 @@ class TimerViewModel(
         timerJob?.cancel()
         timerJob = null
         runAnchorEpochMs = null
+        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
         // Cues and thumbs strictly before the park point count as already
         // fired, so resuming plays the cue at the parked time and nothing
         // older.

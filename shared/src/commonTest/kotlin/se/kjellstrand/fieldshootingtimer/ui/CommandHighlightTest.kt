@@ -74,4 +74,15 @@ class CommandHighlightTest {
     fun `competition parked in the countdown highlights AllReady`() {
         assertEquals(Command.AllReady, competition(-10f, TimerRunningState.NotStarted))
     }
+
+    @Test
+    fun `awaiting ready confirmation keeps AllReady highlighted at zero`() {
+        assertEquals(
+            Command.AllReady,
+            highlightedCommand(
+                TimerMode.Competition, TimerRunningState.Stopped, 0f, segments,
+                awaitingReadyConfirmation = true
+            )
+        )
+    }
 }

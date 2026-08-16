@@ -68,7 +68,7 @@ class TimerViewModelCountdownTest {
     }
 
     @Test
-    fun `the first cue fires as the countdown crosses zero`() = runTest {
+    fun `the countdown ends in the ready question - the first cue fires on continue`() = runTest {
         val vm = competitionVm()
         val collected = mutableListOf<Command>()
         val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -78,6 +78,11 @@ class TimerViewModelCountdownTest {
 
         vm.start()
         advanceTimeBy(61_000)
+        runCurrent()
+        assertTrue(vm.uiStateFlow.value.awaitingReadyConfirmation)
+        assertEquals(emptyList(), collected)
+
+        vm.confirmAllReady()
         runCurrent()
         job.cancel()
 
@@ -109,7 +114,10 @@ class TimerViewModelCountdownTest {
     fun `stop after the countdown still pauses the sequence normally`() = runTest {
         val vm = competitionVm()
         vm.start()
-        advanceTimeBy(65_000) // 5s into the sequence
+        advanceTimeBy(61_000)
+        runCurrent()
+        vm.confirmAllReady() // answer the ready question, sequence runs from 0
+        advanceTimeBy(5_000) // 5s into the sequence
         runCurrent()
         vm.stop()
         runCurrent()
@@ -139,7 +147,10 @@ class TimerViewModelCountdownTest {
         val total = vm.segmentDurationsFlow.value.sum() // 21s
 
         vm.start()
-        advanceTimeBy(60_000 + (total * 1000).toLong() + 500)
+        advanceTimeBy(61_000)
+        runCurrent()
+        vm.confirmAllReady() // answer the ready question at 0
+        advanceTimeBy((total * 1000).toLong() + 500)
         runCurrent()
 
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)

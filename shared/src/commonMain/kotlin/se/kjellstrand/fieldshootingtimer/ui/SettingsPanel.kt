@@ -29,6 +29,9 @@ fun SettingsPanel(
     val timerMode by timerViewModel.timerModeFlow.collectAsState(
         initial = TimerMode.Training, context = Dispatchers.Main
     )
+    val awaitingReadyConfirmation by timerViewModel.awaitingReadyConfirmationFlow.collectAsState(
+        initial = false, context = Dispatchers.Main
+    )
 
     val visibleCommands = when (timerMode) {
         TimerMode.Competition -> Command.entries
@@ -38,7 +41,8 @@ fun SettingsPanel(
         mode = timerMode,
         runningState = timerRunningState,
         currentTime = currentTime,
-        segmentDurations = segmentDurations
+        segmentDurations = segmentDurations,
+        awaitingReadyConfirmation = awaitingReadyConfirmation
     )
 
     // Owns its column so callers don't have to provide a specific layout.

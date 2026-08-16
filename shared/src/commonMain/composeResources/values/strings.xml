@@ -19,6 +19,9 @@
     <string name="tutorial_step_add_tick">Tryck på + i menyn för att lägga till en partid (vibration). − tar bort den senaste.</string>
     <string name="tutorial_step_drag_tick">Dra partidens markör längs ringen för att flytta den dit du vill.</string>
     <string name="tutorial_step_mode">Växla mellan tävlings- och träningsläge i menyn. I tävlingsläge läggs kommandona LADDA! och ALLA KLARA! till innan de vanliga kommandona.</string>
+    <string name="ready_confirm_question">Var alla klara?</string>
+    <string name="ready_confirm_continue">Fortsätt</string>
+    <string name="ready_confirm_again">Fråga igen</string>
     <string name="tutorial_next">Nästa</string>
     <string name="tutorial_done">Klar</string>
     <string name="tutorial_skip">Hoppa över</string>

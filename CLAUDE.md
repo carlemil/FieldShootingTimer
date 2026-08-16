@@ -238,7 +238,15 @@ cue time is ≥ 0 so nothing fires until the countdown ends. `stop()` during
 the countdown (negative time) cancels it back to `NotStarted`; after 0 it
 pauses normally. Renderers clamp: the dial hand coerces to ≥ 0; while time
 is negative the play button shows `ceil(-currentTime)` as countdown digits
-beneath the stop icon (tap = cancel), keeping its normal green background. The command-list highlight
+beneath the stop icon (tap = cancel), keeping its normal green background.
+The countdown does NOT roll straight into the sequence: at 0 the loop parks
+(`Stopped`, `awaitingReadyConfirmation = true` in `TimerUiState`) without
+firing the 0-second cue, and `MainScreen` shows the modal "Var alla klara?"
+dialog (`ui/ReadyConfirmation.kt`). `confirmAllReady()` resumes from 0 (the
+TenSecondsLeft cue fires then); `repeatAllReady()` re-runs the AllReady
+stretch from -10, which ends in the same question. While waiting, the list
+highlight stays on `AllReady`. Covered by `TimerViewModelReadyConfirmTest`
+and `ReadyConfirmationTest`. The command-list highlight
 (`ui/CommandHighlight.kt`, `highlightedCommand(...)`) returns `Load` before
 the start and through most of the countdown, `AllReady` for the final 10s,
 then follows the running segment. Covered by `TimerViewModelCountdownTest`

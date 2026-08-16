@@ -34,6 +34,7 @@ import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
 import se.kjellstrand.fieldshootingtimer.ui.MENU_SCRIM_TAG
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.RadialMenu
+import se.kjellstrand.fieldshootingtimer.ui.ReadyConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
@@ -204,6 +205,16 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 .systemBarsPadding()
                 .padding(horizontal = Paddings.Large, vertical = Paddings.Medium)
         )
+        // Competition countdown reached 0: modal "Var alla klara?" question.
+        val awaitingReadyConfirmation by timerViewModel.awaitingReadyConfirmationFlow.collectAsState(
+            initial = false, context = Dispatchers.Main
+        )
+        if (awaitingReadyConfirmation) {
+            ReadyConfirmationOverlay(
+                onContinue = timerViewModel::confirmAllReady,
+                onAskAgain = timerViewModel::repeatAllReady
+            )
+        }
         tutorialStep?.let { stepIndex ->
             TutorialOverlay(
                 stepIndex = stepIndex,

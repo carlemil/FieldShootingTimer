@@ -19,8 +19,12 @@ internal fun highlightedCommand(
     mode: TimerMode,
     runningState: TimerRunningState,
     currentTime: Float,
-    segmentDurations: List<Float>
+    segmentDurations: List<Float>,
+    awaitingReadyConfirmation: Boolean = false
 ): Command {
+    // Parked at 0 behind the "Var alla klara?" dialog — conceptually still
+    // in the AllReady phase.
+    if (awaitingReadyConfirmation) return Command.AllReady
     if (mode == TimerMode.Competition) {
         // Only an untouched timer (still at 0) reads as "before the start" —
         // a timer parked mid-sequence by seekTo follows its parked time.
