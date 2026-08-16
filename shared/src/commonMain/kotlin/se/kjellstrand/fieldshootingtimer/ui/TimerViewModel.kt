@@ -97,6 +97,13 @@ class TimerViewModel(
     private val crossedThumbs = mutableSetOf<Float>()
     private var timerJob: Job? = null
 
+    // Epoch of the ongoing run: while Running, currentTime is always
+    // (timeSourceMs() - anchor) / 1000. Exposed via frameTimeSeconds() so the
+    // dial hand can be rendered frame-synced instead of at the tick cadence
+    // (a delay-loop tick lands out of phase with vsync and makes the hand
+    // judder). Null whenever no run is in progress.
+    private var runAnchorEpochMs: Long? = null
+
     init {
         settingsStore?.let { store ->
             scope.launch {
@@ -207,20 +214,20 @@ class TimerViewModel(
         ) {
             setCurrentTime(-COMPETITION_COUNTDOWN_SECONDS)
         }
+        // Anchor against wall clock so dropped frames or scheduler hiccups
+        // don't accumulate drift — currentTime is always (now - epoch).
+        val initialTime = _uiState.value.currentTime
+        val startEpochMs = timeSourceMs() - (initialTime * 1000f).toLong()
+        runAnchorEpochMs = startEpochMs
         setTimerState(TimerRunningState.Running)
         timerJob = scope.launch {
             // Snapshot directly from _uiState — stateIn-derived flows may not have
             // propagated the latest shootingDuration when start() is called from a test.
             val shootingDuration = _uiState.value.shootingDuration
-            val initialTime = _uiState.value.currentTime
             val segments = buildSegmentDurations(shootingDuration)
             val total = segments.sum()
             val cues = buildAudioCues(shootingDuration)
             val thumbs = _uiState.value.thumbValues
-
-            // Anchor against wall clock so dropped frames or scheduler hiccups
-            // don't accumulate drift — currentTime is always (now - epoch).
-            val startEpochMs = timeSourceMs() - (initialTime * 1000f).toLong()
 
             setCurrentTime(initialTime)
             emitPassedCues(initialTime, cues)
@@ -230,6 +237,7 @@ class TimerViewModel(
                 delay(tickMs)
                 val elapsed = (timeSourceMs() - startEpochMs) / 1000f
                 if (elapsed >= total) {
+                    runAnchorEpochMs = null
                     setCurrentTime(total)
                     emitPassedCues(total, cues)
                     emitPassedThumbs(total, thumbs)
@@ -253,17 +261,28 @@ class TimerViewModel(
         }
         timerJob?.cancel()
         timerJob = null
+        runAnchorEpochMs = null
         setTimerState(TimerRunningState.Stopped)
     }
 
     fun reset() {
         timerJob?.cancel()
         timerJob = null
+        runAnchorEpochMs = null
         playedCueIndices.clear()
         crossedThumbs.clear()
         setCurrentTime(0f)
         setTimerState(TimerRunningState.NotStarted)
     }
+
+    /**
+     * The ongoing run's elapsed seconds measured against the timer's own
+     * clock right now, or null when no run is in progress. Sampled by the
+     * dial once per display frame so the hand moves in lockstep with vsync
+     * instead of at the (phase-drifting) tick cadence of the timer loop.
+     */
+    fun frameTimeSeconds(): Float? =
+        runAnchorEpochMs?.let { (timeSourceMs() - it) / 1000f }
 
     /**
      * Parks the timer at the second [command]'s segment starts, pausing any
@@ -305,6 +324,7 @@ class TimerViewModel(
     private fun parkAt(seconds: Float, state: TimerRunningState) {
         timerJob?.cancel()
         timerJob = null
+        runAnchorEpochMs = null
         // Cues and thumbs strictly before the park point count as already
         // fired, so resuming plays the cue at the parked time and nothing
         // older.

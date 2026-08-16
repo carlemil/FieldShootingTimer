@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -159,6 +160,29 @@ class TimerViewModelTimingTest {
 
         assertEquals(0f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
+    }
+
+    @Test
+    fun `frameTimeSeconds tracks the running clock and clears when not running`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(5f)
+
+        assertNull(vm.frameTimeSeconds(), "no anchor before start")
+
+        vm.start()
+        advanceTimeBy(500)
+        runCurrent()
+        val t = vm.frameTimeSeconds()
+        assertTrue(t != null && t in 0.45f..0.55f, "expected ~0.5s from the frame clock, got $t")
+
+        vm.stop()
+        assertNull(vm.frameTimeSeconds(), "anchor must clear on stop")
+
+        vm.start() // resume
+        advanceTimeBy((24_000))
+        runCurrent()
+        assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
+        assertNull(vm.frameTimeSeconds(), "anchor must clear when the run finishes")
     }
 
     @Test

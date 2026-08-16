@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -71,10 +73,26 @@ fun ShootTimer(
                 badgeRadius = 15.dp
             )
 
+            // While running, sample the run's elapsed time once per display
+            // frame instead of drawing the timer loop's tick emissions — the
+            // 16ms delay-loop cadence drifts in and out of phase with vsync,
+            // which made the hand visibly judder. Paused/parked states follow
+            // the collected currentTime (seek, scrub, reset).
+            val running = timerRunningState == TimerRunningState.Running
+            val handTime by produceState(currentTime, running) {
+                if (running) {
+                    while (true) {
+                        withFrameMillis { }
+                        timerViewModel.frameTimeSeconds()?.let { value = it }
+                    }
+                }
+            }
+
             DialHand(
                 // Negative during a competition countdown (hand waits at 0);
                 // past the dial's end during UnloadWeapon/Visitation (parks).
-                currentTime = currentTime.coerceIn(0f, dialSeconds),
+                currentTime = (if (running) handTime else currentTime)
+                    .coerceIn(0f, dialSeconds),
                 totalTime = dialSeconds,
                 gapAngleDegrees = gapAngleDegrees,
                 size = timerSize,

@@ -127,6 +127,11 @@ Single-screen Compose app. One Activity, no navigation graph.
 frames don't accumulate drift. Emits to `cueEventsFlow` (audio cues) and
 `thumbCrossedFlow` (haptics) as the timer crosses each boundary. `MainScreen`
 collects both flows and routes them to the platform `AudioPlayer` / `Haptics`.
+The dial hand is NOT drawn from the tick emissions — the tick cadence drifts
+in and out of phase with vsync and makes the hand judder. While Running,
+`ShootTimer` samples `TimerViewModel.frameTimeSeconds()` (the run's clock
+against its anchor) once per display frame via `withFrameMillis`; paused and
+parked states draw the collected `currentTime`.
 
 **The `Command` enum (`domain/Command.kt`) is the heart of the domain model.**
 Each entry bundles `audioPath: String?` (e.g. `"files/eld.mp3"`),
