@@ -157,6 +157,47 @@ class TimerViewModelSeekTest {
     }
 
     @Test
+    fun `scrubTo pauses a running timer at the given time`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(5f)
+
+        vm.start()
+        advanceTimeBy(2_000)
+        runCurrent()
+
+        vm.scrubTo(12.4f)
+        runCurrent()
+
+        assertEquals(12.4f, vm.uiStateFlow.value.currentTime)
+        assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
+
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertEquals(12.4f, vm.uiStateFlow.value.currentTime, "timer must stay parked after scrubTo")
+    }
+
+    @Test
+    fun `resuming after scrubTo fires only cues past the scrub point`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(5f)
+
+        val collected = mutableListOf<Command>()
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.cueEventsFlow.collect { collected += it }
+        }
+        runCurrent()
+
+        vm.scrubTo(12f) // mid-Fire: 0, 7 and 10 are behind the scrub point
+        runCurrent()
+        vm.start()
+        advanceTimeBy(4_000) // 12 → 16, past CeaseFire (15)
+        runCurrent()
+        job.cancel()
+
+        assertEquals(listOf(Command.CeaseFire), collected)
+    }
+
+    @Test
     fun `seekTo Mark jumps to the finished end`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)

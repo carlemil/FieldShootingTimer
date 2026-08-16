@@ -92,12 +92,16 @@ fun ShootTimer(
                 range = range,
                 fireStart = fireStartSeconds(),
                 fireDuration = segmentDurations.getOrNull(Command.fireSegmentIndex) ?: 0f,
+                currentTime = currentTime,
                 gapAngleDegrees = gapAngleDegrees,
                 ringThickness = ringThickness,
-                enabled = timerRunningState == TimerRunningState.NotStarted,
+                editEnabled = timerRunningState == TimerRunningState.NotStarted,
+                // The hand is draggable whenever the timer isn't running.
+                scrubEnabled = timerRunningState != TimerRunningState.Running,
                 onDragSetTicks = timerViewModel::setThumbValues,
                 onDragRoundTicks = timerViewModel::roundThumbValues,
-                onPinchSetShootingDuration = timerViewModel::setShootingTime
+                onPinchSetShootingDuration = timerViewModel::setShootingTime,
+                onScrub = timerViewModel::scrubTo
             )
         }
     }

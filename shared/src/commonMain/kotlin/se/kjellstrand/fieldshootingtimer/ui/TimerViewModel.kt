@@ -279,26 +279,42 @@ class TimerViewModel(
             reset()
             return
         }
-        timerJob?.cancel()
-        timerJob = null
         val shootingDuration = _uiState.value.shootingDuration
-        val cues = buildAudioCues(shootingDuration)
         val seekTime = when (command) {
             Command.AllReady -> -COMPETITION_ALL_READY_REMAINING_SECONDS
             Command.Mark -> buildSegmentDurations(shootingDuration).sum()
-            else -> cues.first { it.second == command }.first
+            else -> buildAudioCues(shootingDuration).first { it.second == command }.first
         }
-        // Cues and thumbs strictly before the seek point count as already
-        // fired, so resuming plays the tapped command's cue and nothing older.
-        playedCueIndices.clear()
-        cues.indices.filterTo(playedCueIndices) { cues[it].first < seekTime }
-        crossedThumbs.clear()
-        _uiState.value.thumbValues.filterTo(crossedThumbs) { it < seekTime }
-        setCurrentTime(seekTime)
-        setTimerState(
+        parkAt(
+            seekTime,
             if (command == Command.Mark) TimerRunningState.Finished
             else TimerRunningState.NotStarted
         )
+    }
+
+    /**
+     * Parks the timer at an arbitrary [seconds] — the dial hand is draggable
+     * whenever the timer isn't running, and each drag position lands here.
+     * Same parked semantics as [seekTo]: NotStarted at the given time, so
+     * play resumes from the scrubbed position.
+     */
+    fun scrubTo(seconds: Float) {
+        parkAt(seconds, TimerRunningState.NotStarted)
+    }
+
+    private fun parkAt(seconds: Float, state: TimerRunningState) {
+        timerJob?.cancel()
+        timerJob = null
+        // Cues and thumbs strictly before the park point count as already
+        // fired, so resuming plays the cue at the parked time and nothing
+        // older.
+        val cues = buildAudioCues(_uiState.value.shootingDuration)
+        playedCueIndices.clear()
+        cues.indices.filterTo(playedCueIndices) { cues[it].first < seconds }
+        crossedThumbs.clear()
+        _uiState.value.thumbValues.filterTo(crossedThumbs) { it < seconds }
+        setCurrentTime(seconds)
+        setTimerState(state)
     }
 
     private fun emitPassedCues(time: Float, cues: List<Pair<Float, Command>>) {

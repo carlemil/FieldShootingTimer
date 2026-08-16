@@ -207,7 +207,12 @@ in `ui/SliderGeometry.kt`.
 sliders), via `ui/DialGestureOverlay.kt` — a transparent gesture surface
 `ShootTimer` stacks over the dial. One finger on the ring near a user tick
 drags that tick; two fingers on the Fire (green) segment pinch the shooting
-duration (range `SHOOT_TIME_MIN`/`MAX`, defined next to the overlay). The
+duration (range `SHOOT_TIME_MIN`/`MAX`, defined next to the overlay); one
+finger on the hand itself (whenever the timer isn't `Running` — ticks and
+pinch stay `NotStarted`-only) scrubs `currentTime` via
+`TimerViewModel.scrubTo` (the same parked-`NotStarted` semantics and
+cue/thumb re-marking as `seekTo`), snapping to a whole second on release
+(`DialHandScrubTest`). The
 gesture is hand-rolled (`awaitEachGesture`) because the stock detectors eat
 touch slop before reporting a start position, and because a second finger
 must be able to convert a started tick drag into a pinch. The touch→value
@@ -217,8 +222,7 @@ covered by `DialDragGeometryTest`; end-to-end gestures are covered in
 `uiTest/.../DialTicksDragTest` and `DialPinchTest`. Ticks are added/removed
 with the radial menu's + and − items. All gesture paths share the ViewModel
 contract: live updates during the gesture (`setThumbValues` /
-`setShootingTime`), `roundThumbValues` on tick-drag release, everything
-disabled unless the timer is `NotStarted`.
+`setShootingTime` / `scrubTo`), rounding once on release.
 
 **Competition vs training mode (`domain/TimerMode.kt`).** Training runs the
 sequence immediately and hides the `Load`/`AllReady` rows from the command

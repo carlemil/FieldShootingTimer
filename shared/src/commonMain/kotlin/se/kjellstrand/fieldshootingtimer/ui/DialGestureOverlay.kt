@@ -39,13 +39,17 @@ private const val PinchWedgeSlackSeconds = 2f
  *   tick and follows the finger's angle around the dial. Values update live
  *   via [onDragSetTicks] and are rounded once via [onDragRoundTicks] on
  *   release.
+ * - **One finger** landing on the dial hand itself (and not on a tick)
+ *   scrubs the timer: the hand follows the finger's angle, reporting each
+ *   position via [onScrub] and snapping to a whole second on release.
  * - **Two fingers** starting on the Fire (green) segment pinch the shooting
  *   duration: the change in the fingers' angular span, in seconds at the
  *   scale when the pinch began, is added to the duration and reported
  *   rounded via [onPinchSetShootingDuration]. A second finger landing during
  *   a tick drag converts the gesture into a pinch.
  *
- * All gestures are ignored unless [enabled].
+ * Tick drags and pinches are ignored unless [editEnabled] (timer untouched);
+ * the hand scrub is ignored unless [scrubEnabled] (timer not running).
  */
 @Composable
 internal fun DialGestureOverlay(
@@ -55,19 +59,24 @@ internal fun DialGestureOverlay(
     range: IntRange,
     fireStart: Float,
     fireDuration: Float,
+    currentTime: Float,
     gapAngleDegrees: Float,
     ringThickness: Dp,
-    enabled: Boolean,
+    editEnabled: Boolean,
+    scrubEnabled: Boolean,
     onDragSetTicks: (List<Float>) -> Unit,
     onDragRoundTicks: () -> Unit,
     onPinchSetShootingDuration: (Float) -> Unit,
+    onScrub: (Float) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val currentTicks by rememberUpdatedState(ticks)
     val currentTicksMax by rememberUpdatedState(ticksMax)
     val currentRange by rememberUpdatedState(range)
     val currentFireDuration by rememberUpdatedState(fireDuration)
-    val currentEnabled by rememberUpdatedState(enabled)
+    val currentEditEnabled by rememberUpdatedState(editEnabled)
+    val currentScrubEnabled by rememberUpdatedState(scrubEnabled)
+    val currentTimeState by rememberUpdatedState(currentTime)
 
     Box(
         modifier = modifier
@@ -85,7 +94,7 @@ internal fun DialGestureOverlay(
                 // take over a started tick drag.
                 awaitEachGesture {
                     val down = awaitFirstDown()
-                    if (!currentEnabled) return@awaitEachGesture
+                    if (!currentEditEnabled && !currentScrubEnabled) return@awaitEachGesture
 
                     val canvasSize = this.size.width.toFloat()
                     val center = Offset(canvasSize / 2f, this.size.height / 2f)
@@ -110,7 +119,7 @@ internal fun DialGestureOverlay(
                             )
                     }
 
-                    var tickIndex: Int? = run {
+                    var tickIndex: Int? = if (!currentEditEnabled) null else run {
                         val distance = (down.position - center).getDistance()
                         if (!isWithinRingBand(distance, canvasSize, ringThicknessPx)) return@run null
                         val tolerance = tickDragToleranceSeconds(
@@ -118,6 +127,20 @@ internal fun DialGestureOverlay(
                         )
                         nearestTickIndex(tickValueAt(down.position), currentTicks, tolerance)
                     }
+                    // A finger that grabbed no tick can grab the hand itself
+                    // and scrub the paused timer.
+                    val handGrabbed = tickIndex == null && currentScrubEnabled &&
+                        distanceToHandPx(
+                            center = center,
+                            position = down.position,
+                            handAngleDeg = DialGeometry.tickAngle(
+                                currentTimeState.coerceIn(0f, totalAtStart),
+                                totalAtStart,
+                                gapAngleDegrees
+                            ),
+                            handLengthPx = canvasSize / 2f
+                        ) <= touchSlopPx
+                    var lastScrub: Float? = null
                     var tickDragged = false
                     var pinchStartSpan: Float? = null
                     var lastSentDuration: Float? = null
@@ -130,7 +153,9 @@ internal fun DialGestureOverlay(
                         fun spanSeconds(changes: List<PointerInputChange>): Float =
                             abs(tickValueAt(changes[0].position) - tickValueAt(changes[1].position))
 
-                        if (pinchStartSpan == null && pressed.size >= 2) {
+                        if (pinchStartSpan == null && pressed.size >= 2 &&
+                            currentEditEnabled && !handGrabbed
+                        ) {
                             if (pressed.take(2).all { onRingNearFire(it.position) }) {
                                 pinchStartSpan = spanSeconds(pressed)
                                 tickIndex = null
@@ -151,6 +176,14 @@ internal fun DialGestureOverlay(
                                 onPinchSetShootingDuration(newDuration)
                             }
                             pressed.forEach { it.consume() }
+                        } else if (handGrabbed) {
+                            val change = pressed.firstOrNull { it.id == down.id } ?: break
+                            if (change.positionChanged()) {
+                                change.consume()
+                                val newTime = tickValueAt(change.position)
+                                lastScrub = newTime
+                                onScrub(newTime)
+                            }
                         } else {
                             val index = tickIndex ?: continue
                             val change = pressed.firstOrNull { it.id == down.id } ?: break
@@ -166,6 +199,8 @@ internal fun DialGestureOverlay(
                         }
                     }
                     if (tickDragged) onDragRoundTicks()
+                    // Snap the scrubbed hand to a whole second once released.
+                    lastScrub?.let { onScrub(it.roundToInt().toFloat()) }
                 }
             }
     )

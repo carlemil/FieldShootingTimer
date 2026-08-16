@@ -124,6 +124,29 @@ internal fun isWithinWedge(
 ): Boolean = tickValue >= wedgeStart - slackSeconds && tickValue <= wedgeEnd + slackSeconds
 
 /**
+ * Distance in px from [position] to the dial hand, modeled as the segment
+ * from [center] of length [handLengthPx] toward [handAngleDeg]. Positions
+ * past the hand's tip measure to the tip, so a finger can't grab the hand
+ * by pointing at its extension beyond the dial.
+ */
+internal fun distanceToHandPx(
+    center: Offset,
+    position: Offset,
+    handAngleDeg: Float,
+    handLengthPx: Float
+): Float {
+    val end = polarToCartesian(center, handLengthPx, handAngleDeg)
+    val segment = end - center
+    val toPosition = position - center
+    val segmentLengthSquared = segment.x * segment.x + segment.y * segment.y
+    if (segmentLengthSquared <= 0f) return toPosition.getDistance()
+    val t = ((toPosition.x * segment.x + toPosition.y * segment.y) / segmentLengthSquared)
+        .coerceIn(0f, 1f)
+    val projection = Offset(center.x + segment.x * t, center.y + segment.y * t)
+    return (position - projection).getDistance()
+}
+
+/**
  * Seconds of tick-value tolerance corresponding to [touchSlopPx] of arc length
  * at [arcRadiusPx] — so the grab distance feels the same regardless of how
  * many seconds the dial spans.

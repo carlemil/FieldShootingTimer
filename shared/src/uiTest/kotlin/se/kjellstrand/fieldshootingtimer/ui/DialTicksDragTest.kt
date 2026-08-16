@@ -63,12 +63,15 @@ class DialTicksDragTest {
                         range = 11..17,
                         fireStart = 10f,
                         fireDuration = 5f,
+                        currentTime = 0f,
                         gapAngleDegrees = gap,
                         ringThickness = 60.dp,
-                        enabled = enabled,
+                        editEnabled = enabled,
+                        scrubEnabled = enabled,
                         onDragSetTicks = state::set,
                         onDragRoundTicks = state::round,
-                        onPinchSetShootingDuration = {}
+                        onPinchSetShootingDuration = {},
+                        onScrub = {}
                     )
                 }
             }

@@ -55,12 +55,15 @@ class DialPinchTest {
                         range = 11..17,
                         fireStart = 10f,
                         fireDuration = 5f,
+                        currentTime = 0f,
                         gapAngleDegrees = gap,
                         ringThickness = 60.dp,
-                        enabled = enabled,
+                        editEnabled = enabled,
+                        scrubEnabled = enabled,
                         onDragSetTicks = { state.ticks = it },
                         onDragRoundTicks = { state.rounds++ },
-                        onPinchSetShootingDuration = { state.duration = it }
+                        onPinchSetShootingDuration = { state.duration = it },
+                        onScrub = {}
                     )
                 }
             }

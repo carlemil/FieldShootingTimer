@@ -35,6 +35,29 @@ class DialDragGeometryTest {
     }
 
     @Test
+    fun `distanceToHandPx is zero on the hand line`() {
+        val center = Offset(150f, 150f)
+        // Hand pointing straight right (0 degrees), length 100.
+        val onHand = Offset(200f, 150f)
+        assertEquals(0f, distanceToHandPx(center, onHand, 0f, 100f), 1e-3f)
+    }
+
+    @Test
+    fun `distanceToHandPx measures perpendicular offset from the hand`() {
+        val center = Offset(150f, 150f)
+        val above = Offset(200f, 130f) // 20px above a rightward hand
+        assertEquals(20f, distanceToHandPx(center, above, 0f, 100f), 1e-3f)
+    }
+
+    @Test
+    fun `distanceToHandPx measures to the tip past the hand's end`() {
+        val center = Offset(150f, 150f)
+        // 50px beyond the tip of a 100px rightward hand.
+        val beyond = Offset(300f, 150f)
+        assertEquals(50f, distanceToHandPx(center, beyond, 0f, 100f), 1e-3f)
+    }
+
+    @Test
     fun `angles in the bottom gap snap to the nearer end`() {
         // Gap 30 => dial spans 105..435 degrees; the gap straddles 90 degrees.
         val ticksMax = 24f
