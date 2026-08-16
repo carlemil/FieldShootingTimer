@@ -200,8 +200,9 @@ Paint usage). All geometry (sweep angles, per-second tick placement, polar
 conversion, ring radii) lives as pure functions in `ui/DialGeometry.kt`,
 covered by `DialGeometryTest`/`DialOverlayGeometryTest` — the composables are
 thin draw loops over precomputed values, so change the geometry functions,
-not the Canvas lambdas. `thumbValues` (user-placed "ticks" on the slider)
-render both as blocks on the ring and as numbered badges; their displayed
+not the Canvas lambdas. `thumbValues` (user-placed partids)
+render as small flags planted on the ring's outer edge (pole + pennant
+pointing clockwise, `TickFlags`) plus numbered interval badges; their displayed
 time is offset by `TenSecondsLeft.duration + Ready.duration` so users see
 time relative to the start of the Fire phase. Per-second small ticks are
 drawn for every integer second *except* on segment boundaries (avoids visual

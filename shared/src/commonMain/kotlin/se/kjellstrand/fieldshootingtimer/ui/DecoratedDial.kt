@@ -67,18 +67,18 @@ fun DecoratedDial(
             borderColor = borderColor
         )
 
-        // User-defined ticks showing when to flip/drop or change targets.
-        // Drawn as rectangles outside the ring.
-        // A trailing tick at UnloadWeapon start closes out the last interval.
-        TickMarks(
+        // User-placed partids, drawn as small flags planted on the ring's
+        // outer edge with the pennant pointing clockwise (forward in time).
+        // The interval ends (Fire start / dial end) need no markers of their
+        // own — the segment divider and the dial's edge already are ones.
+        TickFlags(
             size = size,
-            ticks = userTickDisplayPositions(ticks, fireStart, unloadStart),
+            ticks = ticks,
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
-            ringThickness = ringThickness / 1.7f,
-            borderWidth = borderWidth / 1.4f,
-            tickColor = BlackColor,
-            shape = TickShape.Block
+            ringThickness = ringThickness,
+            borderWidth = borderWidth,
+            borderColor = BlackColor
         )
 
         // One tick for each second, drawn as inward-pointing triangles inside the ring.
@@ -89,8 +89,7 @@ fun DecoratedDial(
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness / 1.7f,
             borderWidth = borderWidth / 1.4f,
-            tickColor = borderColor.copy(alpha = 0.6f),
-            shape = TickShape.Triangle
+            tickColor = borderColor.copy(alpha = 0.6f)
         )
 
         SegmentBadges(
@@ -172,12 +171,65 @@ fun unloadStartSeconds(fireDuration: Float): Float =
         fireDuration +
         Command.CeaseFire.duration
 
-fun userTickDisplayPositions(
+/**
+ * A partid marker: a pole planted on the ring's outer edge with a bordered
+ * pennant at the top pointing clockwise — forward in time. Sized off the
+ * ring thickness so it reaches about as far out as the interval badges.
+ */
+@Composable
+internal fun TickFlags(
+    size: Dp,
     ticks: List<Float>,
-    fireStart: Float,
-    unloadStart: Float
-): List<Float> =
-    if (ticks.isEmpty()) emptyList() else listOf(fireStart) + ticks + unloadStart
+    ticksMax: Int,
+    gapAngleDegrees: Float,
+    ringThickness: Dp,
+    borderWidth: Dp,
+    borderColor: Color
+) {
+    Canvas(modifier = Modifier.size(size)) {
+        val canvasSize = size.toPx()
+        val ringPx = ringThickness.toPx()
+        val borderWidthPx = borderWidth.toPx()
+        val center = Offset(canvasSize / 2, canvasSize / 2)
+
+        val poleBase = canvasSize / 2 - borderWidthPx * 2
+        val poleTop = canvasSize / 2 + ringPx * 0.38f
+        val flagBottom = poleTop - ringPx * 0.28f
+        // Pennant length as arc degrees at its radius, so flags look the same
+        // regardless of dial size.
+        val flagSweepDeg =
+            (ringPx * 0.4f / poleTop * 180.0 / PI).toFloat()
+
+        ticks.map { tick ->
+            DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
+        }.forEach { angle ->
+            drawLine(
+                color = borderColor,
+                start = polarToCartesian(center, poleBase, angle),
+                end = polarToCartesian(center, poleTop, angle),
+                strokeWidth = borderWidthPx * 2f,
+                cap = androidx.compose.ui.graphics.StrokeCap.Round
+            )
+            val pennant = Path().apply {
+                val top = polarToCartesian(center, poleTop, angle)
+                val bottom = polarToCartesian(center, flagBottom, angle)
+                val tip = polarToCartesian(
+                    center, (poleTop + flagBottom) / 2, angle + flagSweepDeg
+                )
+                moveTo(top.x, top.y)
+                lineTo(tip.x, tip.y)
+                lineTo(bottom.x, bottom.y)
+                close()
+            }
+            drawPath(pennant, color = Color.White)
+            drawPath(
+                pennant,
+                color = borderColor,
+                style = Stroke(width = borderWidthPx, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+            )
+        }
+    }
+}
 
 @Composable
 internal fun SegmentBadges(
@@ -250,12 +302,9 @@ internal fun Dividers(
     }
 }
 
-internal enum class TickShape { Triangle, Block }
-
 /**
- * Small tick marks around the ring. [TickShape.Triangle] points inward from
- * the ring's edge (per-second ticks); [TickShape.Block] sits as a rectangle
- * outside the ring (user-placed ticks).
+ * Per-second tick marks: small triangles pointing inward from the ring's
+ * outer edge.
  */
 @Composable
 internal fun TickMarks(
@@ -265,8 +314,7 @@ internal fun TickMarks(
     gapAngleDegrees: Float,
     ringThickness: Dp,
     borderWidth: Dp,
-    tickColor: Color,
-    shape: TickShape
+    tickColor: Color
 ) {
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
@@ -275,45 +323,20 @@ internal fun TickMarks(
         val halfWidthDeg = (halfWidthRad * 180.0 / PI).toFloat()
         val center = Offset(canvasSize / 2, canvasSize / 2)
 
-        val innerRadius: Float
-        val outerRadius: Float
-        when (shape) {
-            TickShape.Triangle -> {
-                innerRadius = (canvasSize / 2) - ringThicknessPx / 2
-                outerRadius = canvasSize / 2
-            }
-
-            TickShape.Block -> {
-                innerRadius = canvasSize / 2
-                outerRadius = innerRadius + ringThicknessPx / 2
-            }
-        }
+        val innerRadius = (canvasSize / 2) - ringThicknessPx / 2
+        val outerRadius = canvasSize / 2
 
         ticks.map { tick ->
             DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)
         }.forEach { angle ->
-            val path = when (shape) {
-                TickShape.Triangle -> Path().apply {
-                    val tip = polarToCartesian(center, innerRadius, angle)
-                    val leftBase = polarToCartesian(center, outerRadius, angle + halfWidthDeg)
-                    val rightBase = polarToCartesian(center, outerRadius, angle - halfWidthDeg)
-                    moveTo(tip.x, tip.y)
-                    lineTo(leftBase.x, leftBase.y)
-                    lineTo(rightBase.x, rightBase.y)
-                    close()
-                }
-
-                TickShape.Block -> Path().apply {
-                    val innerLeft = polarToCartesian(center, innerRadius, angle + halfWidthDeg)
-                    val outerLeft = polarToCartesian(center, outerRadius, angle + halfWidthDeg)
-                    val outerRight = polarToCartesian(center, outerRadius, angle - halfWidthDeg)
-                    val innerRight = polarToCartesian(center, innerRadius, angle - halfWidthDeg)
-                    moveTo(innerLeft.x, innerLeft.y)
-                    lineTo(outerLeft.x, outerLeft.y)
-                    lineTo(outerRight.x, outerRight.y)
-                    lineTo(innerRight.x, innerRight.y)
-                    close()
-                }
+            val path = Path().apply {
+                val tip = polarToCartesian(center, innerRadius, angle)
+                val leftBase = polarToCartesian(center, outerRadius, angle + halfWidthDeg)
+                val rightBase = polarToCartesian(center, outerRadius, angle - halfWidthDeg)
+                moveTo(tip.x, tip.y)
+                lineTo(leftBase.x, leftBase.y)
+                lineTo(rightBase.x, rightBase.y)
+                close()
             }
             drawPath(path = path, color = tickColor)
         }
