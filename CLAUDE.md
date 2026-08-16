@@ -237,8 +237,8 @@ list. Competition prefixes the run with a 60s preparation countdown,
 cue time is ≥ 0 so nothing fires until the countdown ends. `stop()` during
 the countdown (negative time) cancels it back to `NotStarted`; after 0 it
 pauses normally. Renderers clamp: the dial hand coerces to ≥ 0; while time
-is negative the play button turns white and shows `ceil(-currentTime)` as
-countdown digits instead of the stop icon (tap = cancel). The command-list highlight
+is negative the play button shows `ceil(-currentTime)` as countdown digits
+beneath the stop icon (tap = cancel), keeping its normal green background. The command-list highlight
 (`ui/CommandHighlight.kt`, `highlightedCommand(...)`) returns `Load` before
 the start and through most of the countdown, `AllReady` for the final 10s,
 then follows the running segment. Covered by `TimerViewModelCountdownTest`
