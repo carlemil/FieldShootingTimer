@@ -23,11 +23,13 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.add_tick
 import se.kjellstrand.fieldshootingtimer.resources.competition
 import se.kjellstrand.fieldshootingtimer.resources.help
 import se.kjellstrand.fieldshootingtimer.resources.menu
 import se.kjellstrand.fieldshootingtimer.resources.mode_competition
 import se.kjellstrand.fieldshootingtimer.resources.mode_training
+import se.kjellstrand.fieldshootingtimer.resources.remove_tick
 import se.kjellstrand.fieldshootingtimer.resources.share
 import se.kjellstrand.fieldshootingtimer.resources.share_app
 import se.kjellstrand.fieldshootingtimer.resources.training
@@ -36,6 +38,8 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 import kotlin.math.roundToInt
 
 internal const val MENU_BUTTON_TAG = "RadialMenuButton"
+internal const val MENU_ITEM_ADD_TICK_TAG = "RadialMenuItemAddTick"
+internal const val MENU_ITEM_REMOVE_TICK_TAG = "RadialMenuItemRemoveTick"
 internal const val MENU_ITEM_SHARE_TAG = "RadialMenuItemShare"
 internal const val MENU_ITEM_MODE_TAG = "RadialMenuItemMode"
 internal const val MENU_ITEM_TUTORIAL_TAG = "RadialMenuItemTutorial"
@@ -43,10 +47,10 @@ internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
 /**
  * Distance from the menu button's center to each fanned-out item's center.
- * With three items 35° apart, adjacent centers sit ~2·r·sin(17.5°) apart —
- * keep that comfortably above the 48dp button size.
+ * With five items 20° apart, adjacent centers sit ~2·r·sin(10°) ≈ 52dp
+ * apart — keep that comfortably above the 48dp button size.
  */
-private val MenuItemRadius = 120.dp
+private val MenuItemRadius = 150.dp
 
 /**
  * A circular menu button whose items fan out on an arc when opened. The items
@@ -54,8 +58,10 @@ private val MenuItemRadius = 120.dp
  * underdamped spring floats them out to their arc positions with a small
  * elastic overshoot, and pulls them back in on close.
  *
- * Items: share, and a competition/training mode toggle whose icon shows the
- * active mode ([modeToggleEnabled] gates it to when the timer is idle).
+ * Items: add/remove tick (+/−, gated by [tickAdjustEnabled]; the menu stays
+ * open so several ticks can be added in a row), a competition/training mode
+ * toggle whose icon shows the active mode ([modeToggleEnabled] gates it to
+ * when the timer is idle), share, and help (reopens the tutorial).
  * [openTowardsStart] picks the arc direction so the items fan toward the
  * screen's interior from either top corner.
  *
@@ -69,6 +75,9 @@ fun RadialMenu(
     timerMode: TimerMode,
     modeToggleEnabled: Boolean,
     onToggleMode: () -> Unit,
+    tickAdjustEnabled: Boolean,
+    onAddTick: () -> Unit,
+    onRemoveTick: () -> Unit,
     onShare: () -> Unit,
     onShowTutorial: () -> Unit,
     openTowardsStart: Boolean,
@@ -86,9 +95,9 @@ fun RadialMenu(
     // Degrees: 0 = right, 90 = straight down. Fan into the screen from the
     // anchoring corner.
     val itemAngles = if (openTowardsStart) {
-        listOf(100f, 135f, 170f)
+        listOf(90f, 110f, 130f, 150f, 170f)
     } else {
-        listOf(80f, 45f, 10f)
+        listOf(90f, 70f, 50f, 30f, 10f)
     }
 
     Box(modifier = modifier) {
@@ -99,16 +108,22 @@ fun RadialMenu(
                 angleDeg = itemAngles[0],
                 progress = progress,
                 radiusPx = radiusPx,
-                icon = Res.drawable.share,
-                contentDescription = stringResource(Res.string.share_app),
-                tag = MENU_ITEM_SHARE_TAG,
-                onClick = {
-                    onOpenChange(false)
-                    onShare()
-                }
+                icon = Res.drawable.add_tick,
+                contentDescription = stringResource(Res.string.add_tick),
+                tag = MENU_ITEM_ADD_TICK_TAG,
+                onClick = { if (tickAdjustEnabled) onAddTick() }
             )
             RadialMenuItem(
                 angleDeg = itemAngles[1],
+                progress = progress,
+                radiusPx = radiusPx,
+                icon = Res.drawable.remove_tick,
+                contentDescription = stringResource(Res.string.remove_tick),
+                tag = MENU_ITEM_REMOVE_TICK_TAG,
+                onClick = { if (tickAdjustEnabled) onRemoveTick() }
+            )
+            RadialMenuItem(
+                angleDeg = itemAngles[2],
                 progress = progress,
                 radiusPx = radiusPx,
                 icon = if (timerMode == TimerMode.Competition) {
@@ -127,7 +142,19 @@ fun RadialMenu(
                 onClick = { if (modeToggleEnabled) onToggleMode() }
             )
             RadialMenuItem(
-                angleDeg = itemAngles[2],
+                angleDeg = itemAngles[3],
+                progress = progress,
+                radiusPx = radiusPx,
+                icon = Res.drawable.share,
+                contentDescription = stringResource(Res.string.share_app),
+                tag = MENU_ITEM_SHARE_TAG,
+                onClick = {
+                    onOpenChange(false)
+                    onShare()
+                }
+            )
+            RadialMenuItem(
+                angleDeg = itemAngles[4],
                 progress = progress,
                 radiusPx = radiusPx,
                 icon = Res.drawable.help,

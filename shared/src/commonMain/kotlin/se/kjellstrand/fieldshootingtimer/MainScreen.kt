@@ -80,6 +80,10 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
         initial = TimerMode.Training, context = Dispatchers.Main
     )
 
+    val range by timerViewModel.rangeFlow.collectAsState(
+        context = Dispatchers.Main
+    )
+
     val audioPlayer = rememberAudioPlayer()
     val haptics = rememberHaptics()
     val audioPolicy = rememberPlatformAudioPolicy()
@@ -189,13 +193,15 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                     else TimerMode.Competition
                 )
             },
+            tickAdjustEnabled = timerRunningState == TimerRunningState.NotStarted,
+            onAddTick = { timerViewModel.addNewThumbValue(range) },
+            onRemoveTick = timerViewModel::dropLastThumbValue,
             onShare = { sharer.share(SHARE_URL) },
             onShowTutorial = { tutorialStep = 0 },
             openTowardsStart = !isLandscape,
             modifier = Modifier
                 .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)
                 .systemBarsPadding()
-                // Same side breathing room as the +/- buttons under the dial.
                 .padding(horizontal = Paddings.Large, vertical = Paddings.Medium)
         )
         tutorialStep?.let { stepIndex ->

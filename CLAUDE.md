@@ -50,7 +50,7 @@ flavor-less `installDebug`, `testDebugUnitTest`, or `connectedDebugAndroidTest`.
 - **`uiTest` source set** — Compose UI tests via `runComposeUiTest`, shared
   between `jvmTest` (headless skiko, runs on Windows/Linux) and `iosTest`.
   Select nodes by the `testTag` constants defined next to each composable
-  (`PLAY_BUTTON_TAG`, `TICKS_PLUS_TAG`, `SLIDER_THUMB_TAG`…), not by text or
+  (`PLAY_BUTTON_TAG`, `MENU_ITEM_ADD_TICK_TAG`, `SLIDER_THUMB_TAG`…), not by text or
   contentDescription. Keep this source set free of JVM-only APIs — it also
   compiles for iOS.
 - **`jvmTest`** — jvm-only extras, e.g. `MainScreenSmokeTest`, which forces
@@ -167,13 +167,17 @@ The `RadialMenu` (`ui/RadialMenu.kt`) is overlaid by `MainScreen` in the
 clears the right-hand settings column), fanning its items toward the screen
 interior (`openTowardsStart`). Its items animate out on an arc with a
 slightly underdamped spring, composed beneath the menu button so they hide
-under it at rest. Items: share (the GitHub Pages landing page, `SHARE_URL`
-in `MainScreen.kt`) and the competition/training mode toggle. The open
-state is hoisted to `MainScreen`, which puts a 50% black scrim between the
-app and the open menu — it swallows all presses and closes the menu on tap.
+under it at rest. Items: add/remove tick (+/−, wired to
+`addNewThumbValue`/`dropLastThumbValue`; the menu stays open so several
+ticks can be added in a row), the competition/training mode toggle, share
+(the GitHub Pages landing page, `SHARE_URL` in `MainScreen.kt`), and help
+(reopens the tutorial). The tick and mode items are gated to a `NotStarted`
+timer. The open state is hoisted to `MainScreen`, which puts a 50% black
+scrim between the app and the open menu — it swallows all presses and
+closes the menu on tap.
 
 **Tutorial (`ui/Tutorial.kt`).** Four modal cards (`tutorialSteps`) teaching
-pinch, +/-, tick drag, and the mode toggle. `MainScreen` shows it when the
+pinch, the menu's +/−, tick drag, and the mode toggle. `MainScreen` shows it when the
 persisted `tutorialSeen` setting is unset (first launch — store-less
 ViewModels default to seen so tests never flash it) and on demand via the
 menu's help item; finishing or skipping calls `markTutorialSeen()`.
@@ -211,8 +215,7 @@ math (angle from center, the inverse of `tickAngle`, ring-band and wedge hit
 tests, arc-px grab tolerance) is pure functions in `ui/DialGeometry.kt`,
 covered by `DialDragGeometryTest`; end-to-end gestures are covered in
 `uiTest/.../DialTicksDragTest` and `DialPinchTest`. Ticks are added/removed
-with the `TickAdjustButton`s: + at the dial's lower-left, - at its lower-right
-(hosted by `TimerWithPlayButton`). All gesture paths share the ViewModel
+with the radial menu's + and − items. All gesture paths share the ViewModel
 contract: live updates during the gesture (`setThumbValues` /
 `setShootingTime`), `roundThumbValues` on tick-drag release, everything
 disabled unless the timer is `NotStarted`.

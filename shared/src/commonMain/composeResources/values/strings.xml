@@ -13,8 +13,10 @@
     <string name="mode_competition">Tävlingsläge</string>
     <string name="mode_training">Träningsläge</string>
     <string name="help">Hjälp</string>
+    <string name="add_tick">Lägg till mellansignal</string>
+    <string name="remove_tick">Ta bort mellansignal</string>
     <string name="tutorial_step_pinch">Nyp med två fingrar på det gröna fältet för att ändra skjuttiden.</string>
-    <string name="tutorial_step_add_tick">Tryck på + under urtavlan för att lägga till en mellansignal (vibration). − tar bort den senaste.</string>
+    <string name="tutorial_step_add_tick">Tryck på + i menyn för att lägga till en mellansignal (vibration). − tar bort den senaste.</string>
     <string name="tutorial_step_drag_tick">Dra signalens markör längs ringen för att flytta den dit du vill.</string>
     <string name="tutorial_step_mode">Växla mellan tävlings- och träningsläge i menyn. I tävlingsläge räknas 60 sekunder ner innan kommandona startar.</string>
     <string name="tutorial_next">Nästa</string>

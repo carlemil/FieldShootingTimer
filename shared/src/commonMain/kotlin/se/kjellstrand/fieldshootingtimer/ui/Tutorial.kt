@@ -31,6 +31,7 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.add_tick
 import se.kjellstrand.fieldshootingtimer.resources.competition
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_done
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_next
@@ -57,7 +58,7 @@ internal data class TutorialStep(
 /** The gestures worth teaching, in the order a new user meets them. */
 internal val tutorialSteps = listOf(
     TutorialStep(Res.string.tutorial_step_pinch),
-    TutorialStep(Res.string.tutorial_step_add_tick),
+    TutorialStep(Res.string.tutorial_step_add_tick, Res.drawable.add_tick),
     TutorialStep(Res.string.tutorial_step_drag_tick),
     TutorialStep(Res.string.tutorial_step_mode, Res.drawable.competition)
 )
