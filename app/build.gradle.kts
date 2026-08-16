@@ -15,8 +15,8 @@ kotlin {
     }
 }
 
-val appVersionCode = 11
-val appVersionName = "1.9.0"
+val appVersionCode = 12
+val appVersionName = "1.9.1"
 
 val keystorePropertiesFile = rootProject.file("keystore.properties")
 val keystoreProperties = Properties()

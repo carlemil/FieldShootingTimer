@@ -1,7 +1,2 @@
-• Allt ställs nu in direkt på urtavlan: nyp i det gröna fältet för skjuttiden, dra partider längs ringen
-• Ny meny med + och − för partider, delning och hjälp
-• Tävlingsläge med 60 sekunders förberedelsetid
-• Tryck på ett kommando i listan eller dra i visaren för att hoppa till ett moment
-• Skjuttid upp till 5 minuter
-• Inbyggd guide vid första start
-• Ny appikon
+• Visaren rör sig nu helt mjukt, utan små hopp och ryck
+• Rättad beskrivning av tävlingsläget i guiden
