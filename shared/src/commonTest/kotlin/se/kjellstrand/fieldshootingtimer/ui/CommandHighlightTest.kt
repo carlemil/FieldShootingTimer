@@ -66,7 +66,7 @@ class CommandHighlightTest {
     }
 
     @Test
-    fun `competition parked mid-sequence follows the parked time, not Load`() {
+    fun `competition parked mid-sequence follows the parked time instead of Load`() {
         assertEquals(Command.Fire, competition(10f, TimerRunningState.NotStarted))
     }
 
