@@ -64,4 +64,14 @@ class CommandHighlightTest {
     fun `training never highlights the preparation commands`() {
         assertEquals(Command.TenSecondsLeft, training(0f, TimerRunningState.NotStarted))
     }
+
+    @Test
+    fun `competition parked mid-sequence follows the parked time, not Load`() {
+        assertEquals(Command.Fire, competition(10f, TimerRunningState.NotStarted))
+    }
+
+    @Test
+    fun `competition parked in the countdown highlights AllReady`() {
+        assertEquals(Command.AllReady, competition(-10f, TimerRunningState.NotStarted))
+    }
 }

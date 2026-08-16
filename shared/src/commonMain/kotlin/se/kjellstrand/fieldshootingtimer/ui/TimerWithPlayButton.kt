@@ -52,7 +52,10 @@ internal fun TimerWithPlayButton(
             onClickPlayButton = onClickPlayButton,
             timerRunningState = timerRunningState,
             timerSize = timerSize,
+            // Digits only while actually counting down — a timer parked at a
+            // negative time by seekTo shows the plain play icon instead.
             countdownSeconds = countdownSecondsOrNull(currentTime)
+                ?.takeIf { timerRunningState == TimerRunningState.Running }
         )
         val adjustEnabled = timerRunningState == TimerRunningState.NotStarted
         // One button per side, hanging slightly below the dial's lower edge.

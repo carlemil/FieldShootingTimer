@@ -12,7 +12,8 @@ import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 /**
  * The command list with the mode-appropriate rows and running highlight.
  * Training hides the competition-only preparation commands; competition
- * shows the full list.
+ * shows the full list. Tapping a row seeks the timer to that command's
+ * start, pausing any ongoing run ([TimerViewModel.seekTo]).
  */
 @Composable
 fun SettingsPanel(
@@ -42,6 +43,10 @@ fun SettingsPanel(
 
     // Owns its column so callers don't have to provide a specific layout.
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CommandList(commands = visibleCommands, highlighted = highlighted)
+        CommandList(
+            commands = visibleCommands,
+            highlighted = highlighted,
+            onCommandClick = timerViewModel::seekTo
+        )
     }
 }

@@ -232,6 +232,22 @@ the start and through most of the countdown, `AllReady` for the final 10s,
 then follows the running segment. Covered by `TimerViewModelCountdownTest`
 and `CommandHighlightTest`.
 
+**Tap-to-seek on the command list.** Tapping any row (`CommandList`'s
+`onCommandClick` → `TimerViewModel.seekTo`) pauses an ongoing run and parks
+the timer at the second that command's segment starts. The parked state is
+`NotStarted` with a non-zero `currentTime` — the dial stays editable and the
+play button reads "play" — and `start()` anchors on `currentTime`, so play
+resumes from the parked spot, firing the tapped command's own cue but none
+of the earlier ones (`playedCueIndices`/`crossedThumbs` are pre-marked for
+everything strictly before the seek time). The untimed rows map to their
+natural spots: `Load` → `reset()`, `AllReady` → -10s of the countdown,
+`Mark` → the finished end (`Finished`). Because a parked timer can now sit
+at a non-zero time, `highlightedCommand` treats competition + `NotStarted`
+as "before the start" only when `currentTime == 0`, and the play button
+shows countdown digits only while actually `Running`. Covered by
+`TimerViewModelSeekTest`, `CommandHighlightTest`, and the row-click tests in
+`CommandListTest`/`SettingsPanelTest`.
+
 **Portrait vs. landscape** are two sibling composables (`PortraitLayout`,
 `LandscapeLayout` in `commonMain/.../ui`) selected by
 `BoxWithConstraints { maxWidth > maxHeight }` in `MainScreen.kt`. They share

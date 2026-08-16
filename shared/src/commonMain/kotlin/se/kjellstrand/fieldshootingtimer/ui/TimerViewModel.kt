@@ -21,6 +21,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.TimeSource
+import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REMAINING_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_COUNTDOWN_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.domain.buildAudioCues
@@ -262,6 +263,42 @@ class TimerViewModel(
         crossedThumbs.clear()
         setCurrentTime(0f)
         setTimerState(TimerRunningState.NotStarted)
+    }
+
+    /**
+     * Parks the timer at the second [command]'s segment starts, pausing any
+     * ongoing run. The parked state is NotStarted — the dial stays editable
+     * and the play button reads "play" — so starting runs from the parked
+     * time, firing [command]'s own cue but none of the earlier ones. The
+     * untimed rows park at their natural spots: Load at the untouched start,
+     * AllReady at the final stretch of the preparation countdown, and Mark
+     * at the finished end of the sequence.
+     */
+    fun seekTo(command: Command) {
+        if (command == Command.Load) {
+            reset()
+            return
+        }
+        timerJob?.cancel()
+        timerJob = null
+        val shootingDuration = _uiState.value.shootingDuration
+        val cues = buildAudioCues(shootingDuration)
+        val seekTime = when (command) {
+            Command.AllReady -> -COMPETITION_ALL_READY_REMAINING_SECONDS
+            Command.Mark -> buildSegmentDurations(shootingDuration).sum()
+            else -> cues.first { it.second == command }.first
+        }
+        // Cues and thumbs strictly before the seek point count as already
+        // fired, so resuming plays the tapped command's cue and nothing older.
+        playedCueIndices.clear()
+        cues.indices.filterTo(playedCueIndices) { cues[it].first < seekTime }
+        crossedThumbs.clear()
+        _uiState.value.thumbValues.filterTo(crossedThumbs) { it < seekTime }
+        setCurrentTime(seekTime)
+        setTimerState(
+            if (command == Command.Mark) TimerRunningState.Finished
+            else TimerRunningState.NotStarted
+        )
     }
 
     private fun emitPassedCues(time: Float, cues: List<Pair<Float, Command>>) {

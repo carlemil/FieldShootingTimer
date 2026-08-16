@@ -22,7 +22,9 @@ internal fun highlightedCommand(
     segmentDurations: List<Float>
 ): Command {
     if (mode == TimerMode.Competition) {
-        if (runningState == TimerRunningState.NotStarted) return Command.Load
+        // Only an untouched timer (still at 0) reads as "before the start" —
+        // a timer parked mid-sequence by seekTo follows its parked time.
+        if (runningState == TimerRunningState.NotStarted && currentTime == 0f) return Command.Load
         if (currentTime < -COMPETITION_ALL_READY_REMAINING_SECONDS) return Command.Load
         if (currentTime < 0f) return Command.AllReady
     }

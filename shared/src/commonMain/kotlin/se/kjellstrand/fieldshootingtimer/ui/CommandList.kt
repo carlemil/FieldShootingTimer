@@ -4,6 +4,7 @@ import se.kjellstrand.fieldshootingtimer.domain.Command
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,7 +34,8 @@ internal const val COMMAND_LIST_ROW_TAG = "CommandListRow"
 @Composable
 fun CommandList(
     commands: List<Command>,
-    highlighted: Command?
+    highlighted: Command?,
+    onCommandClick: (Command) -> Unit = {}
 ) {
     val listState = rememberLazyListState()
     val hlIndex = commands.indexOf(highlighted)
@@ -61,6 +63,7 @@ fun CommandList(
                     .fillMaxWidth()
                     .testTag("$COMMAND_LIST_ROW_TAG${command.name}")
                     .semantics { selected = isHighlighted }
+                    .clickable { onCommandClick(command) }
                     .background(if (isHighlighted) PaleGreenColor else Color.Transparent)
                     .padding(Paddings.Small),
                 color = if (isHighlighted) BlackColor else GrayColor,

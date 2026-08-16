@@ -7,9 +7,11 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 @OptIn(ExperimentalTestApi::class)
 class CommandListTest {
@@ -32,6 +34,22 @@ class CommandListTest {
             }
         }
         onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.Fire.name}").assertIsSelected()
+    }
+
+    @Test
+    fun `tapping a row reports its command`() = runComposeUiTest {
+        var clicked: Command? = null
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                CommandList(
+                    commands = Command.entries,
+                    highlighted = null,
+                    onCommandClick = { clicked = it }
+                )
+            }
+        }
+        onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.CeaseFire.name}").performClick()
+        assertEquals(Command.CeaseFire, clicked)
     }
 
     @Test
