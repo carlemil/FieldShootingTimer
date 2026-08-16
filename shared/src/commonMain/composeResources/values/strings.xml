@@ -18,7 +18,7 @@
     <string name="tutorial_step_pinch">Nyp med två fingrar på det gröna fältet för att ändra skjuttiden.</string>
     <string name="tutorial_step_add_tick">Tryck på + i menyn för att lägga till en partid (vibration). − tar bort den senaste.</string>
     <string name="tutorial_step_drag_tick">Dra partidens markör längs ringen för att flytta den dit du vill.</string>
-    <string name="tutorial_step_mode">Växla mellan tävlings- och träningsläge i menyn. I tävlingsläge räknas 60 sekunder ner innan kommandona startar.</string>
+    <string name="tutorial_step_mode">Växla mellan tävlings- och träningsläge i menyn. I tävlingsläge läggs kommandona LADDA! och ALLA KLARA! till innan de vanliga kommandona.</string>
     <string name="tutorial_next">Nästa</string>
     <string name="tutorial_done">Klar</string>
     <string name="tutorial_skip">Hoppa över</string>
