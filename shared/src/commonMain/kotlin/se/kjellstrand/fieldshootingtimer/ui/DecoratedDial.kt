@@ -193,12 +193,12 @@ internal fun TickFlags(
         val center = Offset(canvasSize / 2, canvasSize / 2)
 
         val poleBase = canvasSize / 2 - borderWidthPx * 2
-        val poleTop = canvasSize / 2 + ringPx * 0.38f
-        val flagBottom = poleTop - ringPx * 0.28f
+        val poleTop = canvasSize / 2 + ringPx * 0.19f
+        val flagBottom = poleTop - ringPx * 0.14f
         // Pennant length as arc degrees at its radius, so flags look the same
         // regardless of dial size.
         val flagSweepDeg =
-            (ringPx * 0.4f / poleTop * 180.0 / PI).toFloat()
+            (ringPx * 0.2f / poleTop * 180.0 / PI).toFloat()
 
         ticks.map { tick ->
             DialGeometry.tickAngle(tick, ticksMax.toFloat(), gapAngleDegrees)

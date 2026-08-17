@@ -3,10 +3,14 @@
     android:height="24dp"
     android:viewportWidth="960"
     android:viewportHeight="960">
+  <!-- Same flag as the dial's partid marker: pole + triangular pennant. -->
   <path
-      android:pathData="M144,894L144,375L432,375L444,433L605,433L605,721L374,721L363,663L202,663L202,894L144,894Z"
+      android:pathData="M270,880L270,180L340,180L340,880Z"
       android:fillColor="#e8eaed"/>
   <path
-      android:pathData="M620,260v-80h100v-100h80v100h100v80h-100v100h-80v-100h-100Z"
+      android:pathData="M340,180L700,325L340,470Z"
+      android:fillColor="#e8eaed"/>
+  <path
+      android:pathData="M560,720v-80h110v-110h80v110h110v80L750,720v110h-80L670,720L560,720Z"
       android:fillColor="#e8eaed"/>
 </vector>

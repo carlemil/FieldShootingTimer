@@ -47,10 +47,10 @@ internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
 /**
  * Distance from the menu button's center to each fanned-out item's center.
- * With five items 20° apart, adjacent centers sit ~2·r·sin(10°) ≈ 52dp
- * apart — keep that comfortably above the 48dp button size.
+ * With five items 20° apart, adjacent centers sit ~2·r·sin(10°) ≈ 61dp
+ * apart — comfortably above the 48dp button size.
  */
-private val MenuItemRadius = 150.dp
+private val MenuItemRadius = 175.dp
 
 /**
  * A circular menu button whose items fan out on an arc when opened. The items
