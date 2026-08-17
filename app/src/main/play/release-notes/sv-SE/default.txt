@@ -1,2 +1,4 @@
-• Visaren rör sig nu helt mjukt, utan små hopp och ryck
-• Rättad beskrivning av tävlingsläget i guiden
+• Tävlingsläge: efter nedräkningen ställs frågan "Var alla klara?" — fortsätt, eller kör "Alla klara" en gång till
+• Partider visas nu som flaggor, både på urtavlan och i menyn
+• Menyknapparna har fått mer luft mellan sig
+• Nedräkningsknappen behåller sin gröna färg
