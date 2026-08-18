@@ -51,7 +51,7 @@ fun LandscapeLayout(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(Paddings.Tiny)
+                .padding(start = Paddings.Large, top = Paddings.Tiny, end = Paddings.Tiny, bottom = Paddings.Tiny)
                 .navigationBarsPadding()
         ) {
             statelessSettingsComposable()

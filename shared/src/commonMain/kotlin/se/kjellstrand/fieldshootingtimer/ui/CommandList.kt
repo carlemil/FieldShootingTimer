@@ -5,7 +5,9 @@ import se.kjellstrand.fieldshootingtimer.domain.Command
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,8 +50,12 @@ fun CommandList(
     LazyColumn(
         state = listState,
         contentPadding = PaddingValues(Paddings.Medium),
+        // SpaceEvenly spreads the rows over the full height when they fit;
+        // when they don't (small landscape screens) it degrades to a plain
+        // scrolling list, which the highlight auto-scroll depends on.
+        verticalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(Paddings.Large)
             .border(Paddings.Tiny, BlackColor)
             .background(WhiteColor)

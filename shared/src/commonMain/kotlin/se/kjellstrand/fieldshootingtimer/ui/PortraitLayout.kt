@@ -41,7 +41,7 @@ fun PortraitLayout(
                 .fillMaxWidth()
                 .padding(top = Paddings.Large)
         )
-        Spacer(modifier = Modifier.padding(Paddings.Medium))
+        Spacer(modifier = Modifier.padding(Paddings.Large))
         statelessSettingsComposable()
     }
 }
