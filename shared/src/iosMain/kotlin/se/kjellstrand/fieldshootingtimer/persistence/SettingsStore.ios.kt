@@ -12,15 +12,17 @@ private const val SETTINGS_FILE = "settings.preferences_pb"
 @OptIn(ExperimentalForeignApi::class)
 @Composable
 actual fun rememberSettingsStore(): SettingsStore = remember {
-    val documents = NSFileManager.defaultManager.URLForDirectory(
-        directory = NSDocumentDirectory,
-        inDomain = NSUserDomainMask,
-        appropriateForURL = null,
-        create = true,
-        error = null
-    )
-    val dataStore = createPreferencesDataStore {
-        requireNotNull(documents?.path) { "Documents directory not available" } + "/" + SETTINGS_FILE
+    settingsStoreSingleton {
+        val documents = NSFileManager.defaultManager.URLForDirectory(
+            directory = NSDocumentDirectory,
+            inDomain = NSUserDomainMask,
+            appropriateForURL = null,
+            create = true,
+            error = null
+        )
+        val dataStore = createPreferencesDataStore {
+            requireNotNull(documents?.path) { "Documents directory not available" } + "/" + SETTINGS_FILE
+        }
+        DataStoreSettingsStore(dataStore)
     }
-    DataStoreSettingsStore(dataStore)
 }

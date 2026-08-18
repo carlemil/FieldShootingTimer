@@ -73,5 +73,21 @@ class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : Se
 fun createPreferencesDataStore(producePath: () -> String): DataStore<Preferences> =
     PreferenceDataStoreFactory.createWithPath(produceFile = { producePath().toPath() })
 
+private var settingsStoreInstance: SettingsStore? = null
+
+/**
+ * Returns the process-wide [SettingsStore], creating it on the first call.
+ * DataStore forbids two active instances on the same file, so the store must
+ * outlive any single composition — recreating it per Activity/composition
+ * crashes with IllegalStateException on the next read. Only called from
+ * composition (main thread), so no locking is needed.
+ */
+fun settingsStoreSingleton(create: () -> SettingsStore): SettingsStore =
+    settingsStoreInstance ?: create().also { settingsStoreInstance = it }
+
+internal fun resetSettingsStoreSingleton() {
+    settingsStoreInstance = null
+}
+
 @Composable
 expect fun rememberSettingsStore(): SettingsStore
