@@ -205,7 +205,7 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 .systemBarsPadding()
                 .padding(horizontal = Paddings.Large, vertical = Paddings.Medium)
         )
-        // Competition countdown reached 0: modal "Var alla klara?" question.
+        // Competition countdown reached 0: modal "Alla klara!" question.
         val awaitingReadyConfirmation by timerViewModel.awaitingReadyConfirmationFlow.collectAsState(
             initial = false, context = Dispatchers.Main
         )

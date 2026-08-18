@@ -1,8 +1,15 @@
-﻿# FieldShootingTimer
+# Fältskyttetimer — Field Shooting Timer
 
-Enhance your shooting practice with the Field Shooting Timer—a precise and customizable timing tool designed for shooters of all levels. Whether you're training for competitions, improving your marksmanship, or coordinating team exercises, this app provides an audible sequence of commands to keep your sessions structured and efficient.
+A shot-timer for Swedish field shooting (fältskytte) and precision shooting. It plays the
+standardized Swedish range commands — "Tio sekunder kvar", "Färdiga", "Eld", "Eld upphör",
+"Patron ur, proppa vapen", "Visitation" — at exactly the right times, with a dial that shows
+where in the sequence you are. Built with Kotlin Multiplatform + Compose Multiplatform and
+shipped to both Android and iOS from one shared codebase.
 
-![Screenshot from the app](https://github.com/carlemil/FieldShootingTimer/blob/main/originals/play_feature_image.png)
+<p align="center">
+  <img src="app/src/prod/play/listings/sv-SE/graphics/phone-screenshots/3.png" width="300" alt="Radial menu open with add/remove partid, mode toggle, share and help" />
+  <img src="app/src/prod/play/listings/sv-SE/graphics/phone-screenshots/2.png" width="300" alt="Timer running in the Eld phase with the hand in the green segment" />
+</p>
 
 ## Download
 
@@ -11,47 +18,60 @@ Enhance your shooting practice with the Field Shooting Timer—a precise and cus
 - [Android — Google Play](https://play.google.com/store/apps/details?id=se.kjellstrand.fieldshootingtimer)
 - [iPhone — App Store](https://apps.apple.com/se/app/f%C3%A4ltskyttetimer/id6778128329)
 
-https://www.youtube.com/watch?v=E-AQSUt9uac&ab_channel=Carl-EmilKjellstrand
+## What it does
 
-Key Features:
+The dial **is** the interface — everything is adjusted directly on it:
 
-Audible Commands: The app plays five critical commands at specific intervals to simulate real shooting scenarios:
+- **Pinch the green Eld segment** with two fingers to set the fire time (5 s up to 5 minutes).
+  It is the only configurable segment; the other commands run on their standard durations.
+- **Partids** (string subdivisions) are planted as small flags on the dial's edge, with
+  numbered badges showing each interval. Add or remove them from the menu, and **drag a
+  flag** along the ring to move it. The app gives haptic feedback as the timer passes each one.
+- **Drag the hand** of a paused timer to scrub to any second, or **tap a command in the
+  list** to jump straight to where that command starts — playback resumes from there.
+- The **radial menu** (top corner) fans out buttons for adding/removing partids, switching
+  between competition and training mode, sharing the app, and reopening the tutorial.
 
-"10 Seconds Left": Alerts you to prepare as the shooting phase approaches.
-"Ready": Signals you to get into position.
-"Fire": Indicates the start of the shooting phase.
-"Cease Fire": Marks the end of the shooting phase.
-"Remove Cartridge and Plug Your Weapon": Instructs you to safely unload and secure your firearm.
-Customizable Fire Segment: Tailor the length of the "Fire" segment to suit your training needs. Adjust the duration to challenge yourself and improve your shooting endurance.
+Two modes:
 
-Visual Timing Interface: The app features a clean and intuitive interface displaying the timing of each segment. Small bubbles indicate the duration of each phase, helping you anticipate upcoming commands.
+- **Training** starts the command sequence immediately.
+- **Competition** prefixes it with the full range procedure: "Ladda!", "Alla klara!" and a
+  60-second preparation countdown shown on the play button. When the countdown hits zero the
+  timer asks **"Alla klara!"** — continue into the sequence, or repeat the all-ready call.
 
-Toggle Segment Time Display: Prefer a minimalist view? You can easily turn on or off the display of segment times in the bubbles, allowing you to focus solely on the audible cues.
+Practical details: the screen stays awake while the timer runs, audio follows the phone's
+ringer mode on Android (silent means silent) and the silent switch on iOS, portrait and
+landscape are both supported, and a short tutorial runs on first launch. The app collects no
+data, needs no permissions, and works fully offline. All voice and UI text is Swedish.
 
-Simple Controls: Start, pause, and reset the timer with ease. The straightforward design ensures you spend more time practicing and less time navigating menus.
+## Project structure
 
-Adaptable for Various Shooting Disciplines: Whether you're practicing field shooting, target shooting, or any discipline that requires timed commands, this app adapts to your requirements.
+| Module | What it is |
+|---|---|
+| `shared/` | Kotlin Multiplatform + Compose Multiplatform library — all UI, domain logic, and the timer state machine live in `commonMain`, with Android/iOS `actual`s for audio, haptics, and screen-wake |
+| `app/` | Android entrypoint (a ~20-line `MainActivity`) plus release signing and Play publishing |
+| `iosApp/` | SwiftUI wrapper around the shared Compose UI, generated by XcodeGen, shipped via fastlane |
 
-How It Works:
+The command sequence is modeled by a single enum (`Command`) bundling each command's audio
+clip, label, duration, and dial color — the timer plan, dial geometry, and cue times are all
+pure functions derived from it, covered by host-runnable tests (including headless Compose
+UI tests that run the actual gestures). See [CLAUDE.md](CLAUDE.md) for the full architecture
+notes and build instructions, and [iosApp/README.md](iosApp/README.md) for the iOS setup.
 
-Set Up Your Session: Open the app and adjust the "Fire" segment length using the intuitive slider. The other segments are pre-timed to standard durations but can be visually tracked.
+## Building
 
-Begin Timing: Press the "Play" button to start the sequence. The app will automatically progress through each command, providing audible cues at the correct times.
+```sh
+# Android debug build
+./gradlew :app:assembleProdDebug
 
-Visual Feedback: Watch the timer progress through each segment on the screen. The optional time bubbles help you stay aware of the timing without distracting from your practice.
+# Run the host-side test suite (logic + headless Compose UI tests)
+./gradlew :shared:testDebugUnitTest :shared:jvmTest :app:testProdDebugUnitTest
+```
 
-Adjust as Needed: Pause or reset the timer at any point. Customize the "Fire" segment length at any time to vary your training intensity.
+iOS requires macOS: `brew install xcodegen`, then `cd iosApp && xcodegen generate` and open
+`iosApp.xcodeproj` — the shared framework builds automatically as a pre-build phase.
 
-Why Choose Field Shooting Timer:
+---
 
-Improve Timing and Coordination: Practice with precise timing to enhance your reaction speed and coordination during shooting exercises.
-
-Safe Practice Environment: The structured commands promote safe handling of firearms by reminding you of critical safety steps.
-
-User-Friendly Design: Designed with shooters in mind, the app offers a straightforward and clutter-free experience.
-
-Portable and Convenient: Practice anytime and anywhere without the need for physical timers or range officers.
-
-Note: Always ensure you are practicing in a safe and appropriate environment. Follow all local laws and regulations regarding firearm usage.
-
-Download the Field Shooting Timer now and take your shooting practice to the next level!
+*Always practice in a safe and appropriate environment and follow local laws and regulations
+regarding firearm usage.*

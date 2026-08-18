@@ -40,7 +40,7 @@ internal const val READY_AGAIN_TAG = "ReadyConfirmAgain"
 
 /**
  * Modal question shown when the competition countdown reaches 0:
- * "Var alla klara?". [onContinue] runs the timed sequence from 0;
+ * "Alla klara!". [onContinue] runs the timed sequence from 0;
  * [onAskAgain] re-runs the AllReady stretch of the countdown. The scrim
  * swallows all presses, so answering is the only way forward.
  */

@@ -42,7 +42,7 @@ data class TimerUiState(
     // never flash it; a store with no saved value means first launch => false.
     val tutorialSeen: Boolean = true,
     // Competition only: the countdown has just hit 0 and the timer is parked
-    // there waiting for the "Var alla klara?" dialog to be answered.
+    // there waiting for the "Alla klara!" dialog to be answered.
     val awaitingReadyConfirmation: Boolean = false
 )
 
@@ -239,7 +239,7 @@ class TimerViewModel(
             emitPassedThumbs(initialTime, thumbs)
 
             // A competition countdown does not roll straight into the timed
-            // sequence: at 0 the timer parks and asks "Var alla klara?".
+            // sequence: at 0 the timer parks and asks "Alla klara!".
             // "Fortsätt" resumes from 0 (firing the 0-second cue then),
             // "Fråga igen" re-runs the AllReady stretch.
             val confirmAtZero =

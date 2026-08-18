@@ -1,4 +1,8 @@
-• Tävlingsläge: efter nedräkningen ställs frågan "Var alla klara?" — fortsätt, eller kör "Alla klara" en gång till
-• Partider visas nu som flaggor, både på urtavlan och i menyn
-• Menyknapparna har fått mer luft mellan sig
-• Nedräkningsknappen behåller sin gröna färg
+• Tävlingsläge: 60 s förberedelsetid, nedräkning på startknappen och frågan "Alla klara!"
+• Ny meny med +/− för partider, lägesväxling, delning och hjälp
+• Justera direkt på urtavlan: nyp för eldtid, dra partider, dra visaren för att spola
+• Tryck på ett kommando i listan för att hoppa dit
+• Partider visas som flaggor på urtavlan
+• Maxtiden höjd till 5 minuter
+• Guide vid första start
+• Ny appikon och mjukare visare

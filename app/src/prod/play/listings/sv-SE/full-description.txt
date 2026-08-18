@@ -1,44 +1,25 @@
-Förbättra din skjutträning med Field Shooting Timer—ett precist och anpassningsbart tidsverktyg utformat för skyttar på alla nivåer. Oavsett om du tränar för tävlingar, förbättrar din skjutskicklighet eller koordinerar lagövningar, ger denna app en hörbar sekvens av kommandon för att hålla dina sessioner strukturerade och effektiva.
+Fältskyttetimer är en enkel timer för svenskt fältskytte och precisionsskytte. Appen spelar upp de standardiserade röstkommandona vid exakt rätt tidpunkt: "Tio sekunder kvar", "Färdiga", "Eld", "Eld upphör", "Patron ur, proppa vapen", "Visitation".
 
-Nyckelfunktioner:
+Urtavlan är hela gränssnittet — allt ställs in direkt på den:
 
-Hörbara kommandon: Appen spelar upp fem viktiga kommandon vid specifika intervall för att simulera verkliga skjutscenarier:
+• Nyp med två fingrar på det gröna Eld-segmentet för att ställa eldtiden, från 5 sekunder upp till 5 minuter. Övriga kommandon följer sina standardtider.
+• Partider visas som små flaggor på urtavlans kant med numrerade intervallmärken. Lägg till och ta bort dem i menyn, och dra en flagga längs ringen för att flytta den. Telefonen vibrerar när timern passerar varje partid.
+• Dra visaren på en pausad timer för att spola till valfri sekund, eller tryck på ett kommando i listan för att hoppa dit — uppspelningen fortsätter därifrån.
+• Menyn i hörnet fäller ut knappar för partider (+/−), växling mellan tävlings- och träningsläge, delning av appen och guiden.
 
-"10 sekunder kvar": Varnar dig att förbereda dig när skjutfasen närmar sig.
-"Klara": Signalerar att du ska inta din position.
-"Eld": Indikerar starten på skjutfasen.
-"Eld upphör": Markerar slutet på skjutfasen.
-"Patron ur, plugg i vapen": Instruerar dig att säkert tömma och säkra ditt vapen.
-Anpassningsbart eldsegment: Anpassa längden på "Eld"-segmentet för att passa dina träningsbehov. Justera varaktigheten för att utmana dig själv och förbättra din skjututhållighet.
+Två lägen:
 
-Visuellt tidsgränssnitt: Appen har ett rent och intuitivt gränssnitt som visar tiden för varje segment. Små bubblor anger varaktigheten för varje fas, vilket hjälper dig att förutse kommande kommandon.
+• Träningsläge startar kommandosekvensen direkt.
+• Tävlingsläge inleder med hela stationsproceduren: "Ladda!", "Alla klara!" och 60 sekunders förberedelsetid som räknas ned på startknappen. När tiden når noll ställs frågan "Alla klara!" — fortsätt in i sekvensen, eller repetera utropet.
 
-Växla visning av segmenttider: Föredrar du en minimalistisk vy? Du kan enkelt slå på eller av visningen av segmenttider i bubblorna, vilket gör att du kan fokusera enbart på de hörbara signalerna.
+Praktiska detaljer:
 
-Enkla kontroller: Starta, pausa och återställ timern med lätthet. Den enkla designen säkerställer att du spenderar mer tid på att träna och mindre tid på att navigera i menyer.
+• Skärmen slocknar inte medan timern går
+• Ljudet följer telefonens ringläge — på "ljudlös" hörs ingenting
+• Fungerar i både porträtt- och liggande läge
+• En kort guide visas vid första start och kan öppnas igen från menyn
+• Haptisk återkoppling vid partider
 
-Anpassningsbar för olika skyttegrenar: Oavsett om du tränar fältskytte, målsytte eller någon disciplin som kräver tidsstyrda kommandon, anpassar sig denna app till dina behov.
+Appen samlar inte in några data, kräver inga behörigheter och fungerar helt offline.
 
-Så här fungerar det:
-
-Ställ in din session: Öppna appen och justera längden på "Eld"-segmentet med hjälp av det intuitiva skjutreglaget. De andra segmenten är förinställda på standardtider men kan följas visuellt.
-
-Börja tidtagning: Tryck på "Spela"-knappen för att starta sekvensen. Appen kommer automatiskt att gå igenom varje kommando och ge hörbara signaler vid rätt tidpunkt.
-
-Visuell återkoppling: Se timern gå igenom varje segment på skärmen. De valfria tidsbubblorna hjälper dig att hålla koll på tiden utan att distrahera från din träning.
-
-Justera efter behov: Pausa eller återställ timern när som helst. Anpassa längden på "Eld"-segmentet när som helst för att variera din träningsintensitet.
-
-Varför välja Field Shooting Timer:
-
-Förbättra timing och koordination: Träna med exakt timing för att förbättra din reaktionshastighet och koordination under skytteövningar.
-
-Säker träningsmiljö: De strukturerade kommandona främjar säker hantering av vapen genom att påminna dig om viktiga säkerhetsåtgärder.
-
-Användarvänlig design: Utformad med skyttar i åtanke erbjuder appen en enkel och ren upplevelse.
-
-Bärbar och bekväm: Träna när som helst och var som helst utan behov av fysiska timers eller skjutledare.
-
-Notera: Se alltid till att du tränar i en säker och lämplig miljö. Följ alla lokala lagar och föreskrifter angående vapenanvändning.
-
-Ladda ner Field Shooting Timer nu och ta din skjutträning till nästa nivå!
+Träna alltid i en säker och lämplig miljö och följ lokala lagar och regler för vapenhantering.

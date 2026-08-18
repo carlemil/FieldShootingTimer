@@ -95,6 +95,19 @@ number. Marketing version (`CFBundleShortVersionString`) is bumped manually in
 App icons are regenerated from the single 1024×1024 source in
 `AppIcon.appiconset/` via `bash iosApp/scripts/generate-app-icons.sh`.
 
+**Release notes (both platforms).** Android notes live in
+`app/src/main/play/release-notes/sv-SE/default.txt` (Play, 500-char limit);
+iOS notes in `iosApp/fastlane/metadata/sv/release_notes.txt` (used as the
+TestFlight changelog by `fastlane beta` and as App Store "What's New" by
+`release`/`metadata`). Always generate both from the git diff between the
+**last public store release** and HEAD — never from the previous internal/
+TestFlight build. Every internal release gets a `v<version>` tag, so the
+newest tag is usually the wrong baseline; find the live version instead
+(Play listing scrape, or `https://itunes.apple.com/lookup?bundleId=se.kjellstrand.fieldshootingtimer&country=se`
+for iOS) and diff from that version's tag. Keep the two files in sync — same
+content, regenerated together at every version bump. The `/release` skill
+encodes this flow.
+
 ## CI
 
 `.github/workflows/ci.yml` runs on push to `main` and on PRs, with two jobs:
@@ -242,7 +255,7 @@ is negative the play button shows `ceil(-currentTime)` as countdown digits
 beneath the stop icon (tap = cancel), keeping its normal green background.
 The countdown does NOT roll straight into the sequence: at 0 the loop parks
 (`Stopped`, `awaitingReadyConfirmation = true` in `TimerUiState`) without
-firing the 0-second cue, and `MainScreen` shows the modal "Var alla klara?"
+firing the 0-second cue, and `MainScreen` shows the modal "Alla klara!"
 dialog (`ui/ReadyConfirmation.kt`). `confirmAllReady()` resumes from 0 (the
 TenSecondsLeft cue fires then); `repeatAllReady()` re-runs the AllReady
 stretch from -10, which ends in the same question. While waiting, the list
