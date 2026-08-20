@@ -36,7 +36,8 @@ class RadialMenuTest {
         darkTheme: Boolean = false,
         onToggleTheme: () -> Unit = {},
         ceaseFireBeep: Boolean = false,
-        onToggleCeaseFireBeep: () -> Unit = {}
+        onToggleCeaseFireBeep: () -> Unit = {},
+        onSendFeedback: () -> Unit = {}
     ) {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
@@ -57,6 +58,7 @@ class RadialMenuTest {
                         onToggleTheme = onToggleTheme,
                         ceaseFireBeep = ceaseFireBeep,
                         onToggleCeaseFireBeep = onToggleCeaseFireBeep,
+                        onSendFeedback = onSendFeedback,
                         openTowardsStart = false
                     )
                 }
@@ -84,6 +86,16 @@ class RadialMenuTest {
         onNodeWithTag(MENU_ITEM_REMOVE_TICK_TAG).assertExists()
         onNodeWithTag(MENU_ITEM_TUTORIAL_TAG).assertExists()
         onNodeWithTag(MENU_ITEM_THEME_TAG).assertExists()
+    }
+
+    @Test
+    fun `feedback item fires the callback and closes the menu`() = runComposeUiTest {
+        var feedbacks = 0
+        setMenuContent(onSendFeedback = { feedbacks++ })
+        onNodeWithTag(MENU_BUTTON_TAG).performClick()
+        onNodeWithTag(MENU_ITEM_FEEDBACK_TAG).performClick()
+        assertEquals(1, feedbacks)
+        onNodeWithTag(MENU_ITEM_FEEDBACK_TAG).assertDoesNotExist()
     }
 
     @Test

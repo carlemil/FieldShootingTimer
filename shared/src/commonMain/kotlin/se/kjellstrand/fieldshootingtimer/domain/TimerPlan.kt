@@ -9,11 +9,27 @@ import kotlin.math.roundToInt
  * on any target.
  */
 
-/** Competition-mode preparation countdown, run as currentTime -60..0. */
-internal const val COMPETITION_COUNTDOWN_SECONDS = 60f
+/** The "Ladda!" phase of the competition preparation countdown. */
+internal const val COMPETITION_LOAD_SECONDS = 60f
 
-/** With this many countdown seconds remaining, "Alla klara!" takes the highlight. */
+/**
+ * The "Alla klara!" wait after the Ladda phase — called with this many
+ * seconds left, and the ready question pops when they run out.
+ */
 internal const val COMPETITION_ALL_READY_REMAINING_SECONDS = 10f
+
+/**
+ * Competition-mode preparation, run as currentTime -70..0: a 60s Ladda
+ * phase followed by the 10s Alla klara wait.
+ */
+internal const val COMPETITION_COUNTDOWN_SECONDS =
+    COMPETITION_LOAD_SECONDS + COMPETITION_ALL_READY_REMAINING_SECONDS
+
+/**
+ * "Fråga igen" in the ready dialog: the repeated Alla klara wait, slightly
+ * longer — and it rolls straight into the sequence without asking again.
+ */
+internal const val COMPETITION_ALL_READY_REPEAT_SECONDS = 15f
 
 /** Second at which the Fire segment starts (end of the pre-fire commands). */
 internal fun fireStartSeconds(): Float =

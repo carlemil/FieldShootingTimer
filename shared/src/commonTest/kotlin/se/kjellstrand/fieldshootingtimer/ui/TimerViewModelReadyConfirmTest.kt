@@ -69,26 +69,47 @@ class TimerViewModelReadyConfirmTest {
     }
 
     @Test
-    fun `ask again re-runs the AllReady stretch and asks once more`() = runTest {
+    fun `ask again calls AllReady, waits fifteen seconds, and never asks twice`() = runTest {
         val vm = competitionVm()
+        val cues = mutableListOf<Command>()
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.cueEventsFlow.collect { cues += it }
+        }
+        runCurrent()
+
         vm.seekTo(Command.AllReady)
         runCurrent()
         vm.start()
         advanceTimeBy(11_000)
         runCurrent()
         assertTrue(vm.uiStateFlow.value.awaitingReadyConfirmation)
+        assertEquals(listOf(Command.AllReady), cues)
 
         vm.repeatAllReady()
         runCurrent()
         assertFalse(vm.uiStateFlow.value.awaitingReadyConfirmation)
         assertEquals(TimerRunningState.Running, vm.uiStateFlow.value.timerRunningState)
+        assertTrue(vm.uiStateFlow.value.allReadyRepeat)
         val t = vm.uiStateFlow.value.currentTime
-        assertTrue(t <= -9.9f, "expected the countdown back at ~-10, got $t")
+        assertTrue(t <= -14.9f, "expected the repeated 15s wait, got $t")
+        // "Alla klara!" is called again immediately by the button itself.
+        assertEquals(listOf(Command.AllReady, Command.AllReady), cues)
 
-        advanceTimeBy(11_000)
+        // The repeated wait rolls straight into the sequence — the question
+        // is never asked twice, and the -10s cue does not refire.
+        advanceTimeBy(16_000)
         runCurrent()
-        assertTrue(vm.uiStateFlow.value.awaitingReadyConfirmation, "the question must come back")
-        assertEquals(0f, vm.uiStateFlow.value.currentTime)
+        job.cancel()
+        assertFalse(
+            vm.uiStateFlow.value.awaitingReadyConfirmation,
+            "the question must not come back after the repeated wait"
+        )
+        assertEquals(TimerRunningState.Running, vm.uiStateFlow.value.timerRunningState)
+        assertTrue(vm.uiStateFlow.value.currentTime > 0f)
+        assertEquals(
+            listOf(Command.AllReady, Command.AllReady, Command.TenSecondsLeft),
+            cues
+        )
     }
 
     @Test

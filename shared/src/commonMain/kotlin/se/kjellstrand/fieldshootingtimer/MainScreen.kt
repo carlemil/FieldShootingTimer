@@ -29,6 +29,7 @@ import se.kjellstrand.fieldshootingtimer.platform.rememberAudioPlayer
 import se.kjellstrand.fieldshootingtimer.platform.rememberHaptics
 import se.kjellstrand.fieldshootingtimer.platform.rememberPlatformAudioPolicy
 import se.kjellstrand.fieldshootingtimer.platform.SyncSystemBarsToTheme
+import se.kjellstrand.fieldshootingtimer.platform.rememberFeedbackSender
 import se.kjellstrand.fieldshootingtimer.platform.rememberSharer
 import se.kjellstrand.fieldshootingtimer.domain.Command
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
@@ -106,6 +107,7 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
     val haptics = rememberHaptics()
     val audioPolicy = rememberPlatformAudioPolicy()
     val sharer = rememberSharer()
+    val feedbackSender = rememberFeedbackSender()
 
     LaunchedEffect(audioPlayer) {
         audioPlayer.preload(Command.audibleCommands)
@@ -252,6 +254,7 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 onToggleTheme = { timerViewModel.setDarkTheme(!darkTheme) },
                 ceaseFireBeep = ceaseFireBeep,
                 onToggleCeaseFireBeep = { timerViewModel.setCeaseFireBeep(!ceaseFireBeep) },
+                onSendFeedback = feedbackSender::sendFeedback,
                 openTowardsStart = !isLandscape,
                 modifier = Modifier
                     .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)

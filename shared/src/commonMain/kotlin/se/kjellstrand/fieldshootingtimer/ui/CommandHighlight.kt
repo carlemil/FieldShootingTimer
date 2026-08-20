@@ -23,7 +23,8 @@ internal fun highlightedCommand(
     segmentDurations: List<Float>,
     awaitingReadyConfirmation: Boolean = false,
     parkedBySeek: Boolean = false,
-    awaitingVisitationDoneConfirmation: Boolean = false
+    awaitingVisitationDoneConfirmation: Boolean = false,
+    allReadyRepeat: Boolean = false
 ): Command {
     // Parked at 0 behind the "Alla klara!" dialog — conceptually still
     // in the AllReady phase.
@@ -43,8 +44,17 @@ internal fun highlightedCommand(
         if (runningState == TimerRunningState.NotStarted && currentTime == 0f && !parkedBySeek) {
             return Command.Load
         }
-        if (currentTime < -COMPETITION_ALL_READY_REMAINING_SECONDS) return Command.Load
-        if (currentTime < 0f) return Command.AllReady
+        if (currentTime < 0f) {
+            // The repeated wait after "Fråga igen" is all AllReady; the
+            // first countdown hands over from Ladda with 10s left.
+            return if (allReadyRepeat ||
+                currentTime >= -COMPETITION_ALL_READY_REMAINING_SECONDS
+            ) {
+                Command.AllReady
+            } else {
+                Command.Load
+            }
+        }
     }
     val timedCommands = timedCommandsFor(mode)
     var accumulatedTime = 0f

@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.TimeSource
 import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REMAINING_SECONDS
+import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REPEAT_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_COUNTDOWN_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.domain.beepTimeSeconds
@@ -62,7 +63,11 @@ data class TimerUiState(
     val awaitingMarkConfirmation: Boolean = false,
     // A competition run just finished (or the row was tapped): "Visitation
     // klar?" — confirming makes the call and hands over to the Mark dialog.
-    val awaitingVisitationDoneConfirmation: Boolean = false
+    val awaitingVisitationDoneConfirmation: Boolean = false,
+    // "Fråga igen" is running its repeated Alla klara wait: the whole
+    // negative stretch is the AllReady phase, and the ready question is NOT
+    // asked again when it reaches 0 — once per play press.
+    val allReadyRepeat: Boolean = false
 )
 
 enum class TimerRunningState {
@@ -105,6 +110,7 @@ class TimerViewModel(
         _uiState.map { it.awaitingMarkConfirmation }.distinctUntilChanged()
     val awaitingVisitationDoneConfirmationFlow =
         _uiState.map { it.awaitingVisitationDoneConfirmation }.distinctUntilChanged()
+    val allReadyRepeatFlow = _uiState.map { it.allReadyRepeat }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration, it.timerMode) }
@@ -304,11 +310,12 @@ class TimerViewModel(
             emitPassedThumbs(initialTime, thumbs)
 
             // A competition countdown does not roll straight into the timed
-            // sequence: at 0 the timer parks and asks "Alla klara!".
-            // "Fortsätt" resumes from 0 (firing the 0-second cue then),
-            // "Fråga igen" re-runs the AllReady stretch.
+            // sequence: at 0 the timer parks and asks "Alla klara!". The
+            // question comes at most once per play press — the repeated wait
+            // after "Fråga igen" runs straight through 0 into the sequence.
             val confirmAtZero =
-                _uiState.value.timerMode == TimerMode.Competition && initialTime < 0f
+                _uiState.value.timerMode == TimerMode.Competition && initialTime < 0f &&
+                    !_uiState.value.allReadyRepeat
 
             while (isActive && _uiState.value.timerRunningState == TimerRunningState.Running) {
                 delay(tickMs)
@@ -369,6 +376,7 @@ class TimerViewModel(
                 awaitingReadyConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
+                allReadyRepeat = false,
                 parkedBySeek = false
             )
         }
@@ -383,11 +391,23 @@ class TimerViewModel(
         start()
     }
 
-    /** "Fråga igen" in the ready dialog: re-run the AllReady stretch. */
+    /**
+     * "Fråga igen" in the ready dialog: call "Alla klara!" right away, run
+     * the slightly longer repeated wait, and roll straight into the
+     * sequence at 0 — the question is never asked twice in one play press.
+     */
     fun repeatAllReady() {
         if (!_uiState.value.awaitingReadyConfirmation) return
         _uiState.update { it.copy(awaitingReadyConfirmation = false) }
-        parkAt(-COMPETITION_ALL_READY_REMAINING_SECONDS, TimerRunningState.NotStarted)
+        parkAt(-COMPETITION_ALL_READY_REPEAT_SECONDS, TimerRunningState.NotStarted)
+        _uiState.update { it.copy(allReadyRepeat = true) }
+        _cueEventsFlow.tryEmit(Command.AllReady)
+        // The -10s AllReady cue must not refire mid-wait — the call was
+        // just made.
+        val cues = activeCues(_uiState.value.shootingDuration)
+        cues.indices
+            .filter { cues[it].second == Command.AllReady }
+            .forEach { playedCueIndices.add(it) }
         start()
     }
 
@@ -496,6 +516,7 @@ class TimerViewModel(
                 awaitingReadyConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
+                allReadyRepeat = false,
                 parkedBySeek = true
             )
         }

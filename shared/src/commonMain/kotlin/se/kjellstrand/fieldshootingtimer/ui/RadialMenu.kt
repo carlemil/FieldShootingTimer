@@ -34,11 +34,13 @@ import se.kjellstrand.fieldshootingtimer.resources.dark_mode
 import se.kjellstrand.fieldshootingtimer.resources.graphic_eq
 import se.kjellstrand.fieldshootingtimer.resources.help
 import se.kjellstrand.fieldshootingtimer.resources.light_mode
+import se.kjellstrand.fieldshootingtimer.resources.mail
 import se.kjellstrand.fieldshootingtimer.resources.menu
 import se.kjellstrand.fieldshootingtimer.resources.mode_competition
 import se.kjellstrand.fieldshootingtimer.resources.mode_training
 import se.kjellstrand.fieldshootingtimer.resources.record_voice_over
 import se.kjellstrand.fieldshootingtimer.resources.remove_tick
+import se.kjellstrand.fieldshootingtimer.resources.send_feedback
 import se.kjellstrand.fieldshootingtimer.resources.share
 import se.kjellstrand.fieldshootingtimer.resources.share_app
 import se.kjellstrand.fieldshootingtimer.resources.theme_dark
@@ -55,18 +57,19 @@ internal const val MENU_ITEM_MODE_TAG = "RadialMenuItemMode"
 internal const val MENU_ITEM_TUTORIAL_TAG = "RadialMenuItemTutorial"
 internal const val MENU_ITEM_THEME_TAG = "RadialMenuItemTheme"
 internal const val MENU_ITEM_BEEP_TAG = "RadialMenuItemBeep"
+internal const val MENU_ITEM_FEEDBACK_TAG = "RadialMenuItemFeedback"
 internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
 /**
  * The items fan out in two layers so nothing sits too far from the button:
  * the theme toggle, share, and help on the inner arc; the timer-editing
- * items (+/−, mode) and the beep toggle on the outer. The radii and angle sets
- * are chosen so every neighbor distance lands in a tight 68–73dp band:
- * outer 2·158·sin(13.3°) ≈ 73dp, inner 2·90·sin(22.5°) ≈ 69dp, ring gap
- * 158−90 = 68dp, and the staggered cross-ring pairs ≈ 70–71dp.
+ * items (+/−, mode), the beep toggle, and feedback on the outer. Both arcs
+ * span the full 90°–180° quadrant, and the radii/angle steps keep every
+ * neighbor distance in a tight 66–75dp band: outer 2·170·sin(11.25°) ≈
+ * 66dp, inner 2·95·sin(22.5°) ≈ 73dp, aligned ring gap 170−95 = 75dp.
  */
-private val InnerMenuItemRadius = 90.dp
-private val OuterMenuItemRadius = 158.dp
+private val InnerMenuItemRadius = 95.dp
+private val OuterMenuItemRadius = 170.dp
 
 /** 20% below the stock 48dp IconButton, keeping the fan compact. */
 private val MenuButtonSize = 38.dp
@@ -108,6 +111,7 @@ fun RadialMenu(
     onToggleTheme: () -> Unit,
     ceaseFireBeep: Boolean,
     onToggleCeaseFireBeep: () -> Unit,
+    onSendFeedback: () -> Unit,
     openTowardsStart: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -124,9 +128,9 @@ fun RadialMenu(
     // Degrees: 0 = right, 90 = straight down. Fan into the screen from the
     // anchoring corner.
     val outerAngles = if (openTowardsStart) {
-        listOf(90f, 117f, 143f, 170f)
+        listOf(90f, 112.5f, 135f, 157.5f, 180f)
     } else {
-        listOf(90f, 63f, 37f, 10f)
+        listOf(90f, 67.5f, 45f, 22.5f, 0f)
     }
     val innerAngles = if (openTowardsStart) {
         listOf(90f, 135f, 180f)
@@ -191,6 +195,18 @@ fun RadialMenu(
                 ),
                 tag = MENU_ITEM_BEEP_TAG,
                 onClick = onToggleCeaseFireBeep
+            )
+            RadialMenuItem(
+                angleDeg = outerAngles[4],
+                progress = progress,
+                radiusPx = outerRadiusPx,
+                icon = Res.drawable.mail,
+                contentDescription = stringResource(Res.string.send_feedback),
+                tag = MENU_ITEM_FEEDBACK_TAG,
+                onClick = {
+                    onOpenChange(false)
+                    onSendFeedback()
+                }
             )
             // Inner layer: theme toggle + app-level items.
             RadialMenuItem(

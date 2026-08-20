@@ -12,6 +12,7 @@
     <string name="visitation_done_confirm_action">Visitation klar</string>
     <string name="command_mark">MARKERA!</string>
     <string name="share_app">Dela appen</string>
+    <string name="send_feedback">Skicka feedback</string>
     <string name="play_action">Starta</string>
     <string name="stop_action">Stoppa</string>
     <string name="reset_action">Återställ</string>

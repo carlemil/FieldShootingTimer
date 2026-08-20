@@ -265,12 +265,17 @@ contract: live updates during the gesture (`setThumbValues` /
 **Competition vs training mode (`domain/TimerMode.kt`).** Training runs the
 sequence immediately and hides the `Load`/`AllReady` rows from the command
 list. Competition prefixes the run with a 60s preparation countdown,
-**modeled as `currentTime` running from -60 to 0** (constants in
-`domain/TimerPlan.kt`) — this reuses the whole timer loop untouched. The
-preparation calls ride the same cue machinery on the negative clock
-(`buildCompetitionPrepCues`: "Ladda!" at -60, "Alla klara!" at -10,
-prepended to the cue list in competition mode only); the timed cues are all
-≥ 0 so none fire until the countdown ends. `stop()` during
+**modeled as `currentTime` running from -70 to 0** (constants in
+`domain/TimerPlan.kt`: a 60s Ladda phase + the 10s Alla klara wait) — this
+reuses the whole timer loop untouched. The preparation calls ride the same
+cue machinery on the negative clock (`buildCompetitionPrepCues`: "Ladda!"
+at -70, "Alla klara!" at -10, prepended to the cue list in competition mode
+only); the timed cues are all ≥ 0 so none fire until the countdown ends.
+The play button's digits count the CURRENT phase (60→1, then 10→1;
+`countdownSecondsOrNull`). The ready question is asked at most once per
+play press: "Fråga igen" calls "Alla klara!" immediately, runs a 15s
+repeated wait (`allReadyRepeat` in TimerUiState — all-AllReady for
+highlight/digits), and rolls straight through 0 into the sequence. `stop()` during
 the countdown (negative time) cancels it back to `NotStarted`; after 0 it
 pauses normally. Renderers clamp: the dial hand coerces to ≥ 0; while time
 is negative the play button shows `ceil(-currentTime)` as countdown digits

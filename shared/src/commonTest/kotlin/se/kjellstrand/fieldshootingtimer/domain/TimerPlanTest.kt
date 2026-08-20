@@ -73,8 +73,9 @@ class TimerPlanTest {
 
     @Test
     fun `competition prep cues call Load and AllReady on the countdown clock`() {
+        // 60s Ladda phase + 10s Alla klara wait = the -70..0 countdown.
         assertEquals(
-            listOf(-60f to Command.Load, -10f to Command.AllReady),
+            listOf(-70f to Command.Load, -10f to Command.AllReady),
             buildCompetitionPrepCues()
         )
     }

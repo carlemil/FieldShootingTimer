@@ -12,7 +12,10 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/** Competition-mode preparation countdown, modeled as currentTime -60..0. */
+/**
+ * Competition-mode preparation countdown, modeled as currentTime -70..0:
+ * a 60s Ladda phase followed by the 10s Alla klara wait.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerViewModelCountdownTest {
 
@@ -27,13 +30,13 @@ class TimerViewModelCountdownTest {
     }
 
     @Test
-    fun `competition start seeds the countdown at minus sixty`() = runTest {
+    fun `competition start seeds the countdown at minus seventy`() = runTest {
         val vm = competitionVm()
         vm.start()
         runCurrent()
         assertTrue(
-            vm.uiStateFlow.value.currentTime <= -59.9f,
-            "expected ~-60, got ${vm.uiStateFlow.value.currentTime}"
+            vm.uiStateFlow.value.currentTime <= -69.9f,
+            "expected ~-70, got ${vm.uiStateFlow.value.currentTime}"
         )
         assertEquals(TimerRunningState.Running, vm.uiStateFlow.value.timerRunningState)
     }
@@ -63,7 +66,7 @@ class TimerViewModelCountdownTest {
         runCurrent()
         assertEquals(listOf(Command.Load), collected)
 
-        advanceTimeBy(49_000) // -11s: still only Load
+        advanceTimeBy(59_000) // -11s: still only Load
         runCurrent()
         assertEquals(listOf(Command.Load), collected)
 
@@ -84,7 +87,7 @@ class TimerViewModelCountdownTest {
         runCurrent()
 
         vm.start()
-        advanceTimeBy(61_000)
+        advanceTimeBy(71_000)
         runCurrent()
         assertTrue(vm.uiStateFlow.value.awaitingReadyConfirmation)
         assertEquals(listOf(Command.Load, Command.AllReady), collected)
@@ -115,8 +118,8 @@ class TimerViewModelCountdownTest {
         vm.start()
         runCurrent()
         assertTrue(
-            vm.uiStateFlow.value.currentTime <= -59.9f,
-            "expected a fresh -60 countdown, got ${vm.uiStateFlow.value.currentTime}"
+            vm.uiStateFlow.value.currentTime <= -69.9f,
+            "expected a fresh -70 countdown, got ${vm.uiStateFlow.value.currentTime}"
         )
     }
 
@@ -124,7 +127,7 @@ class TimerViewModelCountdownTest {
     fun `stop after the countdown still pauses the sequence normally`() = runTest {
         val vm = competitionVm()
         vm.start()
-        advanceTimeBy(61_000)
+        advanceTimeBy(71_000)
         runCurrent()
         vm.confirmAllReady() // answer the ready question, sequence runs from 0
         advanceTimeBy(5_000) // 5s into the sequence
@@ -157,7 +160,7 @@ class TimerViewModelCountdownTest {
         val total = vm.segmentDurationsFlow.value.sum() // 21s
 
         vm.start()
-        advanceTimeBy(61_000)
+        advanceTimeBy(71_000)
         runCurrent()
         vm.confirmAllReady() // answer the ready question at 0
         advanceTimeBy((total * 1000).toLong() + 500)
