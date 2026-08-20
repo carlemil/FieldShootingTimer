@@ -55,6 +55,15 @@ class CommandHighlightTest {
     }
 
     @Test
+    fun `a finished competition timer highlights Mark`() {
+        // Tapping "MARKERA!" parks the timer Finished at the sequence end —
+        // and a run that completes naturally lands in the same phase.
+        assertEquals(Command.Mark, competition(29f, TimerRunningState.Finished))
+        // Training has no Mark row: the last shown command keeps the highlight.
+        assertEquals(Command.UnloadWeapon, training(25f, TimerRunningState.Finished))
+    }
+
+    @Test
     fun `competition highlights Load before the start`() {
         assertEquals(Command.Load, competition(0f, TimerRunningState.NotStarted))
     }

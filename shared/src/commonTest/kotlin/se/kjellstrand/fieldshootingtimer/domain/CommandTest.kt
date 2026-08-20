@@ -45,6 +45,7 @@ class CommandTest {
                 Command.CeaseFire,
                 Command.UnloadWeapon,
                 Command.Visitation,
+                Command.VisitationDone,
                 Command.Mark
             ),
             Command.audibleCommands
@@ -98,15 +99,17 @@ class CommandTest {
     }
 
     @Test
-    fun `Command enum has the full set of 11 entries`() {
-        assertEquals(11, Command.entries.size)
+    fun `Command enum has the full set of 12 entries`() {
+        assertEquals(12, Command.entries.size)
     }
 
     @Test
     fun `untimed commands carry -1 for duration but all have audio`() {
-        // Load/AllReady are called during the competition countdown; Mark
-        // when its row is tapped.
-        listOf(Command.Load, Command.AllReady, Command.Mark).forEach { cmd ->
+        // Load/AllReady are called during the competition countdown;
+        // VisitationDone and Mark through their dialogs.
+        listOf(
+            Command.Load, Command.AllReady, Command.VisitationDone, Command.Mark
+        ).forEach { cmd ->
             assertEquals(-1, cmd.duration, "${cmd.name} duration")
             assertNotNull(cmd.audioPath, "${cmd.name} audioPath")
         }

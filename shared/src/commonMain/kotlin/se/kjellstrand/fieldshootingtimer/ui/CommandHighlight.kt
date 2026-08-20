@@ -22,11 +22,20 @@ internal fun highlightedCommand(
     currentTime: Float,
     segmentDurations: List<Float>,
     awaitingReadyConfirmation: Boolean = false,
-    parkedBySeek: Boolean = false
+    parkedBySeek: Boolean = false,
+    awaitingVisitationDoneConfirmation: Boolean = false
 ): Command {
     // Parked at 0 behind the "Alla klara!" dialog — conceptually still
     // in the AllReady phase.
     if (awaitingReadyConfirmation) return Command.AllReady
+    // The "Visitation klar?" dialog owns its row while it is open.
+    if (awaitingVisitationDoneConfirmation) return Command.VisitationDone
+    // A finished timer has otherwise reached the Mark phase; competition is
+    // the mode that shows the row (training's list ends at UnloadWeapon,
+    // which the segment walk below keeps highlighted there).
+    if (mode == TimerMode.Competition && runningState == TimerRunningState.Finished) {
+        return Command.Mark
+    }
     if (mode == TimerMode.Competition) {
         // Only an untouched timer (still at 0) reads as "before the start" —
         // a timer parked at 0 by tapping "10 sekunder kvar!" (or scrubbing

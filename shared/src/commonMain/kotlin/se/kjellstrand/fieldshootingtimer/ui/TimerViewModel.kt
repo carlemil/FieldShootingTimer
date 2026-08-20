@@ -55,7 +55,14 @@ data class TimerUiState(
     // True when the user explicitly parked the timer (row tap or hand
     // scrub). Distinguishes "parked at 0" from an untouched timer, which
     // competition mode otherwise treats as "run the countdown first".
-    val parkedBySeek: Boolean = false
+    val parkedBySeek: Boolean = false,
+    // The Markera row was tapped (or the VisitationDone dialog confirmed):
+    // the timer is parked at the finished end and the "Markera?" dialog
+    // decides whether the call is made.
+    val awaitingMarkConfirmation: Boolean = false,
+    // A competition run just finished (or the row was tapped): "Visitation
+    // klar?" — confirming makes the call and hands over to the Mark dialog.
+    val awaitingVisitationDoneConfirmation: Boolean = false
 )
 
 enum class TimerRunningState {
@@ -94,6 +101,10 @@ class TimerViewModel(
     val awaitingReadyConfirmationFlow =
         _uiState.map { it.awaitingReadyConfirmation }.distinctUntilChanged()
     val parkedBySeekFlow = _uiState.map { it.parkedBySeek }.distinctUntilChanged()
+    val awaitingMarkConfirmationFlow =
+        _uiState.map { it.awaitingMarkConfirmation }.distinctUntilChanged()
+    val awaitingVisitationDoneConfirmationFlow =
+        _uiState.map { it.awaitingVisitationDoneConfirmation }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration, it.timerMode) }
@@ -316,6 +327,12 @@ class TimerViewModel(
                     emitPassedThumbs(total, thumbs)
                     emitPassedBeep(total, beepTime)
                     setTimerState(TimerRunningState.Finished)
+                    // A competition round ends in the "Visitation klar?"
+                    // question; confirming it hands over to "Markera?".
+                    // Training has no Visitation/Mark stretch, so no dialogs.
+                    if (_uiState.value.timerMode == TimerMode.Competition) {
+                        _uiState.update { it.copy(awaitingVisitationDoneConfirmation = true) }
+                    }
                     break
                 }
                 setCurrentTime(elapsed)
@@ -347,7 +364,14 @@ class TimerViewModel(
         playedCueIndices.clear()
         crossedThumbs.clear()
         beepEmitted = false
-        _uiState.update { it.copy(awaitingReadyConfirmation = false, parkedBySeek = false) }
+        _uiState.update {
+            it.copy(
+                awaitingReadyConfirmation = false,
+                awaitingMarkConfirmation = false,
+                awaitingVisitationDoneConfirmation = false,
+                parkedBySeek = false
+            )
+        }
         setCurrentTime(0f)
         setTimerState(TimerRunningState.NotStarted)
     }
@@ -395,17 +419,56 @@ class TimerViewModel(
         }
         val shootingDuration = _uiState.value.shootingDuration
         val mode = _uiState.value.timerMode
-        val seekTime = when (command) {
-            Command.AllReady -> -COMPETITION_ALL_READY_REMAINING_SECONDS
-            Command.Mark -> buildSegmentDurations(shootingDuration, mode).sum()
+        val parksAtEnd = command == Command.Mark || command == Command.VisitationDone
+        val seekTime = when {
+            command == Command.AllReady -> -COMPETITION_ALL_READY_REMAINING_SECONDS
+            parksAtEnd -> buildSegmentDurations(shootingDuration, mode).sum()
             else -> buildAudioCues(shootingDuration, mode).first { it.second == command }.first
         }
         parkAt(
             seekTime,
-            if (command == Command.Mark) TimerRunningState.Finished
-            else TimerRunningState.NotStarted
+            if (parksAtEnd) TimerRunningState.Finished else TimerRunningState.NotStarted
         )
-        playRowCall(command)
+        // The dialog-driven calls are guarded instead of playing on the tap.
+        when (command) {
+            Command.Mark ->
+                _uiState.update { it.copy(awaitingMarkConfirmation = true) }
+            Command.VisitationDone ->
+                _uiState.update { it.copy(awaitingVisitationDoneConfirmation = true) }
+            else -> playRowCall(command)
+        }
+    }
+
+    /**
+     * "Visitation klar" in its dialog: make the call, then hand over to the
+     * "Markera?" question — the natural next step of the round.
+     */
+    fun confirmVisitationDone() {
+        if (!_uiState.value.awaitingVisitationDoneConfirmation) return
+        _uiState.update {
+            it.copy(
+                awaitingVisitationDoneConfirmation = false,
+                awaitingMarkConfirmation = true
+            )
+        }
+        playRowCall(Command.VisitationDone)
+    }
+
+    /** "Stäng" in the visitation-done dialog: close without calling. */
+    fun dismissVisitationDoneConfirmation() {
+        _uiState.update { it.copy(awaitingVisitationDoneConfirmation = false) }
+    }
+
+    /** "Markera" in the mark dialog: make the call and close. */
+    fun confirmMark() {
+        if (!_uiState.value.awaitingMarkConfirmation) return
+        _uiState.update { it.copy(awaitingMarkConfirmation = false) }
+        playRowCall(Command.Mark)
+    }
+
+    /** "Stäng" in the mark dialog: close without calling. */
+    fun dismissMarkConfirmation() {
+        _uiState.update { it.copy(awaitingMarkConfirmation = false) }
     }
 
     /**
@@ -438,7 +501,14 @@ class TimerViewModel(
         timerJob?.cancel()
         timerJob = null
         runAnchorEpochMs = null
-        _uiState.update { it.copy(awaitingReadyConfirmation = false, parkedBySeek = true) }
+        _uiState.update {
+            it.copy(
+                awaitingReadyConfirmation = false,
+                awaitingMarkConfirmation = false,
+                awaitingVisitationDoneConfirmation = false,
+                parkedBySeek = true
+            )
+        }
         // Cues and thumbs strictly before the park point count as already
         // fired, so resuming plays the cue at the parked time and nothing
         // older.

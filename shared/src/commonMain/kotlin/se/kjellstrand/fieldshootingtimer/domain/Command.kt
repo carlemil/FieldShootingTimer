@@ -12,6 +12,7 @@ import se.kjellstrand.fieldshootingtimer.resources.command_load
 import se.kjellstrand.fieldshootingtimer.resources.command_mark
 import se.kjellstrand.fieldshootingtimer.resources.command_ready
 import se.kjellstrand.fieldshootingtimer.resources.command_unload_weapon
+import se.kjellstrand.fieldshootingtimer.resources.command_visitation_done
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGrayColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.MutedYellowColor
@@ -30,8 +31,9 @@ enum class Command(
     // their stringRes is a never-shown placeholder.
     val listed: Boolean = true
 ) {
-    // Untimed, but called during the competition preparation countdown
-    // (Load at its start, AllReady at -10s) via buildCompetitionPrepCues.
+    // Untimed but audible: called during the competition preparation
+    // countdown (Load at its start, AllReady at -10s) via
+    // buildCompetitionPrepCues.
     Load("files/ladda.mp3", Res.string.command_load, -1, LightGrayColor),
     AllReady("files/alla_klara.mp3", Res.string.command_all_ready, -1, LightGrayColor),
     TenSecondsLeft("files/tio_sekunder_kvar.mp3", Res.string.command_10_seconds, 7, LightGrayColor, onDial = true),
@@ -44,7 +46,9 @@ enum class Command(
     // The beat before "Visitation!" is called.
     VisitationDelay(null, Res.string.command_inspection, 2, LightGrayColor, listed = false),
     Visitation("files/visitation.mp3", Res.string.command_inspection, 2, LightGrayColor),
-    // Untimed, but audible when its list row is tapped.
+    // Untimed, dialog-driven calls: VisitationDone asks after the sequence
+    // finishes (or when its row is tapped) and hands over to Mark's dialog.
+    VisitationDone("files/visitation_klar.mp3", Res.string.command_visitation_done, -1, LightGrayColor),
     Mark("files/markera.mp3", Res.string.command_mark, -1, LightGrayColor);
 
     companion object {

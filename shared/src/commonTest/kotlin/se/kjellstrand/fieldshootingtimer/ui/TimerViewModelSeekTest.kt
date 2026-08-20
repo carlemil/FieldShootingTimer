@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -266,6 +267,66 @@ class TimerViewModelSeekTest {
     }
 
     @Test
+    fun `a finished competition run chains the dialogs - training shows none`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setTimerMode(TimerMode.Competition)
+        vm.setShootingTime(5f)
+
+        val collected = mutableListOf<Command>()
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.cueEventsFlow.collect { collected += it }
+        }
+        runCurrent()
+
+        vm.seekTo(Command.Visitation) // 27s of 29 in competition
+        runCurrent()
+        vm.start()
+        advanceTimeBy(3_000)
+        runCurrent()
+        assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
+        assertTrue(
+            vm.uiStateFlow.value.awaitingVisitationDoneConfirmation,
+            "a finished competition run must ask Visitation klar first"
+        )
+        assertFalse(vm.uiStateFlow.value.awaitingMarkConfirmation)
+
+        // Confirming makes the call and hands over to the Markera dialog.
+        vm.confirmVisitationDone()
+        runCurrent()
+        assertTrue(collected.contains(Command.VisitationDone))
+        assertFalse(vm.uiStateFlow.value.awaitingVisitationDoneConfirmation)
+        assertTrue(vm.uiStateFlow.value.awaitingMarkConfirmation)
+        job.cancel()
+
+        // Training's run ends after UnloadWeapon — no dialogs.
+        vm.reset()
+        vm.setTimerMode(TimerMode.Training)
+        runCurrent()
+        vm.seekTo(Command.UnloadWeapon) // 21s of 25 in training
+        runCurrent()
+        vm.start()
+        advanceTimeBy(5_000)
+        runCurrent()
+        assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
+        assertFalse(vm.uiStateFlow.value.awaitingVisitationDoneConfirmation)
+        assertFalse(vm.uiStateFlow.value.awaitingMarkConfirmation)
+    }
+
+    @Test
+    fun `seekTo VisitationDone parks at the end and asks its dialog`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setTimerMode(TimerMode.Competition)
+        vm.setShootingTime(5f)
+
+        vm.seekTo(Command.VisitationDone)
+        runCurrent()
+
+        assertEquals(29f, vm.uiStateFlow.value.currentTime)
+        assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
+        assertTrue(vm.uiStateFlow.value.awaitingVisitationDoneConfirmation)
+    }
+
+    @Test
     fun `seekTo Mark jumps to the finished end`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)
@@ -278,7 +339,7 @@ class TimerViewModelSeekTest {
     }
 
     @Test
-    fun `seekTo Mark plays the Mark call`() = runTest {
+    fun `seekTo Mark asks first - the call plays on confirm only`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)
 
@@ -290,8 +351,21 @@ class TimerViewModelSeekTest {
 
         vm.seekTo(Command.Mark)
         runCurrent()
-        job.cancel()
+        assertTrue(vm.uiStateFlow.value.awaitingMarkConfirmation)
+        assertEquals(emptyList(), collected, "the tap itself must not call Markera")
 
+        vm.confirmMark()
+        runCurrent()
         assertEquals(listOf(Command.Mark), collected)
+        assertFalse(vm.uiStateFlow.value.awaitingMarkConfirmation)
+
+        // Closing without confirming stays silent.
+        vm.seekTo(Command.Mark)
+        runCurrent()
+        vm.dismissMarkConfirmation()
+        runCurrent()
+        job.cancel()
+        assertEquals(listOf(Command.Mark), collected, "Stäng must not call Markera")
+        assertFalse(vm.uiStateFlow.value.awaitingMarkConfirmation)
     }
 }

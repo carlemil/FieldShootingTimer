@@ -39,6 +39,7 @@ class CuePlaybackTest {
             Command.Fire,
             Command.UnloadWeapon,
             Command.Visitation,
+            Command.VisitationDone,
             Command.Mark
         ).forEach { command ->
             assertTrue(

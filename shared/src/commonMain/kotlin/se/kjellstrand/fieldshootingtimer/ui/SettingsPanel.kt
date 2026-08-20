@@ -38,13 +38,17 @@ fun SettingsPanel(
     val parkedBySeek by timerViewModel.parkedBySeekFlow.collectAsState(
         initial = false, context = Dispatchers.Main
     )
+    val awaitingVisitationDoneConfirmation by
+        timerViewModel.awaitingVisitationDoneConfirmationFlow.collectAsState(
+            initial = false, context = Dispatchers.Main
+        )
 
     val visibleCommands = when (timerMode) {
         TimerMode.Competition -> Command.listedCommands
         // Training runs neither the preparation phase nor the closing
         // Visitation/Mark stretch — its sequence ends after UnloadWeapon.
-        TimerMode.Training -> Command.listedCommands -
-            Command.Load - Command.AllReady - Command.Visitation - Command.Mark
+        TimerMode.Training -> Command.listedCommands - Command.Load - Command.AllReady -
+            Command.Visitation - Command.VisitationDone - Command.Mark
     }
     val highlighted = highlightedCommand(
         mode = timerMode,
@@ -52,7 +56,8 @@ fun SettingsPanel(
         currentTime = currentTime,
         segmentDurations = segmentDurations,
         awaitingReadyConfirmation = awaitingReadyConfirmation,
-        parkedBySeek = parkedBySeek
+        parkedBySeek = parkedBySeek,
+        awaitingVisitationDoneConfirmation = awaitingVisitationDoneConfirmation
     )
 
     // Owns its column so callers don't have to provide a specific layout.

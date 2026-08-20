@@ -34,6 +34,8 @@ import se.kjellstrand.fieldshootingtimer.domain.Command
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
 import se.kjellstrand.fieldshootingtimer.ui.MENU_SCRIM_TAG
+import se.kjellstrand.fieldshootingtimer.ui.MarkConfirmationOverlay
+import se.kjellstrand.fieldshootingtimer.ui.VisitationDoneConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.RadialMenu
 import se.kjellstrand.fieldshootingtimer.ui.ReadyConfirmationOverlay
@@ -264,6 +266,26 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 ReadyConfirmationOverlay(
                     onContinue = timerViewModel::confirmAllReady,
                     onAskAgain = timerViewModel::repeatAllReady
+                )
+            }
+            // A finished competition round (or the row's tap): "Visitation
+            // klar?" — confirming makes the call and hands over to "Markera?".
+            val awaitingVisitationDone by timerViewModel.awaitingVisitationDoneConfirmationFlow
+                .collectAsState(initial = false, context = Dispatchers.Main)
+            if (awaitingVisitationDone) {
+                VisitationDoneConfirmationOverlay(
+                    onConfirm = timerViewModel::confirmVisitationDone,
+                    onClose = timerViewModel::dismissVisitationDoneConfirmation
+                )
+            }
+            // The Markera row was tapped: "Markera?" — make the call or close.
+            val awaitingMarkConfirmation by timerViewModel.awaitingMarkConfirmationFlow.collectAsState(
+                initial = false, context = Dispatchers.Main
+            )
+            if (awaitingMarkConfirmation) {
+                MarkConfirmationOverlay(
+                    onMark = timerViewModel::confirmMark,
+                    onClose = timerViewModel::dismissMarkConfirmation
                 )
             }
             tutorialStep?.let { stepIndex ->
