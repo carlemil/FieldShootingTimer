@@ -33,6 +33,8 @@ import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.resources.Res
 import se.kjellstrand.fieldshootingtimer.resources.add_tick
 import se.kjellstrand.fieldshootingtimer.resources.competition
+import se.kjellstrand.fieldshootingtimer.resources.graphic_eq
+import se.kjellstrand.fieldshootingtimer.resources.play_arrow
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_done
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_next
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_skip
@@ -40,6 +42,8 @@ import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_add_tick
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_drag_tick
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_mode
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_pinch
+import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_seek
+import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_signal
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 
@@ -52,11 +56,13 @@ internal data class TutorialStep(
     val icon: DrawableResource? = null
 )
 
-/** The gestures worth teaching, in the order a new user meets them. */
+/** The gestures and modes worth teaching, in the order a new user meets them. */
 internal val tutorialSteps = listOf(
     TutorialStep(Res.string.tutorial_step_pinch),
     TutorialStep(Res.string.tutorial_step_add_tick, Res.drawable.add_tick),
     TutorialStep(Res.string.tutorial_step_drag_tick),
+    TutorialStep(Res.string.tutorial_step_seek, Res.drawable.play_arrow),
+    TutorialStep(Res.string.tutorial_step_signal, Res.drawable.graphic_eq),
     TutorialStep(Res.string.tutorial_step_mode, Res.drawable.competition)
 )
 

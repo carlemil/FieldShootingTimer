@@ -212,7 +212,7 @@ class TimerViewModelSeekTest {
     }
 
     @Test
-    fun `tapping a row calls its command once - not again on resume`() = runTest {
+    fun `the tapped row's call waits for play`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)
 
@@ -222,16 +222,17 @@ class TimerViewModelSeekTest {
         }
         runCurrent()
 
-        vm.seekTo(Command.Ready) // 7s: the call plays at the tap itself
+        vm.seekTo(Command.Ready) // 7s: the tap itself is silent
+        runCurrent()
+        assertEquals(emptyList(), collected)
+
+        vm.start() // the call fires as play resumes from the parked spot
         runCurrent()
         assertEquals(listOf(Command.Ready), collected)
 
-        vm.start()
         advanceTimeBy(4_000) // 7 → 11, past Fire at 10
         runCurrent()
         job.cancel()
-
-        // Ready is not repeated on resume; the next cue is Fire.
         assertEquals(listOf(Command.Ready, Command.Fire), collected)
     }
 

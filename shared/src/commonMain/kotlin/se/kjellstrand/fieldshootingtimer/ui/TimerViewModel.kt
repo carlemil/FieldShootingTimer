@@ -411,10 +411,8 @@ class TimerViewModel(
      */
     fun seekTo(command: Command) {
         if (command == Command.Load) {
+            // Silent: "Ladda!" is called when play starts the countdown.
             reset()
-            // Load's call still fires when the countdown starts — reset has
-            // cleared the played set, so no suppression applies here.
-            playRowCall(command)
             return
         }
         val shootingDuration = _uiState.value.shootingDuration
@@ -429,13 +427,15 @@ class TimerViewModel(
             seekTime,
             if (parksAtEnd) TimerRunningState.Finished else TimerRunningState.NotStarted
         )
-        // The dialog-driven calls are guarded instead of playing on the tap.
+        // The tap itself is silent: a timed row's call fires when play
+        // resumes from the parked spot (its cue sits exactly there), and the
+        // dialog-driven calls wait for their dialogs.
         when (command) {
             Command.Mark ->
                 _uiState.update { it.copy(awaitingMarkConfirmation = true) }
             Command.VisitationDone ->
                 _uiState.update { it.copy(awaitingVisitationDoneConfirmation = true) }
-            else -> playRowCall(command)
+            else -> Unit
         }
     }
 
@@ -471,20 +471,10 @@ class TimerViewModel(
         _uiState.update { it.copy(awaitingMarkConfirmation = false) }
     }
 
-    /**
-     * Tapping a row calls its command right away. The command's cue is then
-     * marked as played so pressing play doesn't immediately repeat it —
-     * each command is called once, at the moment it was chosen.
-     */
+    /** Plays a dialog-confirmed call (VisitationDone, Mark). */
     private fun playRowCall(command: Command) {
         if (command.audioPath == null) return
         _cueEventsFlow.tryEmit(command)
-        if (command != Command.Load) {
-            val cues = activeCues(_uiState.value.shootingDuration)
-            cues.indices
-                .filter { cues[it].second == command }
-                .forEach { playedCueIndices.add(it) }
-        }
     }
 
     /**

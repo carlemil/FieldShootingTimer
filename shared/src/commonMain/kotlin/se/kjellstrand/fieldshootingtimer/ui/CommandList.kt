@@ -89,10 +89,12 @@ fun CommandList(
                     .padding(Paddings.Small),
                 color = if (isHighlighted) MaterialTheme.colorScheme.onSecondaryContainer
                 else MaterialTheme.colorScheme.onSurfaceVariant,
+                // 22sp keeps the longest row ("PATRON UR! PROPPA VAPEN!")
+                // on a single line even while highlighted.
                 style = if (isHighlighted) {
                     MaterialTheme.typography.titleLarge.copy(
-                        fontSize = 26.sp,
-                        lineHeight = 32.sp,
+                        fontSize = 22.sp,
+                        lineHeight = 28.sp,
                         fontWeight = FontWeight.Bold
                     )
                 } else {
