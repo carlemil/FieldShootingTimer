@@ -152,7 +152,10 @@ Each entry bundles `audioPath: String?` (e.g. `"files/eld.mp3"`),
 seconds, and a `color`. The ordered `Command.entries` list with `duration >= 0`
 defines the timer's sequence: `TenSecondsLeft (7s) → Ready (3s) → Fire
 (configurable) → CeaseFire (3s) → UnloadWeaponDelay (3s, silent) →
-UnloadWeapon (4s) → VisitationDelay (2s, silent) → Visitation (2s)`. The two
+UnloadWeapon (4s) → VisitationDelay (2s, silent) → Visitation (2s)`. The
+sequence is mode-aware via `timedCommandsFor(mode)`: training ends after
+UnloadWeapon — the Visitation stretch (and the Visitation/Mark list rows)
+are competition-only. The two
 `*Delay` entries are silent pacing gaps: timed, but `listed = false` (no
 command-list row — `Command.listedCommands` filters them; the highlight
 stays on the previous listed command while one runs). `Load` and `AllReady`
