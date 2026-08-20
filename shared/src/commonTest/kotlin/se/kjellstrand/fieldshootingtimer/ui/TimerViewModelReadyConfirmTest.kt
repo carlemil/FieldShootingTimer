@@ -42,7 +42,7 @@ class TimerViewModelReadyConfirmTest {
     }
 
     @Test
-    fun `no cue fires while waiting - the zero cue fires on continue`() = runTest {
+    fun `only the AllReady call fires while waiting - the zero cue fires on continue`() = runTest {
         val vm = competitionVm()
         val cues = mutableListOf<Command>()
         val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -52,14 +52,17 @@ class TimerViewModelReadyConfirmTest {
 
         vm.seekTo(Command.AllReady)
         runCurrent()
-        vm.start()
+        vm.start() // resuming from the AllReady row calls "Alla klara!"
         advanceTimeBy(11_000)
         runCurrent()
-        assertTrue(cues.isEmpty(), "no cue may fire before the dialog is answered, got $cues")
+        assertEquals(
+            listOf(Command.AllReady), cues,
+            "no timed cue may fire before the dialog is answered"
+        )
 
         vm.confirmAllReady()
         runCurrent()
-        assertEquals(listOf(Command.TenSecondsLeft), cues)
+        assertEquals(listOf(Command.AllReady, Command.TenSecondsLeft), cues)
         assertFalse(vm.uiStateFlow.value.awaitingReadyConfirmation)
         assertEquals(TimerRunningState.Running, vm.uiStateFlow.value.timerRunningState)
         job.cancel()

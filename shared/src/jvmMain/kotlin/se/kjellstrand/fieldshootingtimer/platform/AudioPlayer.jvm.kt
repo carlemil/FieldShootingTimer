@@ -8,6 +8,7 @@ import se.kjellstrand.fieldshootingtimer.domain.Command
 private class NoOpAudioPlayer : AudioPlayer {
     override suspend fun preload(cues: List<Command>) = Unit
     override fun play(command: Command) = Unit
+    override fun playBeep() = Unit
     override fun release() = Unit
 }
 

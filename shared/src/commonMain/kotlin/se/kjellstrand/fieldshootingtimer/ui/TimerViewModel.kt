@@ -24,7 +24,10 @@ import kotlin.time.TimeSource
 import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REMAINING_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_COUNTDOWN_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
+import se.kjellstrand.fieldshootingtimer.domain.beepTimeSeconds
+import se.kjellstrand.fieldshootingtimer.domain.boundaryFlagSeconds
 import se.kjellstrand.fieldshootingtimer.domain.buildAudioCues
+import se.kjellstrand.fieldshootingtimer.domain.buildCompetitionPrepCues
 import se.kjellstrand.fieldshootingtimer.domain.buildRange
 import se.kjellstrand.fieldshootingtimer.domain.buildSegmentDurations
 import se.kjellstrand.fieldshootingtimer.domain.findNextFreeThumbSpot
@@ -41,6 +44,11 @@ data class TimerUiState(
     // Defaults to true (no tutorial) so store-less ViewModels — tests, previews —
     // never flash it; a store with no saved value means first launch => false.
     val tutorialSeen: Boolean = true,
+    // Explicit light/dark choice from the menu; null = follow the system theme.
+    val darkTheme: Boolean? = null,
+    // true = a short beep at the end of the yellow (CeaseFire) segment
+    // replaces the drawn-out "Eld upphör!" voice at its start.
+    val ceaseFireBeep: Boolean = false,
     // Competition only: the countdown has just hit 0 and the timer is parked
     // there waiting for the "Alla klara!" dialog to be answered.
     val awaitingReadyConfirmation: Boolean = false
@@ -77,6 +85,8 @@ class TimerViewModel(
     val thumbValuesFlow = _uiState.map { it.thumbValues }.distinctUntilChanged()
     val timerModeFlow = _uiState.map { it.timerMode }.distinctUntilChanged()
     val tutorialSeenFlow = _uiState.map { it.tutorialSeen }.distinctUntilChanged()
+    val darkThemeFlow = _uiState.map { it.darkTheme }.distinctUntilChanged()
+    val ceaseFireBeepFlow = _uiState.map { it.ceaseFireBeep }.distinctUntilChanged()
     val awaitingReadyConfirmationFlow =
         _uiState.map { it.awaitingReadyConfirmation }.distinctUntilChanged()
 
@@ -98,6 +108,13 @@ class TimerViewModel(
     private val _thumbCrossedFlow = MutableSharedFlow<Float>(extraBufferCapacity = 8)
     val thumbCrossedFlow: SharedFlow<Float> = _thumbCrossedFlow.asSharedFlow()
 
+    // Fired once per run at beepTimeSeconds — slightly before the yellow
+    // segment's end. MainScreen plays the cease-fire beep on it when the
+    // beep setting is on.
+    private val _beepEventsFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
+    val beepEventsFlow: SharedFlow<Unit> = _beepEventsFlow.asSharedFlow()
+    private var beepEmitted = false
+
     private val playedCueIndices = mutableSetOf<Int>()
     private val crossedThumbs = mutableSetOf<Float>()
     private var timerJob: Job? = null
@@ -116,12 +133,16 @@ class TimerViewModel(
                 val savedThumbs = store.loadThumbValues()
                 val savedMode = store.loadTimerMode()
                 val savedTutorialSeen = store.loadTutorialSeen()
+                val savedDarkTheme = store.loadDarkTheme()
+                val savedCeaseFireBeep = store.loadCeaseFireBeep()
                 _uiState.update { current ->
                     current.copy(
                         shootingDuration = savedShooting ?: current.shootingDuration,
                         thumbValues = savedThumbs ?: current.thumbValues,
                         timerMode = savedMode ?: current.timerMode,
-                        tutorialSeen = savedTutorialSeen ?: false
+                        tutorialSeen = savedTutorialSeen ?: false,
+                        darkTheme = savedDarkTheme ?: current.darkTheme,
+                        ceaseFireBeep = savedCeaseFireBeep ?: current.ceaseFireBeep
                     )
                 }
             }
@@ -158,6 +179,20 @@ class TimerViewModel(
         _uiState.update { it.copy(timerMode = mode) }
         settingsStore?.let { store ->
             scope.launch { store.saveTimerMode(mode) }
+        }
+    }
+
+    fun setDarkTheme(dark: Boolean) {
+        _uiState.update { it.copy(darkTheme = dark) }
+        settingsStore?.let { store ->
+            scope.launch { store.saveDarkTheme(dark) }
+        }
+    }
+
+    fun setCeaseFireBeep(beep: Boolean) {
+        _uiState.update { it.copy(ceaseFireBeep = beep) }
+        settingsStore?.let { store ->
+            scope.launch { store.saveCeaseFireBeep(beep) }
         }
     }
 
@@ -198,8 +233,11 @@ class TimerViewModel(
     }
 
     fun roundThumbValues() {
+        // distinct(): two flags dragged onto the same second merge into one.
         _uiState.value = _uiState.value.copy(
-            thumbValues = _uiState.value.thumbValues.map { it.roundToInt().toFloat() }
+            thumbValues = _uiState.value.thumbValues
+                .map { it.roundToInt().toFloat() }
+                .distinct()
         )
         persistThumbValues()
     }
@@ -231,8 +269,12 @@ class TimerViewModel(
             val shootingDuration = _uiState.value.shootingDuration
             val segments = buildSegmentDurations(shootingDuration)
             val total = segments.sum()
-            val cues = buildAudioCues(shootingDuration)
-            val thumbs = _uiState.value.thumbValues
+            val cues = activeCues(shootingDuration)
+            val beepTime = beepTimeSeconds(shootingDuration)
+            // The immovable boundary flags (shown once any user flag exists)
+            // vibrate on crossing just like the user-placed ones.
+            val userThumbs = _uiState.value.thumbValues
+            val thumbs = userThumbs + boundaryFlagSeconds(userThumbs, shootingDuration)
 
             setCurrentTime(initialTime)
             emitPassedCues(initialTime, cues)
@@ -260,12 +302,14 @@ class TimerViewModel(
                     setCurrentTime(total)
                     emitPassedCues(total, cues)
                     emitPassedThumbs(total, thumbs)
+                    emitPassedBeep(total, beepTime)
                     setTimerState(TimerRunningState.Finished)
                     break
                 }
                 setCurrentTime(elapsed)
                 emitPassedCues(elapsed, cues)
                 emitPassedThumbs(elapsed, thumbs)
+                emitPassedBeep(elapsed, beepTime)
             }
         }
     }
@@ -290,6 +334,7 @@ class TimerViewModel(
         runAnchorEpochMs = null
         playedCueIndices.clear()
         crossedThumbs.clear()
+        beepEmitted = false
         _uiState.update { it.copy(awaitingReadyConfirmation = false) }
         setCurrentTime(0f)
         setTimerState(TimerRunningState.NotStarted)
@@ -344,6 +389,11 @@ class TimerViewModel(
             if (command == Command.Mark) TimerRunningState.Finished
             else TimerRunningState.NotStarted
         )
+        // Mark never runs on the timer, so tapping its row is the only way
+        // its call is heard — play it right away.
+        if (command == Command.Mark) {
+            _cueEventsFlow.tryEmit(Command.Mark)
+        }
     }
 
     /**
@@ -364,13 +414,35 @@ class TimerViewModel(
         // Cues and thumbs strictly before the park point count as already
         // fired, so resuming plays the cue at the parked time and nothing
         // older.
-        val cues = buildAudioCues(_uiState.value.shootingDuration)
+        val cues = activeCues(_uiState.value.shootingDuration)
         playedCueIndices.clear()
         cues.indices.filterTo(playedCueIndices) { cues[it].first < seconds }
         crossedThumbs.clear()
-        _uiState.value.thumbValues.filterTo(crossedThumbs) { it < seconds }
+        val userThumbs = _uiState.value.thumbValues
+        (userThumbs + boundaryFlagSeconds(userThumbs, _uiState.value.shootingDuration))
+            .filterTo(crossedThumbs) { it < seconds }
+        beepEmitted = beepTimeSeconds(_uiState.value.shootingDuration) < seconds
         setCurrentTime(seconds)
         setTimerState(state)
+    }
+
+    /**
+     * The full cue plan for the current mode: competition prefixes the
+     * timed-command cues with the preparation calls on the countdown's
+     * negative clock ("Ladda!" at its start, "Alla klara!" at -10s).
+     */
+    private fun activeCues(shootingDuration: Float): List<Pair<Float, Command>> {
+        val prepCues =
+            if (_uiState.value.timerMode == TimerMode.Competition) buildCompetitionPrepCues()
+            else emptyList()
+        return prepCues + buildAudioCues(shootingDuration)
+    }
+
+    private fun emitPassedBeep(time: Float, beepTime: Float) {
+        if (!beepEmitted && time >= beepTime) {
+            beepEmitted = true
+            _beepEventsFlow.tryEmit(Unit)
+        }
     }
 
     private fun emitPassedCues(time: Float, cues: List<Pair<Float, Command>>) {

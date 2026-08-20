@@ -29,10 +29,7 @@ import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_again
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_continue
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_question
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
-import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
 internal const val READY_CONFIRM_TAG = "ReadyConfirmOverlay"
 internal const val READY_CONTINUE_TAG = "ReadyConfirmContinue"
@@ -63,13 +60,13 @@ internal fun ReadyConfirmationOverlay(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(WhiteColor)
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(Paddings.Large)
         ) {
             Text(
                 text = stringResource(Res.string.ready_confirm_question),
                 style = MaterialTheme.typography.titleLarge,
-                color = BlackColor,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(vertical = Paddings.Large)
             )
@@ -81,7 +78,7 @@ internal fun ReadyConfirmationOverlay(
                 Text(
                     text = stringResource(Res.string.ready_confirm_again),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = GrayColor,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .testTag(READY_AGAIN_TAG)
                         .clickable { onAskAgain() }
@@ -90,8 +87,8 @@ internal fun ReadyConfirmationOverlay(
                 Button(
                     onClick = onContinue,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LightGreenColor,
-                        contentColor = BlackColor
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     modifier = Modifier.testTag(READY_CONTINUE_TAG)
                 ) {

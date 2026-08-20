@@ -41,10 +41,7 @@ import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_drag_tick
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_mode
 import se.kjellstrand.fieldshootingtimer.resources.tutorial_step_pinch
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
-import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
 internal const val TUTORIAL_OVERLAY_TAG = "TutorialOverlay"
 internal const val TUTORIAL_NEXT_TAG = "TutorialNext"
@@ -90,19 +87,19 @@ internal fun TutorialOverlay(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
                 .clip(RoundedCornerShape(16.dp))
-                .background(WhiteColor)
+                .background(MaterialTheme.colorScheme.surface)
                 .padding(Paddings.Large)
         ) {
             Text(
                 text = "${stepIndex + 1}/${tutorialSteps.size}",
                 style = MaterialTheme.typography.bodySmall,
-                color = GrayColor
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             step.icon?.let { icon ->
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
-                    tint = BlackColor,
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .padding(top = Paddings.Medium)
                         .size(48.dp)
@@ -111,7 +108,7 @@ internal fun TutorialOverlay(
             Text(
                 text = stringResource(step.text),
                 style = MaterialTheme.typography.titleMedium,
-                color = BlackColor,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(vertical = Paddings.Large)
             )
@@ -123,7 +120,7 @@ internal fun TutorialOverlay(
                 Text(
                     text = stringResource(Res.string.tutorial_skip),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = GrayColor,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .testTag(TUTORIAL_SKIP_TAG)
                         .clickable { onSkip() }
@@ -133,8 +130,8 @@ internal fun TutorialOverlay(
                 Button(
                     onClick = onNext,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = LightGreenColor,
-                        contentColor = BlackColor
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     modifier = Modifier.testTag(TUTORIAL_NEXT_TAG)
                 ) {

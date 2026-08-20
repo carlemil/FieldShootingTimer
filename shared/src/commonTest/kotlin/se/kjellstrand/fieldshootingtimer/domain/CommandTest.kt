@@ -16,7 +16,9 @@ class CommandTest {
                 Command.Ready,
                 Command.Fire,
                 Command.CeaseFire,
+                Command.UnloadWeaponDelay,
                 Command.UnloadWeapon,
+                Command.VisitationDelay,
                 Command.Visitation
             ),
             Command.timedCommands
@@ -35,14 +37,36 @@ class CommandTest {
     fun `audibleCommands contains entries that have an audio resource`() {
         assertEquals(
             listOf(
+                Command.Load,
+                Command.AllReady,
                 Command.TenSecondsLeft,
                 Command.Ready,
                 Command.Fire,
                 Command.CeaseFire,
                 Command.UnloadWeapon,
-                Command.Visitation
+                Command.Visitation,
+                Command.Mark
             ),
             Command.audibleCommands
+        )
+    }
+
+    @Test
+    fun `silent pacing delays are timed but neither listed nor audible`() {
+        listOf(Command.UnloadWeaponDelay, Command.VisitationDelay).forEach { cmd ->
+            assertTrue(cmd.duration >= 0, "${cmd.name} must be timed")
+            assertTrue(!cmd.listed, "${cmd.name} must not get a list row")
+            assertNull(cmd.audioPath, "${cmd.name} must be silent")
+        }
+        assertEquals(3, Command.UnloadWeaponDelay.duration)
+        assertEquals(2, Command.VisitationDelay.duration)
+    }
+
+    @Test
+    fun `listedCommands is entries without the pacing delays`() {
+        assertEquals(
+            Command.entries - Command.UnloadWeaponDelay - Command.VisitationDelay,
+            Command.listedCommands
         )
     }
 
@@ -74,15 +98,17 @@ class CommandTest {
     }
 
     @Test
-    fun `Command enum has the full set of 9 entries`() {
-        assertEquals(9, Command.entries.size)
+    fun `Command enum has the full set of 11 entries`() {
+        assertEquals(11, Command.entries.size)
     }
 
     @Test
-    fun `display-only commands carry -1 for duration and null audioPath`() {
+    fun `untimed commands carry -1 for duration but all have audio`() {
+        // Load/AllReady are called during the competition countdown; Mark
+        // when its row is tapped.
         listOf(Command.Load, Command.AllReady, Command.Mark).forEach { cmd ->
             assertEquals(-1, cmd.duration, "${cmd.name} duration")
-            assertNull(cmd.audioPath, "${cmd.name} audioPath")
+            assertNotNull(cmd.audioPath, "${cmd.name} audioPath")
         }
     }
 }

@@ -4,11 +4,14 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -24,17 +27,24 @@ import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.resources.Res
 import se.kjellstrand.fieldshootingtimer.resources.add_tick
+import se.kjellstrand.fieldshootingtimer.resources.cease_fire_beep
+import se.kjellstrand.fieldshootingtimer.resources.cease_fire_voice
 import se.kjellstrand.fieldshootingtimer.resources.competition
+import se.kjellstrand.fieldshootingtimer.resources.dark_mode
+import se.kjellstrand.fieldshootingtimer.resources.graphic_eq
 import se.kjellstrand.fieldshootingtimer.resources.help
+import se.kjellstrand.fieldshootingtimer.resources.light_mode
 import se.kjellstrand.fieldshootingtimer.resources.menu
 import se.kjellstrand.fieldshootingtimer.resources.mode_competition
 import se.kjellstrand.fieldshootingtimer.resources.mode_training
+import se.kjellstrand.fieldshootingtimer.resources.record_voice_over
 import se.kjellstrand.fieldshootingtimer.resources.remove_tick
 import se.kjellstrand.fieldshootingtimer.resources.share
 import se.kjellstrand.fieldshootingtimer.resources.share_app
+import se.kjellstrand.fieldshootingtimer.resources.theme_dark
+import se.kjellstrand.fieldshootingtimer.resources.theme_light
 import se.kjellstrand.fieldshootingtimer.resources.training
-import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
+import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 import kotlin.math.roundToInt
 
 internal const val MENU_BUTTON_TAG = "RadialMenuButton"
@@ -43,14 +53,23 @@ internal const val MENU_ITEM_REMOVE_TICK_TAG = "RadialMenuItemRemoveTick"
 internal const val MENU_ITEM_SHARE_TAG = "RadialMenuItemShare"
 internal const val MENU_ITEM_MODE_TAG = "RadialMenuItemMode"
 internal const val MENU_ITEM_TUTORIAL_TAG = "RadialMenuItemTutorial"
+internal const val MENU_ITEM_THEME_TAG = "RadialMenuItemTheme"
+internal const val MENU_ITEM_BEEP_TAG = "RadialMenuItemBeep"
 internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
 /**
- * Distance from the menu button's center to each fanned-out item's center.
- * With five items 20° apart, adjacent centers sit ~2·r·sin(10°) ≈ 61dp
- * apart — comfortably above the 48dp button size.
+ * The items fan out in two layers so nothing sits too far from the button:
+ * the beep toggle, share, and help on the inner arc; the timer-editing items
+ * (+/−, mode) and the theme toggle on the outer. Four items ~27° apart at
+ * 155dp sit ~2·r·sin(13.3°) ≈ 71dp apart, and three at 40° apart at 100dp
+ * sit ≈ 68dp apart — both well above the 38dp button size — and the layers
+ * are 55dp apart radially.
  */
-private val MenuItemRadius = 175.dp
+private val InnerMenuItemRadius = 100.dp
+private val OuterMenuItemRadius = 155.dp
+
+/** 20% below the stock 48dp IconButton, keeping the fan compact. */
+private val MenuButtonSize = 38.dp
 
 /**
  * A circular menu button whose items fan out on an arc when opened. The items
@@ -58,10 +77,15 @@ private val MenuItemRadius = 175.dp
  * underdamped spring floats them out to their arc positions with a small
  * elastic overshoot, and pulls them back in on close.
  *
- * Items: add/remove tick (+/−, gated by [tickAdjustEnabled]; the menu stays
- * open so several ticks can be added in a row), a competition/training mode
- * toggle whose icon shows the active mode ([modeToggleEnabled] gates it to
- * when the timer is idle), share, and help (reopens the tutorial).
+ * Two layers: the inner arc holds the cease-fire beep toggle (icon shows the
+ * active cue style; a short signal at the yellow segment's end instead of
+ * the spoken "Eld upphör!"), share, and help (reopens the tutorial). The
+ * outer arc holds add/remove tick (+/−, gated by [tickAdjustEnabled]; the
+ * menu stays open so several ticks can be added in a row), a competition/
+ * training mode toggle whose icon shows the active mode ([modeToggleEnabled]
+ * gates it to when the timer isn't running), and the light/dark theme toggle (icon
+ * shows the active theme; the menu stays open so the switch is seen
+ * immediately).
  * [openTowardsStart] picks the arc direction so the items fan toward the
  * screen's interior from either top corner.
  *
@@ -80,6 +104,10 @@ fun RadialMenu(
     onRemoveTick: () -> Unit,
     onShare: () -> Unit,
     onShowTutorial: () -> Unit,
+    darkTheme: Boolean,
+    onToggleTheme: () -> Unit,
+    ceaseFireBeep: Boolean,
+    onToggleCeaseFireBeep: () -> Unit,
     openTowardsStart: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -91,41 +119,48 @@ fun RadialMenu(
         ),
         label = "radialMenuFanOut"
     )
-    val radiusPx = with(LocalDensity.current) { MenuItemRadius.toPx() }
+    val innerRadiusPx = with(LocalDensity.current) { InnerMenuItemRadius.toPx() }
+    val outerRadiusPx = with(LocalDensity.current) { OuterMenuItemRadius.toPx() }
     // Degrees: 0 = right, 90 = straight down. Fan into the screen from the
     // anchoring corner.
-    val itemAngles = if (openTowardsStart) {
-        listOf(90f, 110f, 130f, 150f, 170f)
+    val outerAngles = if (openTowardsStart) {
+        listOf(90f, 117f, 143f, 170f)
     } else {
-        listOf(90f, 70f, 50f, 30f, 10f)
+        listOf(90f, 63f, 37f, 10f)
+    }
+    val innerAngles = if (openTowardsStart) {
+        listOf(90f, 130f, 170f)
+    } else {
+        listOf(90f, 50f, 10f)
     }
 
     Box(modifier = modifier) {
         // Items are composed before (= beneath) the menu button and leave the
         // composition entirely once the closing spring has settled.
         if (progress > 0.01f) {
+            // Outer layer: timer editing + theme.
             RadialMenuItem(
-                angleDeg = itemAngles[0],
+                angleDeg = outerAngles[0],
                 progress = progress,
-                radiusPx = radiusPx,
+                radiusPx = outerRadiusPx,
                 icon = Res.drawable.add_tick,
                 contentDescription = stringResource(Res.string.add_tick),
                 tag = MENU_ITEM_ADD_TICK_TAG,
                 onClick = { if (tickAdjustEnabled) onAddTick() }
             )
             RadialMenuItem(
-                angleDeg = itemAngles[1],
+                angleDeg = outerAngles[1],
                 progress = progress,
-                radiusPx = radiusPx,
+                radiusPx = outerRadiusPx,
                 icon = Res.drawable.remove_tick,
                 contentDescription = stringResource(Res.string.remove_tick),
                 tag = MENU_ITEM_REMOVE_TICK_TAG,
                 onClick = { if (tickAdjustEnabled) onRemoveTick() }
             )
             RadialMenuItem(
-                angleDeg = itemAngles[2],
+                angleDeg = outerAngles[2],
                 progress = progress,
-                radiusPx = radiusPx,
+                radiusPx = outerRadiusPx,
                 icon = if (timerMode == TimerMode.Competition) {
                     Res.drawable.competition
                 } else {
@@ -142,9 +177,37 @@ fun RadialMenu(
                 onClick = { if (modeToggleEnabled) onToggleMode() }
             )
             RadialMenuItem(
-                angleDeg = itemAngles[3],
+                angleDeg = outerAngles[3],
                 progress = progress,
-                radiusPx = radiusPx,
+                radiusPx = outerRadiusPx,
+                icon = if (darkTheme) Res.drawable.dark_mode else Res.drawable.light_mode,
+                contentDescription = stringResource(
+                    if (darkTheme) Res.string.theme_dark else Res.string.theme_light
+                ),
+                tag = MENU_ITEM_THEME_TAG,
+                onClick = onToggleTheme
+            )
+            // Inner layer: beep toggle + app-level items.
+            RadialMenuItem(
+                angleDeg = innerAngles[0],
+                progress = progress,
+                radiusPx = innerRadiusPx,
+                icon = if (ceaseFireBeep) {
+                    Res.drawable.graphic_eq
+                } else {
+                    Res.drawable.record_voice_over
+                },
+                contentDescription = stringResource(
+                    if (ceaseFireBeep) Res.string.cease_fire_beep
+                    else Res.string.cease_fire_voice
+                ),
+                tag = MENU_ITEM_BEEP_TAG,
+                onClick = onToggleCeaseFireBeep
+            )
+            RadialMenuItem(
+                angleDeg = innerAngles[1],
+                progress = progress,
+                radiusPx = innerRadiusPx,
                 icon = Res.drawable.share,
                 contentDescription = stringResource(Res.string.share_app),
                 tag = MENU_ITEM_SHARE_TAG,
@@ -154,9 +217,9 @@ fun RadialMenu(
                 }
             )
             RadialMenuItem(
-                angleDeg = itemAngles[4],
+                angleDeg = innerAngles[2],
                 progress = progress,
-                radiusPx = radiusPx,
+                radiusPx = innerRadiusPx,
                 icon = Res.drawable.help,
                 contentDescription = stringResource(Res.string.help),
                 tag = MENU_ITEM_TUTORIAL_TAG,
@@ -169,14 +232,16 @@ fun RadialMenu(
         IconButton(
             onClick = { onOpenChange(!open) },
             modifier = Modifier
+                .size(MenuButtonSize)
                 .clip(CircleShape)
-                .background(WhiteColor)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .border(Paddings.Tiny, MaterialTheme.colorScheme.onBackground, CircleShape)
                 .testTag(MENU_BUTTON_TAG)
         ) {
             Icon(
                 painter = painterResource(Res.drawable.menu),
                 contentDescription = stringResource(Res.string.menu),
-                tint = BlackColor
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -197,14 +262,16 @@ private fun RadialMenuItem(
         onClick = onClick,
         modifier = Modifier
             .offset { IntOffset(center.x.roundToInt(), center.y.roundToInt()) }
+            .size(MenuButtonSize)
             .clip(CircleShape)
-            .background(WhiteColor)
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(Paddings.Tiny, MaterialTheme.colorScheme.onBackground, CircleShape)
             .testTag(tag)
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = contentDescription,
-            tint = BlackColor
+            tint = MaterialTheme.colorScheme.onSurface
         )
     }
 }

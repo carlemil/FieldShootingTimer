@@ -161,6 +161,24 @@ internal fun tickDragToleranceSeconds(
     return ticksMax * touchSlopPx / (availRad * arcRadiusPx)
 }
 
+/**
+ * True when a badge of [badgeRadiusPx] fits inside an arc sweeping [sweepDeg]
+ * at [orbitRadiusPx] — used to hide segment/interval badges that would
+ * collide with their neighbors when extreme Fire durations squeeze segments
+ * into slivers. [marginFactor] widens the required arc so a badge is dropped
+ * before it visually touches the segment's edges.
+ */
+internal fun badgeFitsInSweep(
+    sweepDeg: Float,
+    badgeRadiusPx: Float,
+    orbitRadiusPx: Float,
+    marginFactor: Float = 1.5f
+): Boolean {
+    if (orbitRadiusPx <= 0f) return false
+    val badgeArcDeg = (2f * badgeRadiusPx * marginFactor / orbitRadiusPx) * (180f / PI.toFloat())
+    return sweepDeg >= badgeArcDeg
+}
+
 /** The radii DecoratedDial's overlays hang off, all derived from the ring. */
 internal data class DialRadii(
     val arcRadius: Float,

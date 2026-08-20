@@ -151,9 +151,17 @@ Each entry bundles `audioPath: String?` (e.g. `"files/eld.mp3"`),
 `stringRes: StringResource` (e.g. `Res.string.command_eld`), a `duration` in
 seconds, and a `color`. The ordered `Command.entries` list with `duration >= 0`
 defines the timer's sequence: `TenSecondsLeft (7s) → Ready (3s) → Fire
-(configurable) → CeaseFire (3s) → UnloadWeapon (4s) → Visitation (2s)`.
-`Load`, `AllReady`, and `Mark` have `duration = -1` and a `null` audioPath —
-they're shown in the command list only. The `onDial` flag marks which timed
+(configurable) → CeaseFire (3s) → UnloadWeaponDelay (3s, silent) →
+UnloadWeapon (4s) → VisitationDelay (2s, silent) → Visitation (2s)`. The two
+`*Delay` entries are silent pacing gaps: timed, but `listed = false` (no
+command-list row — `Command.listedCommands` filters them; the highlight
+stays on the previous listed command while one runs). `Load` and `AllReady`
+have `duration = -1` and a `null` audioPath — list rows only. `Mark` is also
+untimed but has audio: tapping its row plays the call (`seekTo` emits its
+cue). The cease-fire beep setting (`ceaseFireBeep`, persisted) mutes the
+CeaseFire voice and plays `files/beep.wav` via the ViewModel's
+`beepEventsFlow`, fired at `beepTimeSeconds()` — the yellow segment's end
+minus a 0.1s lead. The `onDial` flag marks which timed
 commands are drawn as dial segments (`Command.dialCommands`, the prefix
 through `CeaseFire`); `UnloadWeapon` and `Visitation` still run on the timer
 (audio cues, list highlight) but the dial ends at CeaseFire and the hand
@@ -175,7 +183,7 @@ each with Android + iOS actuals (plus no-op jvm stubs for host tests).
 |---|---|---|
 | `AudioPlayer` via `rememberAudioPlayer()` | SoundPool; loads via `Res.readBytes()` cached to `context.cacheDir` | `AVAudioPlayer` pool constructed from `NSData` |
 | `Haptics` via `rememberHaptics()` | `VibrationEffect.createOneShot(300ms)` (O+) | `UIImpactFeedbackGenerator(.medium)` |
-| `PlatformAudioPolicy` via `rememberPlatformAudioPolicy()` | reads `ringerMode` (NORMAL ⇒ play, !SILENT ⇒ vibrate) | always `true`/`true` (silent switch handled by `AVAudioSession(.ambient)` set in `iosAppApp.swift`) |
+| `PlatformAudioPolicy` via `rememberPlatformAudioPolicy()` | reads `ringerMode` (NORMAL ⇒ play, !SILENT ⇒ vibrate); DND bypasses both gates since it makes `getRingerMode()` report SILENT while media stays audible | always `true`/`true` (silent switch handled by `AVAudioSession(.ambient)` set in `iosAppApp.swift`) |
 | `KeepScreenOn(enabled)` @Composable | toggles `Window.FLAG_KEEP_SCREEN_ON` via `DisposableEffect` | toggles `UIApplication.idleTimerDisabled` |
 | `dynamicColorScheme(dark)` @Composable | `dynamic{Light,Dark}ColorScheme(ctx)` on Android 12+, else `null` | always `null` (falls back to static `Light/DarkColorScheme`) |
 | `Sharer` via `rememberSharer()` | `ACTION_SEND` `text/plain` chooser (`FLAG_ACTIVITY_NEW_TASK`) | `UIActivityViewController` presented from the topmost VC |
@@ -183,15 +191,23 @@ each with Android + iOS actuals (plus no-op jvm stubs for host tests).
 The `RadialMenu` (`ui/RadialMenu.kt`) is overlaid by `MainScreen` in the
 `BoxWithConstraints` — top-end in portrait, top-start in landscape (so it
 clears the right-hand settings column), fanning its items toward the screen
-interior (`openTowardsStart`). Its items animate out on an arc with a
+interior (`openTowardsStart`). Its items animate out on two arcs with a
 slightly underdamped spring, composed beneath the menu button so they hide
-under it at rest. Items: add/remove tick (+/−, wired to
+under it at rest. Outer arc: add/remove tick (+/−, wired to
 `addNewThumbValue`/`dropLastThumbValue`; the menu stays open so several
-ticks can be added in a row), the competition/training mode toggle, share
-(the GitHub Pages landing page, `SHARE_URL` in `MainScreen.kt`), and help
-(reopens the tutorial). The tick and mode items are gated to a `NotStarted`
-timer. The open state is hoisted to `MainScreen`, which puts a 50% black
-scrim between the app and the open menu — it swallows all presses and
+ticks can be added in a row; gated to a `NotStarted` timer), the
+competition/training mode toggle (enabled whenever not `Running`; switching
+resets a paused timer first), and the light/dark theme toggle (persisted
+`darkTheme`; null = follow system; applied by `MainScreen`'s
+`FieldShootingTimerTheme` wrap with dynamic color off, and mirrored to the
+system bars via the `SyncSystemBarsToTheme` platform expect). Inner arc:
+the cease-fire beep toggle (persisted `ceaseFireBeep`: skips the spoken
+CeaseFire cue and plays `files/beep.wav` at the yellow segment's end — it
+rides on UnloadWeapon's cue via the pure `cuePlayback()` in
+`MainScreen.kt`), share (the GitHub Pages landing page, `SHARE_URL` in
+`MainScreen.kt`), and help (reopens the tutorial). Toggle icons show the
+active state. The open state is hoisted to `MainScreen`, which puts a 50%
+black scrim between the app and the open menu — it swallows all presses and
 closes the menu on tap.
 
 **Tutorial (`ui/Tutorial.kt`).** Four modal cards (`tutorialSteps`) teaching
@@ -247,8 +263,11 @@ contract: live updates during the gesture (`setThumbValues` /
 sequence immediately and hides the `Load`/`AllReady` rows from the command
 list. Competition prefixes the run with a 60s preparation countdown,
 **modeled as `currentTime` running from -60 to 0** (constants in
-`domain/TimerPlan.kt`) — this reuses the whole timer loop untouched: every
-cue time is ≥ 0 so nothing fires until the countdown ends. `stop()` during
+`domain/TimerPlan.kt`) — this reuses the whole timer loop untouched. The
+preparation calls ride the same cue machinery on the negative clock
+(`buildCompetitionPrepCues`: "Ladda!" at -60, "Alla klara!" at -10,
+prepended to the cue list in competition mode only); the timed cues are all
+≥ 0 so none fire until the countdown ends. `stop()` during
 the countdown (negative time) cancels it back to `NotStarted`; after 0 it
 pauses normally. Renderers clamp: the dial hand coerces to ≥ 0; while time
 is negative the play button shows `ceil(-currentTime)` as countdown digits

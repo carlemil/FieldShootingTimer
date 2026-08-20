@@ -24,12 +24,24 @@ interface SettingsStore {
     suspend fun saveTimerMode(mode: TimerMode)
     suspend fun loadTutorialSeen(): Boolean?
     suspend fun saveTutorialSeen(seen: Boolean)
+
+    // Defaulted so fakes/stubs that don't care about theming keep compiling;
+    // null means "no explicit choice — follow the system theme".
+    suspend fun loadDarkTheme(): Boolean? = null
+    suspend fun saveDarkTheme(dark: Boolean) {}
+
+    // CeaseFire cue style: true = short beep at the end of the yellow
+    // segment, false/null = the spoken "Eld upphör!" at its start.
+    suspend fun loadCeaseFireBeep(): Boolean? = null
+    suspend fun saveCeaseFireBeep(beep: Boolean) {}
 }
 
 private val SHOOTING_DURATION = floatPreferencesKey("shooting_duration")
 private val THUMB_VALUES = stringPreferencesKey("thumb_values_csv")
 private val TIMER_MODE = stringPreferencesKey("timer_mode")
 private val TUTORIAL_SEEN = booleanPreferencesKey("tutorial_seen")
+private val DARK_THEME = booleanPreferencesKey("dark_theme")
+private val CEASE_FIRE_BEEP = booleanPreferencesKey("cease_fire_beep")
 
 class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : SettingsStore {
     override suspend fun loadShootingDuration(): Float? =
@@ -63,6 +75,20 @@ class DataStoreSettingsStore(private val dataStore: DataStore<Preferences>) : Se
 
     override suspend fun saveTutorialSeen(seen: Boolean) {
         dataStore.edit { it[TUTORIAL_SEEN] = seen }
+    }
+
+    override suspend fun loadDarkTheme(): Boolean? =
+        dataStore.data.first()[DARK_THEME]
+
+    override suspend fun saveDarkTheme(dark: Boolean) {
+        dataStore.edit { it[DARK_THEME] = dark }
+    }
+
+    override suspend fun loadCeaseFireBeep(): Boolean? =
+        dataStore.data.first()[CEASE_FIRE_BEEP]
+
+    override suspend fun saveCeaseFireBeep(beep: Boolean) {
+        dataStore.edit { it[CEASE_FIRE_BEEP] = beep }
     }
 }
 

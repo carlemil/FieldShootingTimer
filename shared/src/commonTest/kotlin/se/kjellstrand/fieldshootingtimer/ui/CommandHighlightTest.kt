@@ -8,7 +8,8 @@ import kotlin.test.assertEquals
 
 class CommandHighlightTest {
 
-    private val segments = listOf(7f, 3f, 5f, 3f, 4f, 2f) // boundaries 7,10,15,18,22,24
+    // Boundaries 7, 10, 15, 18 (delay), 21, 25 (delay), 27, 29.
+    private val segments = listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f)
 
     private fun training(time: Float, state: TimerRunningState = TimerRunningState.Running) =
         highlightedCommand(TimerMode.Training, state, time, segments)
@@ -27,13 +28,23 @@ class CommandHighlightTest {
         assertEquals(Command.Ready, training(7f))
         assertEquals(Command.Fire, training(10f))
         assertEquals(Command.CeaseFire, training(15f))
-        assertEquals(Command.UnloadWeapon, training(18f))
-        assertEquals(Command.Visitation, training(22f))
+        assertEquals(Command.UnloadWeapon, training(21f))
+        assertEquals(Command.Visitation, training(27f))
+    }
+
+    @Test
+    fun `silent pacing delays keep the previous command highlighted`() {
+        // UnloadWeaponDelay runs 18..21: the cease-fire row stays lit.
+        assertEquals(Command.CeaseFire, training(18f))
+        assertEquals(Command.CeaseFire, training(20.9f))
+        // VisitationDelay runs 25..27: the unload row stays lit.
+        assertEquals(Command.UnloadWeapon, training(25f))
+        assertEquals(Command.UnloadWeapon, training(26.9f))
     }
 
     @Test
     fun `past the end the last timed command stays highlighted`() {
-        assertEquals(Command.Visitation, training(24f))
+        assertEquals(Command.Visitation, training(29f))
         assertEquals(Command.Visitation, training(999f))
     }
 

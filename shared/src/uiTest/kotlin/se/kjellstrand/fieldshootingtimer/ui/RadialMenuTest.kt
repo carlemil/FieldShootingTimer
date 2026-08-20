@@ -32,7 +32,11 @@ class RadialMenuTest {
         onAddTick: () -> Unit = {},
         onRemoveTick: () -> Unit = {},
         onShare: () -> Unit = {},
-        onShowTutorial: () -> Unit = {}
+        onShowTutorial: () -> Unit = {},
+        darkTheme: Boolean = false,
+        onToggleTheme: () -> Unit = {},
+        ceaseFireBeep: Boolean = false,
+        onToggleCeaseFireBeep: () -> Unit = {}
     ) {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
@@ -49,6 +53,10 @@ class RadialMenuTest {
                         onRemoveTick = onRemoveTick,
                         onShare = onShare,
                         onShowTutorial = onShowTutorial,
+                        darkTheme = darkTheme,
+                        onToggleTheme = onToggleTheme,
+                        ceaseFireBeep = ceaseFireBeep,
+                        onToggleCeaseFireBeep = onToggleCeaseFireBeep,
                         openTowardsStart = false
                     )
                 }
@@ -75,6 +83,28 @@ class RadialMenuTest {
         onNodeWithTag(MENU_ITEM_ADD_TICK_TAG).assertExists()
         onNodeWithTag(MENU_ITEM_REMOVE_TICK_TAG).assertExists()
         onNodeWithTag(MENU_ITEM_TUTORIAL_TAG).assertExists()
+        onNodeWithTag(MENU_ITEM_THEME_TAG).assertExists()
+    }
+
+    @Test
+    fun `beep item fires the callback and keeps the menu open`() = runComposeUiTest {
+        var toggles = 0
+        setMenuContent(onToggleCeaseFireBeep = { toggles++ })
+        onNodeWithTag(MENU_BUTTON_TAG).performClick()
+        onNodeWithTag(MENU_ITEM_BEEP_TAG).performClick()
+        assertEquals(1, toggles)
+        onNodeWithTag(MENU_ITEM_BEEP_TAG).assertExists()
+    }
+
+    @Test
+    fun `theme item fires the callback and keeps the menu open`() = runComposeUiTest {
+        var toggles = 0
+        setMenuContent(onToggleTheme = { toggles++ })
+        onNodeWithTag(MENU_BUTTON_TAG).performClick()
+        onNodeWithTag(MENU_ITEM_THEME_TAG).performClick()
+        assertEquals(1, toggles)
+        // Stays open so the theme switch is seen immediately.
+        onNodeWithTag(MENU_ITEM_THEME_TAG).assertExists()
     }
 
     @Test

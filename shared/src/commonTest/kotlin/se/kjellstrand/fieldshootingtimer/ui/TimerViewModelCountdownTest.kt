@@ -51,7 +51,7 @@ class TimerViewModelCountdownTest {
     }
 
     @Test
-    fun `no cues fire during the countdown`() = runTest {
+    fun `the preparation calls fire during the countdown - nothing else`() = runTest {
         val vm = competitionVm()
         val collected = mutableListOf<Command>()
         val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -59,12 +59,19 @@ class TimerViewModelCountdownTest {
         }
         runCurrent()
 
-        vm.start()
-        advanceTimeBy(59_000) // still one second short of the sequence
+        vm.start() // "Ladda!" as the countdown starts
+        runCurrent()
+        assertEquals(listOf(Command.Load), collected)
+
+        advanceTimeBy(49_000) // -11s: still only Load
+        runCurrent()
+        assertEquals(listOf(Command.Load), collected)
+
+        advanceTimeBy(10_000) // past -10: "Alla klara!", but no timed cues yet
         runCurrent()
         job.cancel()
 
-        assertEquals(emptyList(), collected)
+        assertEquals(listOf(Command.Load, Command.AllReady), collected)
     }
 
     @Test
@@ -80,13 +87,16 @@ class TimerViewModelCountdownTest {
         advanceTimeBy(61_000)
         runCurrent()
         assertTrue(vm.uiStateFlow.value.awaitingReadyConfirmation)
-        assertEquals(emptyList(), collected)
+        assertEquals(listOf(Command.Load, Command.AllReady), collected)
 
         vm.confirmAllReady()
         runCurrent()
         job.cancel()
 
-        assertEquals(listOf(Command.TenSecondsLeft), collected)
+        assertEquals(
+            listOf(Command.Load, Command.AllReady, Command.TenSecondsLeft),
+            collected
+        )
     }
 
     @Test

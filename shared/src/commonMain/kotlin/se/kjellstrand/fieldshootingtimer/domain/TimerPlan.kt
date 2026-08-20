@@ -18,6 +18,30 @@ internal const val COMPETITION_ALL_READY_REMAINING_SECONDS = 10f
 internal fun fireStartSeconds(): Float =
     (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()
 
+/**
+ * The cease-fire beep leads the yellow segment's end slightly, compensating
+ * for tick granularity and audio latency so the signal lands on the boundary.
+ */
+internal const val CEASE_FIRE_BEEP_LEAD_SECONDS = 0.1f
+
+/** When the cease-fire beep fires: the yellow segment's end minus the lead. */
+internal fun beepTimeSeconds(shootingDuration: Float): Float =
+    fireStartSeconds() + shootingDuration + Command.CeaseFire.duration -
+        CEASE_FIRE_BEEP_LEAD_SECONDS
+
+/**
+ * The immovable boundary flags shown as soon as the user has placed at least
+ * one flag of their own: the start of Fire (the gray→green boundary) and the
+ * end of CeaseFire (the end of the yellow segment — the dial's end). They
+ * look and behave like user flags except they can't be dragged.
+ */
+internal fun boundaryFlagSeconds(userTicks: List<Float>, shootingDuration: Float): List<Float> =
+    if (userTicks.isEmpty()) emptyList()
+    else listOf(
+        fireStartSeconds(),
+        fireStartSeconds() + shootingDuration + Command.CeaseFire.duration
+    )
+
 internal fun buildSegmentDurations(shootingDuration: Float): List<Float> =
     Command.timedCommands.map {
         if (it == Command.Fire) shootingDuration else it.duration.toFloat()
@@ -37,6 +61,17 @@ internal fun buildAudioCues(shootingDuration: Float): List<Pair<Float, Command>>
         cue
     }
 }
+
+/**
+ * The competition preparation calls, timed on the countdown's negative
+ * clock: "Ladda!" as the countdown starts and "Alla klara!" with
+ * [COMPETITION_ALL_READY_REMAINING_SECONDS] left. Training mode never
+ * includes these — its runs start at 0.
+ */
+internal fun buildCompetitionPrepCues(): List<Pair<Float, Command>> = listOf(
+    -COMPETITION_COUNTDOWN_SECONDS to Command.Load,
+    -COMPETITION_ALL_READY_REMAINING_SECONDS to Command.AllReady
+)
 
 internal fun buildRange(shootingDuration: Float): IntRange {
     val offset = Command.TenSecondsLeft.duration + Command.Ready.duration

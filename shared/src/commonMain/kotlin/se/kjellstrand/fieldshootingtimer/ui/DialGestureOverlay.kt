@@ -3,7 +3,7 @@ package se.kjellstrand.fieldshootingtimer.ui
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -13,8 +13,16 @@ import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.shooting_duration
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -26,8 +34,20 @@ internal const val DIAL_GESTURE_TAG = "DialGestureSurface"
 internal const val SHOOT_TIME_MIN = 1
 internal const val SHOOT_TIME_MAX = 300
 
-/** How much arc a finger may miss a tick block by and still grab it. */
-private val TickTouchSlop = 24.dp
+/** How much arc a finger may miss a tick flag by and still grab it. */
+private val TickTouchSlop = 36.dp
+
+/** How far a finger may miss the dial hand and still grab it for a scrub. */
+private val HandTouchSlop = 24.dp
+
+/**
+ * How far the gesture surface extends beyond the dial on every side. The
+ * flags sit outside the dial's edge, so a square surface the dial's exact
+ * size only caught fingers near the diagonals (where the square's corners
+ * reach past the circle) — flags at 0°/90°/180°/270° were untouchable just
+ * outside the edge.
+ */
+private val GestureMargin = TickTouchSlop
 
 /** How far outside the Fire wedge (in seconds) a pinch finger may start. */
 private const val PinchWedgeSlackSeconds = 2f
@@ -77,14 +97,37 @@ internal fun DialGestureOverlay(
     val currentEditEnabled by rememberUpdatedState(editEnabled)
     val currentScrubEnabled by rememberUpdatedState(scrubEnabled)
     val currentTimeState by rememberUpdatedState(currentTime)
+    val shootingDurationLabel = stringResource(Res.string.shooting_duration)
 
     Box(
+        // requiredSize so the surface can exceed the dial-sized parent box;
+        // it stays centered on the dial.
         modifier = modifier
-            .size(size)
+            .requiredSize(size + GestureMargin * 2)
             .testTag(DIAL_GESTURE_TAG)
+            // Screen-reader path for the pinch gesture: the shooting duration
+            // exposed as an adjustable progress node.
+            .semantics {
+                contentDescription = shootingDurationLabel
+                progressBarRangeInfo = ProgressBarRangeInfo(
+                    current = fireDuration,
+                    range = SHOOT_TIME_MIN.toFloat()..SHOOT_TIME_MAX.toFloat()
+                )
+                if (editEnabled) {
+                    setProgress { value ->
+                        onPinchSetShootingDuration(
+                            value.roundToInt().toFloat()
+                                .coerceIn(SHOOT_TIME_MIN.toFloat(), SHOOT_TIME_MAX.toFloat())
+                        )
+                        true
+                    }
+                }
+            }
             .pointerInput(Unit) {
+                val dialSizePx = size.toPx()
                 val ringThicknessPx = ringThickness.toPx()
                 val touchSlopPx = TickTouchSlop.toPx()
+                val handSlopPx = HandTouchSlop.toPx()
 
                 // Hand-rolled instead of detectDragGestures/detectTransformGestures:
                 // those detectors only report positions after touch slop is spent,
@@ -96,8 +139,10 @@ internal fun DialGestureOverlay(
                     val down = awaitFirstDown()
                     if (!currentEditEnabled && !currentScrubEnabled) return@awaitEachGesture
 
-                    val canvasSize = this.size.width.toFloat()
-                    val center = Offset(canvasSize / 2f, this.size.height / 2f)
+                    // The surface is GestureMargin larger than the dial on
+                    // every side; the dial stays centered in it, so all
+                    // radius math uses dialSizePx, not the surface size.
+                    val center = Offset(this.size.width / 2f, this.size.height / 2f)
                     // The dial rescales while the duration changes, so all
                     // angle→seconds mapping during this gesture uses the scale
                     // captured when it began.
@@ -110,7 +155,7 @@ internal fun DialGestureOverlay(
 
                     fun onRingNearFire(position: Offset): Boolean {
                         val distance = (position - center).getDistance()
-                        return isWithinRingBand(distance, canvasSize, ringThicknessPx) &&
+                        return isWithinRingBand(distance, dialSizePx, ringThicknessPx) &&
                             isWithinWedge(
                                 tickValueAt(position),
                                 fireStart,
@@ -121,9 +166,9 @@ internal fun DialGestureOverlay(
 
                     var tickIndex: Int? = if (!currentEditEnabled) null else run {
                         val distance = (down.position - center).getDistance()
-                        if (!isWithinRingBand(distance, canvasSize, ringThicknessPx)) return@run null
+                        if (!isWithinRingBand(distance, dialSizePx, ringThicknessPx)) return@run null
                         val tolerance = tickDragToleranceSeconds(
-                            touchSlopPx, canvasSize / 2f, totalAtStart, gapAngleDegrees
+                            touchSlopPx, dialSizePx / 2f, totalAtStart, gapAngleDegrees
                         )
                         nearestTickIndex(tickValueAt(down.position), currentTicks, tolerance)
                     }
@@ -138,8 +183,8 @@ internal fun DialGestureOverlay(
                                 totalAtStart,
                                 gapAngleDegrees
                             ),
-                            handLengthPx = canvasSize / 2f
-                        ) <= touchSlopPx
+                            handLengthPx = dialSizePx / 2f
+                        ) <= handSlopPx
                     var lastScrub: Float? = null
                     var tickDragged = false
                     var pinchStartSpan: Float? = null

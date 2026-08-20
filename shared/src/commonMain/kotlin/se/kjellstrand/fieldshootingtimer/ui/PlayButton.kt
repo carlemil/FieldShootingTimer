@@ -19,14 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.play_action
 import se.kjellstrand.fieldshootingtimer.resources.play_arrow
+import se.kjellstrand.fieldshootingtimer.resources.reset_action
 import se.kjellstrand.fieldshootingtimer.resources.skip_previous
 import se.kjellstrand.fieldshootingtimer.resources.stop
+import se.kjellstrand.fieldshootingtimer.resources.stop_action
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.LightGreenColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
-import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
 internal const val PLAY_BUTTON_TAG = "PlayButton"
 internal const val PLAY_ICON_TAG = "PlayButtonIconPlay"
@@ -59,11 +61,13 @@ fun PlayButton(
             contentPadding = PaddingValues(0.dp),
             border = BorderStroke(Paddings.Tiny, BlackColor),
             // Same green in every state — a white countdown background made
-            // the stop icon nearly invisible. contentColor is pinned because
-            // the theme default (onPrimary) goes Material-purple in dark mode.
+            // the stop icon nearly invisible. secondary is the theme's green
+            // (dimmed in dark mode); onPrimary (black in both themes) is the
+            // only content color that clears WCAG on both greens — white on
+            // the light green measures 1.67:1.
             colors = ButtonDefaults.buttonColors(
-                containerColor = LightGreenColor,
-                contentColor = WhiteColor
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             if (countdownSeconds != null) {
@@ -72,7 +76,7 @@ fun PlayButton(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         painter = painterResource(Res.drawable.stop),
-                        contentDescription = "Stop",
+                        contentDescription = stringResource(Res.string.stop_action),
                         modifier = Modifier
                             .size(buttonSize * 0.35f)
                             .testTag(STOP_ICON_TAG)
@@ -82,7 +86,6 @@ fun PlayButton(
                         style = MaterialTheme.typography.headlineLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),
-                        color = BlackColor,
                         modifier = Modifier.testTag(COUNTDOWN_TEXT_TAG)
                     )
                 }
@@ -90,7 +93,7 @@ fun PlayButton(
                 TimerRunningState.NotStarted -> {
                     Icon(
                         painter = painterResource(Res.drawable.play_arrow),
-                        contentDescription = "Play",
+                        contentDescription = stringResource(Res.string.play_action),
                         modifier = Modifier
                             .size(buttonSize * 0.8f)
                             .testTag(PLAY_ICON_TAG)
@@ -100,7 +103,7 @@ fun PlayButton(
                 TimerRunningState.Running -> {
                     Icon(
                         painter = painterResource(Res.drawable.stop),
-                        contentDescription = "Stop",
+                        contentDescription = stringResource(Res.string.stop_action),
                         modifier = Modifier
                             .size(buttonSize * 0.8f)
                             .testTag(STOP_ICON_TAG)
@@ -110,7 +113,7 @@ fun PlayButton(
                 TimerRunningState.Finished, TimerRunningState.Stopped -> {
                     Icon(
                         painter = painterResource(Res.drawable.skip_previous),
-                        contentDescription = "Reset",
+                        contentDescription = stringResource(Res.string.reset_action),
                         modifier = Modifier
                             .size(buttonSize * 0.8f)
                             .testTag(RESET_ICON_TAG)

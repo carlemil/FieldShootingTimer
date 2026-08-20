@@ -60,8 +60,8 @@ class TimerViewModelTimingTest {
         runCurrent()
 
         vm.start()
-        // total = 7 + 3 + 2 + 3 + 4 + 2 = 21 seconds
-        advanceTimeBy(22_000)
+        // total = 7 + 3 + 2 + 3 + 3 + 4 + 2 + 2 = 26 seconds
+        advanceTimeBy(27_000)
         runCurrent()
         job.cancel()
 
@@ -71,11 +71,39 @@ class TimerViewModelTimingTest {
                 Command.Ready,
                 Command.Fire,
                 Command.CeaseFire,
+                Command.UnloadWeaponDelay,
                 Command.UnloadWeapon,
+                Command.VisitationDelay,
                 Command.Visitation
             ),
             collected
         )
+    }
+
+    @Test
+    fun `beep event fires just before the yellow segment's end and only once`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(5f)
+
+        var beeps = 0
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.beepEventsFlow.collect { beeps++ }
+        }
+        runCurrent()
+
+        vm.start()
+        advanceTimeBy(17_800) // yellow end is 18; beep time is 17.9
+        runCurrent()
+        assertEquals(0, beeps, "beep must not fire before 17.9s")
+
+        advanceTimeBy(200)
+        runCurrent()
+        assertEquals(1, beeps, "beep fires at 17.9s")
+
+        advanceTimeBy(12_000) // through the finished end
+        runCurrent()
+        job.cancel()
+        assertEquals(1, beeps, "beep fires exactly once per run")
     }
 
     @Test
@@ -115,12 +143,32 @@ class TimerViewModelTimingTest {
         }
 
         vm.start()
-        // run past t=13 (totalDuration with shooting=5 is 7+3+5+3+4+2=24)
+        // run past t=13 (totalDuration with shooting=5 is 29)
         advanceTimeBy(14_000)
         runCurrent()
         job.cancel()
 
-        assertEquals(listOf(11f, 13f), collected)
+        // The immovable boundary flag at the Fire start (10s) — shown because
+        // user flags exist — vibrates like the user flags do.
+        assertEquals(listOf(10f, 11f, 13f), collected)
+    }
+
+    @Test
+    fun `boundary flags do not vibrate when no user thumbs exist`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(5f)
+
+        val collected = mutableListOf<Float>()
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.thumbCrossedFlow.collect { collected += it }
+        }
+
+        vm.start()
+        advanceTimeBy(30_000) // past the full 29s sequence
+        runCurrent()
+        job.cancel()
+
+        assertTrue(collected.isEmpty(), "no flags shown, so nothing may vibrate, got $collected")
     }
 
     @Test
@@ -179,7 +227,7 @@ class TimerViewModelTimingTest {
         assertNull(vm.frameTimeSeconds(), "anchor must clear on stop")
 
         vm.start() // resume
-        advanceTimeBy((24_000))
+        advanceTimeBy((30_000))
         runCurrent()
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
         assertNull(vm.frameTimeSeconds(), "anchor must clear when the run finishes")
@@ -212,13 +260,14 @@ class TimerViewModelTimingTest {
     // --- Guard tests: derived flows produce the expected values ---
 
     @Test
-    fun `segmentDurationsFlow reflects the six timed commands with Fire set to shootingDuration`() = runTest {
+    fun `segmentDurationsFlow reflects the timed commands with Fire set to shootingDuration`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope)
         vm.setShootingTime(4f)
         runCurrent()
-        // TenSecondsLeft=7, Ready=3, Fire=4 (user), CeaseFire=3, UnloadWeapon=4, Visitation=2
+        // TenSecondsLeft=7, Ready=3, Fire=4 (user), CeaseFire=3,
+        // UnloadWeaponDelay=3, UnloadWeapon=4, VisitationDelay=2, Visitation=2
         assertEquals(
-            listOf(7f, 3f, 4f, 3f, 4f, 2f),
+            listOf(7f, 3f, 4f, 3f, 3f, 4f, 2f, 2f),
             vm.segmentDurationsFlow.value
         )
     }
@@ -228,8 +277,8 @@ class TimerViewModelTimingTest {
         val vm = TimerViewModel(externalScope = backgroundScope)
         vm.setShootingTime(5f)
         runCurrent()
-        // 7 + 3 + 5 + 3 + 4 + 2 = 24
-        assertEquals(24f, vm.segmentDurationsFlow.value.sum())
+        // 7 + 3 + 5 + 3 + 3 + 4 + 2 + 2 = 29
+        assertEquals(29f, vm.segmentDurationsFlow.value.sum())
     }
 
     @Test

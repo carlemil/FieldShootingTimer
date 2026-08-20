@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runComposeUiTest
 import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
@@ -20,7 +21,7 @@ class CommandListTest {
     fun `highlights exactly one item`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                CommandList(commands = Command.entries, highlighted = Command.Fire)
+                CommandList(commands = Command.listedCommands, highlighted = Command.Fire)
             }
         }
         onAllNodes(isSelected()).assertCountEquals(1)
@@ -30,7 +31,7 @@ class CommandListTest {
     fun `highlighted row matches the given command`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                CommandList(commands = Command.entries, highlighted = Command.Fire)
+                CommandList(commands = Command.listedCommands, highlighted = Command.Fire)
             }
         }
         onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.Fire.name}").assertIsSelected()
@@ -42,7 +43,7 @@ class CommandListTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
                 CommandList(
-                    commands = Command.entries,
+                    commands = Command.listedCommands,
                     highlighted = null,
                     onCommandClick = { clicked = it }
                 )
@@ -53,8 +54,34 @@ class CommandListTest {
     }
 
     @Test
+    fun `cease fire row reads BEEP when the beep setting is on`() = runComposeUiTest {
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                CommandList(
+                    commands = Command.listedCommands,
+                    highlighted = null,
+                    ceaseFireBeep = true
+                )
+            }
+        }
+        onNodeWithText("BEEP!").assertExists()
+        onNodeWithText("ELD UPPHÖR!").assertDoesNotExist()
+    }
+
+    @Test
+    fun `cease fire row keeps its voice label when the beep setting is off`() = runComposeUiTest {
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                CommandList(commands = Command.listedCommands, highlighted = null)
+            }
+        }
+        onNodeWithText("ELD UPPHÖR!").assertExists()
+        onNodeWithText("BEEP!").assertDoesNotExist()
+    }
+
+    @Test
     fun `only the given commands are shown`() = runComposeUiTest {
-        val withoutPreparation = Command.entries - Command.Load - Command.AllReady
+        val withoutPreparation = Command.listedCommands - Command.Load - Command.AllReady
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
                 CommandList(commands = withoutPreparation, highlighted = Command.Fire)

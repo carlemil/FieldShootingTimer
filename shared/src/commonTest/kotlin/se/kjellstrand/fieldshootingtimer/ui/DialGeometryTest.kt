@@ -2,6 +2,8 @@ package se.kjellstrand.fieldshootingtimer.ui
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class DialGeometryTest {
 
@@ -19,6 +21,20 @@ class DialGeometryTest {
         assertEquals(90f, DialGeometry.startAngle(0f), eps)
         assertEquals(105f, DialGeometry.startAngle(30f), eps)
         assertEquals(135f, DialGeometry.startAngle(90f), eps)
+    }
+
+    @Test
+    fun `badgeFitsInSweep keeps badges in wide segments and drops them in slivers`() {
+        // Badge of radius 12.5px at orbit 80px needs ~2*12.5*1.5/80 rad ≈ 26.9°.
+        assertTrue(badgeFitsInSweep(sweepDeg = 96f, badgeRadiusPx = 12.5f, orbitRadiusPx = 80f))
+        assertTrue(badgeFitsInSweep(sweepDeg = 27f, badgeRadiusPx = 12.5f, orbitRadiusPx = 80f))
+        // A 180s Fire squeezes the 7s gray segment to ~12° — badge dropped.
+        assertFalse(badgeFitsInSweep(sweepDeg = 12f, badgeRadiusPx = 12.5f, orbitRadiusPx = 80f))
+    }
+
+    @Test
+    fun `badgeFitsInSweep never fits on a degenerate orbit`() {
+        assertFalse(badgeFitsInSweep(sweepDeg = 360f, badgeRadiusPx = 10f, orbitRadiusPx = 0f))
     }
 
     @Test

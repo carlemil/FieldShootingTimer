@@ -187,9 +187,26 @@ class TimerViewModelTest {
 
     @Test
     fun `roundThumbValues rounds every thumb to nearest int`() {
-        viewModel.setThumbValues(listOf(3.2f, 4.7f, 5.5f, 6.4f))
+        viewModel.setThumbValues(listOf(3.2f, 4.7f, 6.4f))
         viewModel.roundThumbValues()
-        assertEquals(listOf(3f, 5f, 6f, 6f), viewModel.uiStateFlow.value.thumbValues)
+        assertEquals(listOf(3f, 5f, 6f), viewModel.uiStateFlow.value.thumbValues)
+    }
+
+    @Test
+    fun `roundThumbValues merges flags that land on the same second`() {
+        // A flag dragged onto another: both round to 6, one survives.
+        viewModel.setThumbValues(listOf(5.5f, 6.4f, 8f))
+        viewModel.roundThumbValues()
+        assertEquals(listOf(6f, 8f), viewModel.uiStateFlow.value.thumbValues)
+    }
+
+    @Test
+    fun `ceaseFireBeep defaults off and toggles via the setter`() {
+        assertEquals(false, viewModel.uiStateFlow.value.ceaseFireBeep)
+        viewModel.setCeaseFireBeep(true)
+        assertEquals(true, viewModel.uiStateFlow.value.ceaseFireBeep)
+        viewModel.setCeaseFireBeep(false)
+        assertEquals(false, viewModel.uiStateFlow.value.ceaseFireBeep)
     }
 
     @Test

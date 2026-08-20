@@ -13,15 +13,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
+import se.kjellstrand.fieldshootingtimer.domain.boundaryFlagSeconds
 import se.kjellstrand.fieldshootingtimer.domain.fireStartSeconds
-import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import kotlin.math.PI
 import kotlin.math.roundToInt
 
@@ -69,16 +69,21 @@ fun DecoratedDial(
 
         // User-placed partids, drawn as small flags planted on the ring's
         // outer edge with the pennant pointing clockwise (forward in time).
-        // The interval ends (Fire start / dial end) need no markers of their
-        // own — the segment divider and the dial's edge already are ones.
+        // As soon as any user flag exists, the interval ends (Fire start /
+        // dial end) get immovable flags of the same look — the gesture
+        // overlay only ever grabs ticks from the user list, so these can't
+        // be dragged. onBackground, not BlackColor: the flags stand on the
+        // screen background, and black poles vanish against the dark theme
+        // (1.46:1).
         TickFlags(
             size = size,
-            ticks = ticks,
+            ticks = ticks + boundaryFlagSeconds(ticks, fireDuration),
             ticksMax = ticksMax,
             gapAngleDegrees = gapAngleDegrees,
             ringThickness = ringThickness,
             borderWidth = borderWidth,
-            borderColor = BlackColor
+            borderColor = MaterialTheme.colorScheme.outlineVariant,
+            pennantColor = MaterialTheme.colorScheme.surfaceBright
         )
 
         // One tick for each second, drawn as inward-pointing triangles inside the ring.
@@ -132,6 +137,8 @@ internal fun TickBadges(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val placements = tickBadgePlacements(ticks, fireStartSeconds(), unloadStart)
+    val innerColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onSurface
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
         val borderWidthPx = borderWidth.toPx()
@@ -139,6 +146,13 @@ internal fun TickBadges(
         val center = Offset(canvasSize / 2, canvasSize / 2)
 
         placements.forEach { (position, delta) ->
+            // Skip badges whose interval is squeezed too narrow to hold them
+            // (extreme Fire durations shrink neighboring intervals to slivers).
+            val intervalSweepDeg =
+                delta / ticksMax.toFloat() * DialGeometry.availableAngle(gapAngleDegrees)
+            if (!badgeFitsInSweep(intervalSweepDeg, badgeRadius.toPx(), radii.outerBadgeRadius)) {
+                return@forEach
+            }
             val angle = DialGeometry.tickAngle(position, ticksMax.toFloat(), gapAngleDegrees)
             val badgeCenter = polarToCartesian(center, radii.outerBadgeRadius, angle)
             drawBadge(
@@ -146,8 +160,9 @@ internal fun TickBadges(
                 markerRadiusPx = badgeRadius.toPx(),
                 borderWidthPx = borderWidthPx,
                 borderColor = borderColor,
-                backgroundColor = Color.White,
-                angleDeg = angle,
+                backgroundColor = innerColor,
+                innerColor = innerColor,
+                textColor = textColor,
                 timeText = delta.toString(),
                 textMeasurer = textMeasurer
             )
@@ -184,7 +199,8 @@ internal fun TickFlags(
     gapAngleDegrees: Float,
     ringThickness: Dp,
     borderWidth: Dp,
-    borderColor: Color
+    borderColor: Color,
+    pennantColor: Color
 ) {
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
@@ -192,8 +208,10 @@ internal fun TickFlags(
         val borderWidthPx = borderWidth.toPx()
         val center = Offset(canvasSize / 2, canvasSize / 2)
 
-        val poleBase = canvasSize / 2 - borderWidthPx * 2
-        val poleTop = canvasSize / 2 + ringPx * 0.19f
+        // The pole starts exactly at the dial border's outer edge (canvas
+        // radius), so the whole flag sits outside the dial face.
+        val poleBase = canvasSize / 2
+        val poleTop = canvasSize / 2 + ringPx * 0.26f
         val flagBottom = poleTop - ringPx * 0.14f
         // Pennant length as arc degrees at its radius, so flags look the same
         // regardless of dial size.
@@ -221,7 +239,7 @@ internal fun TickFlags(
                 lineTo(bottom.x, bottom.y)
                 close()
             }
-            drawPath(pennant, color = Color.White)
+            drawPath(pennant, color = pennantColor)
             drawPath(
                 pennant,
                 color = borderColor,
@@ -244,6 +262,8 @@ internal fun SegmentBadges(
     badgeRadius: Dp,
 ) {
     val textMeasurer = rememberTextMeasurer()
+    val innerColor = MaterialTheme.colorScheme.surface
+    val textColor = MaterialTheme.colorScheme.onSurface
     Canvas(modifier = Modifier.size(size)) {
         val canvasSize = size.toPx()
         val borderWidthPx = borderWidth.toPx()
@@ -255,13 +275,19 @@ internal fun SegmentBadges(
         )
 
         adjustedMarkers.zip(timesForSegments).forEachIndexed { index, (angle, time) ->
+            // A segment squeezed into a sliver (extreme Fire durations) can't
+            // hold its badge — drop it rather than let neighbors collide.
+            if (!badgeFitsInSweep(sweepAngles[index], badgeRadius.toPx(), radii.innerBadgeRadius)) {
+                return@forEachIndexed
+            }
             drawBadge(
                 center = polarToCartesian(center, radii.innerBadgeRadius, angle),
                 markerRadiusPx = badgeRadius.toPx(),
                 borderWidthPx = borderWidthPx,
                 backgroundColor = segmentColors[index],
                 borderColor = borderColor,
-                angleDeg = angle,
+                innerColor = innerColor,
+                textColor = textColor,
                 timeText = time.toInt().toString(),
                 textMeasurer = textMeasurer
             )
@@ -363,7 +389,10 @@ internal fun DrawScope.drawBadge(
     borderWidthPx: Float,
     borderColor: Color,
     backgroundColor: Color,
-    angleDeg: Float,
+    // Themed (surface/onSurface) so badges stop being the dark theme's only
+    // bright-white elements; light theme keeps its white-and-black look.
+    innerColor: Color,
+    textColor: Color,
     timeText: String,
     textMeasurer: TextMeasurer
 ) {
@@ -374,7 +403,7 @@ internal fun DrawScope.drawBadge(
     )
 
     drawCircle(
-        color = Color.White, radius = markerRadiusPx - (borderWidthPx * 2), center = center
+        color = innerColor, radius = markerRadiusPx - (borderWidthPx * 2), center = center
     )
 
     drawCircle(
@@ -387,17 +416,17 @@ internal fun DrawScope.drawBadge(
     val fontSizeSp = (markerRadiusPx * 1.2f).toSp()
     val layout = textMeasurer.measure(
         text = timeText,
-        style = TextStyle(color = Color.Black, fontSize = fontSizeSp)
+        style = TextStyle(color = textColor, fontSize = fontSizeSp)
     )
-    rotate(degrees = angleDeg + 90f, pivot = center) {
-        drawText(
-            textLayoutResult = layout,
-            topLeft = Offset(
-                center.x - layout.size.width / 2f,
-                center.y - layout.size.height / 2f
-            )
+    // Screen-upright, deliberately unrotated: digits rotated to follow the
+    // dial read sideways at 3 o'clock and upside down along the bottom.
+    drawText(
+        textLayoutResult = layout,
+        topLeft = Offset(
+            center.x - layout.size.width / 2f,
+            center.y - layout.size.height / 2f
         )
-    }
+    )
 }
 
 fun calculateSegmentAngles(

@@ -36,8 +36,21 @@ internal fun highlightedCommand(
     segmentDurations.forEachIndexed { index, duration ->
         accumulatedTime += duration
         if (currentTime < accumulatedTime) {
-            return Command.timedCommands[index]
+            return listedCommandAtOrBefore(index)
         }
     }
-    return Command.timedCommands.last()
+    return listedCommandAtOrBefore(Command.timedCommands.lastIndex)
+}
+
+/**
+ * The command list has no rows for the silent pacing delays, so while one
+ * of them is running the previous listed command keeps the highlight — the
+ * called command stays in force until the next is called.
+ */
+private fun listedCommandAtOrBefore(index: Int): Command {
+    for (i in index downTo 0) {
+        val command = Command.timedCommands[i]
+        if (command.listed) return command
+    }
+    return Command.timedCommands.first()
 }

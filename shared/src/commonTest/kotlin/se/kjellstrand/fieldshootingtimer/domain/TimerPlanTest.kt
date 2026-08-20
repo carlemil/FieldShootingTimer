@@ -8,8 +8,17 @@ class TimerPlanTest {
 
     @Test
     fun `segment durations mirror timedCommands with Fire replaced`() {
-        assertEquals(listOf(7f, 3f, 5f, 3f, 4f, 2f), buildSegmentDurations(5f))
-        assertEquals(listOf(7f, 3f, 2.5f, 3f, 4f, 2f), buildSegmentDurations(2.5f))
+        // ...including the silent pacing delays (3s before UnloadWeapon,
+        // 2s before Visitation).
+        assertEquals(listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f), buildSegmentDurations(5f))
+        assertEquals(listOf(7f, 3f, 2.5f, 3f, 3f, 4f, 2f, 2f), buildSegmentDurations(2.5f))
+    }
+
+    @Test
+    fun `beep time leads the yellow segment's end by a tenth of a second`() {
+        // yellow end with shooting=5: 7 + 3 + 5 + 3 = 18
+        assertEquals(17.9f, beepTimeSeconds(5f), 1e-4f)
+        assertEquals(15.4f, beepTimeSeconds(2.5f), 1e-4f)
     }
 
     @Test
@@ -34,10 +43,32 @@ class TimerPlanTest {
     }
 
     @Test
+    fun `competition prep cues call Load and AllReady on the countdown clock`() {
+        assertEquals(
+            listOf(-60f to Command.Load, -10f to Command.AllReady),
+            buildCompetitionPrepCues()
+        )
+    }
+
+    @Test
     fun `range starts after the pre-fire commands and ends before Visitation`() {
         // offset = TenSecondsLeft(7) + Ready(3) = 10
         assertEquals(11..17, buildRange(5f))
         assertEquals(11..12, buildRange(0f))
+    }
+
+    @Test
+    fun `boundary flags are absent without user ticks`() {
+        assertEquals(emptyList(), boundaryFlagSeconds(emptyList(), 5f))
+    }
+
+    @Test
+    fun `boundary flags mark the Fire start and the dial end once a user tick exists`() {
+        // fireStart = TenSecondsLeft(7) + Ready(3) = 10;
+        // dial end = fireStart + Fire(5) + CeaseFire(3) = 18
+        assertEquals(listOf(10f, 18f), boundaryFlagSeconds(listOf(12f), 5f))
+        // The dial end follows the configurable Fire duration.
+        assertEquals(listOf(10f, 15.5f), boundaryFlagSeconds(listOf(11f, 12f), 2.5f))
     }
 
     @Test

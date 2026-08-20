@@ -17,7 +17,8 @@ import kotlin.test.assertTrue
 class TimerViewModelSeekTest {
 
     // Segment starts with shooting=5: TenSecondsLeft 0, Ready 7, Fire 10,
-    // CeaseFire 15, UnloadWeapon 18, Visitation 22; total 24.
+    // CeaseFire 15, UnloadWeaponDelay 18, UnloadWeapon 21, VisitationDelay
+    // 25, Visitation 27; total 29.
 
     @Test
     fun `seekTo while running pauses at the tapped command's start`() = runTest {
@@ -69,11 +70,20 @@ class TimerViewModelSeekTest {
 
         assertEquals(listOf(Command.CeaseFire), collected)
 
-        advanceTimeBy(10_000) // 15 → past 24: UnloadWeapon (18) and Visitation (22)
+        advanceTimeBy(15_000) // 15 → past 29: the delays, UnloadWeapon (21) and Visitation (27)
         runCurrent()
         job.cancel()
 
-        assertEquals(listOf(Command.CeaseFire, Command.UnloadWeapon, Command.Visitation), collected)
+        assertEquals(
+            listOf(
+                Command.CeaseFire,
+                Command.UnloadWeaponDelay,
+                Command.UnloadWeapon,
+                Command.VisitationDelay,
+                Command.Visitation
+            ),
+            collected
+        )
     }
 
     @Test
@@ -95,7 +105,10 @@ class TimerViewModelSeekTest {
         runCurrent()
         job.cancel()
 
-        assertTrue(collected.isEmpty(), "thumbs behind the seek point must not refire, got $collected")
+        // Only the boundary flag at the dial's end (18s) lies ahead of the
+        // seek point; the user thumbs (11, 13) and the Fire-start boundary
+        // flag (10) are behind it and must not refire.
+        assertEquals(listOf(18f), collected)
     }
 
     @Test
@@ -117,7 +130,9 @@ class TimerViewModelSeekTest {
         runCurrent()
         job.cancel()
 
-        assertEquals(listOf(11f, 13f), collected)
+        // The boundary flag at the Fire start (exactly the seek point) fires
+        // on resume — same semantics as the tapped command's own cue.
+        assertEquals(listOf(10f, 11f, 13f), collected)
     }
 
     @Test
@@ -205,7 +220,25 @@ class TimerViewModelSeekTest {
         vm.seekTo(Command.Mark)
         runCurrent()
 
-        assertEquals(24f, vm.uiStateFlow.value.currentTime)
+        assertEquals(29f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
+    }
+
+    @Test
+    fun `seekTo Mark plays the Mark call`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(5f)
+
+        val collected = mutableListOf<Command>()
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.cueEventsFlow.collect { collected += it }
+        }
+        runCurrent()
+
+        vm.seekTo(Command.Mark)
+        runCurrent()
+        job.cancel()
+
+        assertEquals(listOf(Command.Mark), collected)
     }
 }

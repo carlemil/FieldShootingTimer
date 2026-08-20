@@ -32,10 +32,13 @@ fun SettingsPanel(
     val awaitingReadyConfirmation by timerViewModel.awaitingReadyConfirmationFlow.collectAsState(
         initial = false, context = Dispatchers.Main
     )
+    val ceaseFireBeep by timerViewModel.ceaseFireBeepFlow.collectAsState(
+        initial = false, context = Dispatchers.Main
+    )
 
     val visibleCommands = when (timerMode) {
-        TimerMode.Competition -> Command.entries
-        TimerMode.Training -> Command.entries - Command.Load - Command.AllReady
+        TimerMode.Competition -> Command.listedCommands
+        TimerMode.Training -> Command.listedCommands - Command.Load - Command.AllReady
     }
     val highlighted = highlightedCommand(
         mode = timerMode,
@@ -50,6 +53,7 @@ fun SettingsPanel(
         CommandList(
             commands = visibleCommands,
             highlighted = highlighted,
+            ceaseFireBeep = ceaseFireBeep,
             onCommandClick = timerViewModel::seekTo
         )
     }

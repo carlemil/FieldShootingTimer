@@ -22,19 +22,22 @@ private fun ByteArray.toNSData(): NSData = usePinned { pinned ->
 @OptIn(ExperimentalResourceApi::class, ExperimentalForeignApi::class)
 class IosAudioPlayer : AudioPlayer {
     private val players: MutableMap<Command, AVAudioPlayer> = mutableMapOf()
+    private var beepPlayer: AVAudioPlayer? = null
 
     override suspend fun preload(cues: List<Command>) {
         cues.forEach { cue ->
             val path = cue.audioPath ?: return@forEach
-            try {
-                val data = Res.readBytes(path).toNSData()
-                val player = AVAudioPlayer(data = data, error = null)
-                player.prepareToPlay()
-                players[cue] = player
-            } catch (e: Exception) {
-                // ignore failures; silent state matches Android behavior
-            }
+            players[cue] = loadFromResources(path) ?: return@forEach
         }
+        beepPlayer = loadFromResources(BEEP_AUDIO_PATH)
+    }
+
+    private suspend fun loadFromResources(path: String): AVAudioPlayer? = try {
+        val data = Res.readBytes(path).toNSData()
+        AVAudioPlayer(data = data, error = null).also { it.prepareToPlay() }
+    } catch (e: Exception) {
+        // ignore failures; silent state matches Android behavior
+        null
     }
 
     override fun play(command: Command) {
@@ -44,9 +47,18 @@ class IosAudioPlayer : AudioPlayer {
         }
     }
 
+    override fun playBeep() {
+        beepPlayer?.let { player ->
+            player.setCurrentTime(0.0)
+            player.play()
+        }
+    }
+
     override fun release() {
         players.values.forEach { it.stop() }
         players.clear()
+        beepPlayer?.stop()
+        beepPlayer = null
     }
 }
 

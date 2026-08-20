@@ -12,22 +12,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
-import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.GrayColor
+import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.command_beep
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
-import se.kjellstrand.fieldshootingtimer.ui.theme.PaleGreenColor
-import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
 // Row tags are "$COMMAND_LIST_ROW_TAG${command.name}" — stable even when the
 // displayed command list is mode-filtered.
@@ -37,6 +38,9 @@ internal const val COMMAND_LIST_ROW_TAG = "CommandListRow"
 fun CommandList(
     commands: List<Command>,
     highlighted: Command?,
+    // With the beep setting on, the CeaseFire row reads "BEEP!" — that run
+    // ends with the signal instead of the spoken command.
+    ceaseFireBeep: Boolean = false,
     onCommandClick: (Command) -> Unit = {}
 ) {
     val listState = rememberLazyListState()
@@ -57,22 +61,33 @@ fun CommandList(
         modifier = Modifier
             .fillMaxSize()
             .padding(Paddings.Large)
-            .border(Paddings.Tiny, BlackColor)
-            .background(WhiteColor)
+            .clip(RoundedCornerShape(8.dp))
+            .border(Paddings.Tiny, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surface)
     ) {
         items(commands.size) { index ->
             val command = commands[index]
             val isHighlighted = command == highlighted
             Text(
-                text = stringResource(command.stringRes),
+                text = if (ceaseFireBeep && command == Command.CeaseFire) {
+                    stringResource(Res.string.command_beep)
+                } else {
+                    stringResource(command.stringRes)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("$COMMAND_LIST_ROW_TAG${command.name}")
                     .semantics { selected = isHighlighted }
                     .clickable { onCommandClick(command) }
-                    .background(if (isHighlighted) PaleGreenColor else Color.Transparent)
+                    // Half the list box's own 8dp corner radius.
+                    .background(
+                        if (isHighlighted) MaterialTheme.colorScheme.secondaryContainer
+                        else Color.Transparent,
+                        RoundedCornerShape(4.dp)
+                    )
                     .padding(Paddings.Small),
-                color = if (isHighlighted) BlackColor else GrayColor,
+                color = if (isHighlighted) MaterialTheme.colorScheme.onSecondaryContainer
+                else MaterialTheme.colorScheme.onSurfaceVariant,
                 style = if (isHighlighted) {
                     MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                 } else {
