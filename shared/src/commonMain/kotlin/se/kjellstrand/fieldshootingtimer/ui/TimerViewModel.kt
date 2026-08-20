@@ -51,7 +51,11 @@ data class TimerUiState(
     val ceaseFireBeep: Boolean = false,
     // Competition only: the countdown has just hit 0 and the timer is parked
     // there waiting for the "Alla klara!" dialog to be answered.
-    val awaitingReadyConfirmation: Boolean = false
+    val awaitingReadyConfirmation: Boolean = false,
+    // True when the user explicitly parked the timer (row tap or hand
+    // scrub). Distinguishes "parked at 0" from an untouched timer, which
+    // competition mode otherwise treats as "run the countdown first".
+    val parkedBySeek: Boolean = false
 )
 
 enum class TimerRunningState {
@@ -89,6 +93,7 @@ class TimerViewModel(
     val ceaseFireBeepFlow = _uiState.map { it.ceaseFireBeep }.distinctUntilChanged()
     val awaitingReadyConfirmationFlow =
         _uiState.map { it.awaitingReadyConfirmation }.distinctUntilChanged()
+    val parkedBySeekFlow = _uiState.map { it.parkedBySeek }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration, it.timerMode) }
@@ -256,7 +261,11 @@ class TimerViewModel(
         // resuming from Stopped keeps the (possibly negative) stop time.
         if (_uiState.value.timerMode == TimerMode.Competition &&
             _uiState.value.timerRunningState == TimerRunningState.NotStarted &&
-            _uiState.value.currentTime == 0f
+            _uiState.value.currentTime == 0f &&
+            // A timer explicitly parked at 0 (the "10 sekunder kvar!" row,
+            // or the hand scrubbed to 0) starts the sequence, not the
+            // countdown.
+            !_uiState.value.parkedBySeek
         ) {
             setCurrentTime(-COMPETITION_COUNTDOWN_SECONDS)
         }
@@ -338,7 +347,7 @@ class TimerViewModel(
         playedCueIndices.clear()
         crossedThumbs.clear()
         beepEmitted = false
-        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
+        _uiState.update { it.copy(awaitingReadyConfirmation = false, parkedBySeek = false) }
         setCurrentTime(0f)
         setTimerState(TimerRunningState.NotStarted)
     }
@@ -379,6 +388,9 @@ class TimerViewModel(
     fun seekTo(command: Command) {
         if (command == Command.Load) {
             reset()
+            // Load's call still fires when the countdown starts — reset has
+            // cleared the played set, so no suppression applies here.
+            playRowCall(command)
             return
         }
         val shootingDuration = _uiState.value.shootingDuration
@@ -393,10 +405,22 @@ class TimerViewModel(
             if (command == Command.Mark) TimerRunningState.Finished
             else TimerRunningState.NotStarted
         )
-        // Mark never runs on the timer, so tapping its row is the only way
-        // its call is heard — play it right away.
-        if (command == Command.Mark) {
-            _cueEventsFlow.tryEmit(Command.Mark)
+        playRowCall(command)
+    }
+
+    /**
+     * Tapping a row calls its command right away. The command's cue is then
+     * marked as played so pressing play doesn't immediately repeat it —
+     * each command is called once, at the moment it was chosen.
+     */
+    private fun playRowCall(command: Command) {
+        if (command.audioPath == null) return
+        _cueEventsFlow.tryEmit(command)
+        if (command != Command.Load) {
+            val cues = activeCues(_uiState.value.shootingDuration)
+            cues.indices
+                .filter { cues[it].second == command }
+                .forEach { playedCueIndices.add(it) }
         }
     }
 
@@ -414,7 +438,7 @@ class TimerViewModel(
         timerJob?.cancel()
         timerJob = null
         runAnchorEpochMs = null
-        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
+        _uiState.update { it.copy(awaitingReadyConfirmation = false, parkedBySeek = true) }
         // Cues and thumbs strictly before the park point count as already
         // fired, so resuming plays the cue at the parked time and nothing
         // older.

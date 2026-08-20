@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.resources.Res
 import se.kjellstrand.fieldshootingtimer.resources.command_beep
@@ -89,9 +90,16 @@ fun CommandList(
                 color = if (isHighlighted) MaterialTheme.colorScheme.onSecondaryContainer
                 else MaterialTheme.colorScheme.onSurfaceVariant,
                 style = if (isHighlighted) {
-                    MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                    MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 26.sp,
+                        lineHeight = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 } else {
-                    MaterialTheme.typography.bodyLarge
+                    MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 20.sp,
+                        lineHeight = 26.sp
+                    )
                 }
             )
         }

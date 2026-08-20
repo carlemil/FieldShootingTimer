@@ -211,6 +211,61 @@ class TimerViewModelSeekTest {
     }
 
     @Test
+    fun `tapping a row calls its command once - not again on resume`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setShootingTime(5f)
+
+        val collected = mutableListOf<Command>()
+        val job = backgroundScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            vm.cueEventsFlow.collect { collected += it }
+        }
+        runCurrent()
+
+        vm.seekTo(Command.Ready) // 7s: the call plays at the tap itself
+        runCurrent()
+        assertEquals(listOf(Command.Ready), collected)
+
+        vm.start()
+        advanceTimeBy(4_000) // 7 → 11, past Fire at 10
+        runCurrent()
+        job.cancel()
+
+        // Ready is not repeated on resume; the next cue is Fire.
+        assertEquals(listOf(Command.Ready, Command.Fire), collected)
+    }
+
+    @Test
+    fun `in competition a park at the sequence start runs the sequence - not the countdown`() = runTest {
+        val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setTimerMode(TimerMode.Competition)
+        vm.setShootingTime(5f)
+
+        vm.seekTo(Command.TenSecondsLeft)
+        runCurrent()
+        assertEquals(0f, vm.uiStateFlow.value.currentTime)
+
+        vm.start()
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertTrue(
+            vm.uiStateFlow.value.currentTime > 0f,
+            "play from the parked sequence start must not run the countdown, " +
+                "got ${vm.uiStateFlow.value.currentTime}"
+        )
+
+        // A reset restores the untouched state: play runs the countdown again.
+        vm.reset()
+        runCurrent()
+        vm.start()
+        advanceTimeBy(1_000)
+        runCurrent()
+        assertTrue(
+            vm.uiStateFlow.value.currentTime < 0f,
+            "after reset the countdown must run, got ${vm.uiStateFlow.value.currentTime}"
+        )
+    }
+
+    @Test
     fun `seekTo Mark jumps to the finished end`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setShootingTime(5f)

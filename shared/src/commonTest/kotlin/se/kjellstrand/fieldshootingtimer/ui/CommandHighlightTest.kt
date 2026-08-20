@@ -60,6 +60,19 @@ class CommandHighlightTest {
     }
 
     @Test
+    fun `competition parked at zero by seek highlights the first timed command`() {
+        // Tapping "10 sekunder kvar!" parks at 0 — that must not read as
+        // "before the start" the way an untouched timer does.
+        assertEquals(
+            Command.TenSecondsLeft,
+            highlightedCommand(
+                TimerMode.Competition, TimerRunningState.NotStarted, 0f,
+                competitionSegments, parkedBySeek = true
+            )
+        )
+    }
+
+    @Test
     fun `competition highlights Load through most of the countdown`() {
         assertEquals(Command.Load, competition(-60f))
         assertEquals(Command.Load, competition(-10.1f))

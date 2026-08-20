@@ -35,6 +35,9 @@ fun SettingsPanel(
     val ceaseFireBeep by timerViewModel.ceaseFireBeepFlow.collectAsState(
         initial = false, context = Dispatchers.Main
     )
+    val parkedBySeek by timerViewModel.parkedBySeekFlow.collectAsState(
+        initial = false, context = Dispatchers.Main
+    )
 
     val visibleCommands = when (timerMode) {
         TimerMode.Competition -> Command.listedCommands
@@ -48,7 +51,8 @@ fun SettingsPanel(
         runningState = timerRunningState,
         currentTime = currentTime,
         segmentDurations = segmentDurations,
-        awaitingReadyConfirmation = awaitingReadyConfirmation
+        awaitingReadyConfirmation = awaitingReadyConfirmation,
+        parkedBySeek = parkedBySeek
     )
 
     // Owns its column so callers don't have to provide a specific layout.
