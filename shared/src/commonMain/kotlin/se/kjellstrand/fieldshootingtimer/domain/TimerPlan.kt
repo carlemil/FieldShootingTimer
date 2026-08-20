@@ -3,9 +3,10 @@ package se.kjellstrand.fieldshootingtimer.domain
 import kotlin.math.roundToInt
 
 /**
- * Pure timer-plan math, derived entirely from [Command.timedCommands] and the
- * user-configurable Fire duration. Kept free of Compose and coroutines so the
- * whole schedule is verifiable with plain unit tests on any target.
+ * Pure timer-plan math, derived entirely from [Command.timedCommands], the
+ * [TimerMode], and the user-configurable Fire duration. Kept free of Compose
+ * and coroutines so the whole schedule is verifiable with plain unit tests
+ * on any target.
  */
 
 /** Competition-mode preparation countdown, run as currentTime -60..0. */
@@ -42,8 +43,18 @@ internal fun boundaryFlagSeconds(userTicks: List<Float>, shootingDuration: Float
         fireStartSeconds() + shootingDuration + Command.CeaseFire.duration
     )
 
-internal fun buildSegmentDurations(shootingDuration: Float): List<Float> =
-    Command.timedCommands.map {
+/**
+ * The timed sequence for [mode]: training ends after UnloadWeapon —
+ * Visitation (and its pacing delay) are competition-only.
+ */
+internal fun timedCommandsFor(mode: TimerMode): List<Command> = when (mode) {
+    TimerMode.Competition -> Command.timedCommands
+    TimerMode.Training ->
+        Command.timedCommands - Command.VisitationDelay - Command.Visitation
+}
+
+internal fun buildSegmentDurations(shootingDuration: Float, mode: TimerMode): List<Float> =
+    timedCommandsFor(mode).map {
         if (it == Command.Fire) shootingDuration else it.duration.toFloat()
     }
 
@@ -52,10 +63,10 @@ internal fun buildSegmentDurations(shootingDuration: Float): List<Float> =
  * cumulative segment boundaries, so cues and dial segments can never drift
  * apart — even for fractional Fire durations.
  */
-internal fun buildAudioCues(shootingDuration: Float): List<Pair<Float, Command>> {
-    val durations = buildSegmentDurations(shootingDuration)
+internal fun buildAudioCues(shootingDuration: Float, mode: TimerMode): List<Pair<Float, Command>> {
+    val durations = buildSegmentDurations(shootingDuration, mode)
     var time = 0f
-    return Command.timedCommands.mapIndexed { index, command ->
+    return timedCommandsFor(mode).mapIndexed { index, command ->
         val cue = time to command
         time += durations[index]
         cue

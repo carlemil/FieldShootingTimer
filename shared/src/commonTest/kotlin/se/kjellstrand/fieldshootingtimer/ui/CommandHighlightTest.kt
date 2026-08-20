@@ -8,14 +8,17 @@ import kotlin.test.assertEquals
 
 class CommandHighlightTest {
 
-    // Boundaries 7, 10, 15, 18 (delay), 21, 25 (delay), 27, 29.
-    private val segments = listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f)
+    // Training boundaries: 7, 10, 15, 18 (delay), 21, 25.
+    private val trainingSegments = listOf(7f, 3f, 5f, 3f, 3f, 4f)
+
+    // Competition boundaries: 7, 10, 15, 18 (delay), 21, 25 (delay), 27, 29.
+    private val competitionSegments = listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f)
 
     private fun training(time: Float, state: TimerRunningState = TimerRunningState.Running) =
-        highlightedCommand(TimerMode.Training, state, time, segments)
+        highlightedCommand(TimerMode.Training, state, time, trainingSegments)
 
     private fun competition(time: Float, state: TimerRunningState = TimerRunningState.Running) =
-        highlightedCommand(TimerMode.Competition, state, time, segments)
+        highlightedCommand(TimerMode.Competition, state, time, competitionSegments)
 
     @Test
     fun `time zero highlights the first timed command`() {
@@ -29,7 +32,8 @@ class CommandHighlightTest {
         assertEquals(Command.Fire, training(10f))
         assertEquals(Command.CeaseFire, training(15f))
         assertEquals(Command.UnloadWeapon, training(21f))
-        assertEquals(Command.Visitation, training(27f))
+        // The Visitation stretch exists in competition only.
+        assertEquals(Command.Visitation, competition(27f))
     }
 
     @Test
@@ -37,15 +41,17 @@ class CommandHighlightTest {
         // UnloadWeaponDelay runs 18..21: the cease-fire row stays lit.
         assertEquals(Command.CeaseFire, training(18f))
         assertEquals(Command.CeaseFire, training(20.9f))
-        // VisitationDelay runs 25..27: the unload row stays lit.
-        assertEquals(Command.UnloadWeapon, training(25f))
-        assertEquals(Command.UnloadWeapon, training(26.9f))
+        // VisitationDelay runs 25..27 (competition): the unload row stays lit.
+        assertEquals(Command.UnloadWeapon, competition(25f))
+        assertEquals(Command.UnloadWeapon, competition(26.9f))
     }
 
     @Test
     fun `past the end the last timed command stays highlighted`() {
-        assertEquals(Command.Visitation, training(29f))
-        assertEquals(Command.Visitation, training(999f))
+        assertEquals(Command.UnloadWeapon, training(25f))
+        assertEquals(Command.UnloadWeapon, training(999f))
+        assertEquals(Command.Visitation, competition(29f))
+        assertEquals(Command.Visitation, competition(999f))
     }
 
     @Test
@@ -91,7 +97,7 @@ class CommandHighlightTest {
         assertEquals(
             Command.AllReady,
             highlightedCommand(
-                TimerMode.Competition, TimerRunningState.Stopped, 0f, segments,
+                TimerMode.Competition, TimerRunningState.Stopped, 0f, competitionSegments,
                 awaitingReadyConfirmation = true
             )
         )

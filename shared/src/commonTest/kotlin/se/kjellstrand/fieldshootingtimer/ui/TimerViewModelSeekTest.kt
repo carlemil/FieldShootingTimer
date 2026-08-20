@@ -16,9 +16,9 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerViewModelSeekTest {
 
-    // Segment starts with shooting=5: TenSecondsLeft 0, Ready 7, Fire 10,
-    // CeaseFire 15, UnloadWeaponDelay 18, UnloadWeapon 21, VisitationDelay
-    // 25, Visitation 27; total 29.
+    // Training segment starts with shooting=5: TenSecondsLeft 0, Ready 7,
+    // Fire 10, CeaseFire 15, UnloadWeaponDelay 18, UnloadWeapon 21;
+    // total 25 (the Visitation stretch is competition-only).
 
     @Test
     fun `seekTo while running pauses at the tapped command's start`() = runTest {
@@ -70,7 +70,7 @@ class TimerViewModelSeekTest {
 
         assertEquals(listOf(Command.CeaseFire), collected)
 
-        advanceTimeBy(15_000) // 15 → past 29: the delays, UnloadWeapon (21) and Visitation (27)
+        advanceTimeBy(11_000) // 15 → past 25: the delay (18) and UnloadWeapon (21)
         runCurrent()
         job.cancel()
 
@@ -78,9 +78,7 @@ class TimerViewModelSeekTest {
             listOf(
                 Command.CeaseFire,
                 Command.UnloadWeaponDelay,
-                Command.UnloadWeapon,
-                Command.VisitationDelay,
-                Command.Visitation
+                Command.UnloadWeapon
             ),
             collected
         )
@@ -220,7 +218,7 @@ class TimerViewModelSeekTest {
         vm.seekTo(Command.Mark)
         runCurrent()
 
-        assertEquals(29f, vm.uiStateFlow.value.currentTime)
+        assertEquals(25f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
     }
 

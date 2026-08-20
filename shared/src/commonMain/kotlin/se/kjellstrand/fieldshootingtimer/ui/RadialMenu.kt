@@ -59,14 +59,14 @@ internal const val MENU_SCRIM_TAG = "RadialMenuScrim"
 
 /**
  * The items fan out in two layers so nothing sits too far from the button:
- * the beep toggle, share, and help on the inner arc; the timer-editing items
- * (+/−, mode) and the theme toggle on the outer. Four items ~27° apart at
- * 155dp sit ~2·r·sin(13.3°) ≈ 71dp apart, and three at 40° apart at 100dp
- * sit ≈ 68dp apart — both well above the 38dp button size — and the layers
- * are 55dp apart radially.
+ * the theme toggle, share, and help on the inner arc; the timer-editing
+ * items (+/−, mode) and the beep toggle on the outer. The radii and angle sets
+ * are chosen so every neighbor distance lands in a tight 68–73dp band:
+ * outer 2·158·sin(13.3°) ≈ 73dp, inner 2·90·sin(22.5°) ≈ 69dp, ring gap
+ * 158−90 = 68dp, and the staggered cross-ring pairs ≈ 70–71dp.
  */
-private val InnerMenuItemRadius = 100.dp
-private val OuterMenuItemRadius = 155.dp
+private val InnerMenuItemRadius = 90.dp
+private val OuterMenuItemRadius = 158.dp
 
 /** 20% below the stock 48dp IconButton, keeping the fan compact. */
 private val MenuButtonSize = 38.dp
@@ -77,15 +77,15 @@ private val MenuButtonSize = 38.dp
  * underdamped spring floats them out to their arc positions with a small
  * elastic overshoot, and pulls them back in on close.
  *
- * Two layers: the inner arc holds the cease-fire beep toggle (icon shows the
+ * Two layers: the inner arc holds the light/dark theme toggle (icon shows
+ * the active theme; the menu stays open so the switch is seen immediately),
+ * share, and help (reopens the tutorial). The outer arc holds add/remove
+ * tick (+/−, gated by [tickAdjustEnabled]; the menu stays open so several
+ * ticks can be added in a row), a competition/training mode toggle whose
+ * icon shows the active mode ([modeToggleEnabled] gates it to when the
+ * timer isn't running), and the cease-fire beep toggle (icon shows the
  * active cue style; a short signal at the yellow segment's end instead of
- * the spoken "Eld upphör!"), share, and help (reopens the tutorial). The
- * outer arc holds add/remove tick (+/−, gated by [tickAdjustEnabled]; the
- * menu stays open so several ticks can be added in a row), a competition/
- * training mode toggle whose icon shows the active mode ([modeToggleEnabled]
- * gates it to when the timer isn't running), and the light/dark theme toggle (icon
- * shows the active theme; the menu stays open so the switch is seen
- * immediately).
+ * the spoken "Eld upphör!").
  * [openTowardsStart] picks the arc direction so the items fan toward the
  * screen's interior from either top corner.
  *
@@ -129,9 +129,9 @@ fun RadialMenu(
         listOf(90f, 63f, 37f, 10f)
     }
     val innerAngles = if (openTowardsStart) {
-        listOf(90f, 130f, 170f)
+        listOf(90f, 135f, 180f)
     } else {
-        listOf(90f, 50f, 10f)
+        listOf(90f, 45f, 0f)
     }
 
     Box(modifier = modifier) {
@@ -180,18 +180,6 @@ fun RadialMenu(
                 angleDeg = outerAngles[3],
                 progress = progress,
                 radiusPx = outerRadiusPx,
-                icon = if (darkTheme) Res.drawable.dark_mode else Res.drawable.light_mode,
-                contentDescription = stringResource(
-                    if (darkTheme) Res.string.theme_dark else Res.string.theme_light
-                ),
-                tag = MENU_ITEM_THEME_TAG,
-                onClick = onToggleTheme
-            )
-            // Inner layer: beep toggle + app-level items.
-            RadialMenuItem(
-                angleDeg = innerAngles[0],
-                progress = progress,
-                radiusPx = innerRadiusPx,
                 icon = if (ceaseFireBeep) {
                     Res.drawable.graphic_eq
                 } else {
@@ -203,6 +191,18 @@ fun RadialMenu(
                 ),
                 tag = MENU_ITEM_BEEP_TAG,
                 onClick = onToggleCeaseFireBeep
+            )
+            // Inner layer: theme toggle + app-level items.
+            RadialMenuItem(
+                angleDeg = innerAngles[0],
+                progress = progress,
+                radiusPx = innerRadiusPx,
+                icon = if (darkTheme) Res.drawable.dark_mode else Res.drawable.light_mode,
+                contentDescription = stringResource(
+                    if (darkTheme) Res.string.theme_dark else Res.string.theme_light
+                ),
+                tag = MENU_ITEM_THEME_TAG,
+                onClick = onToggleTheme
             )
             RadialMenuItem(
                 angleDeg = innerAngles[1],

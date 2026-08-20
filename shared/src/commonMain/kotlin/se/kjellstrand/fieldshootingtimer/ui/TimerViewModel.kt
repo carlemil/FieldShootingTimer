@@ -91,8 +91,11 @@ class TimerViewModel(
         _uiState.map { it.awaitingReadyConfirmation }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
-        .map { buildSegmentDurations(it.shootingDuration) }
-        .stateIn(scope, SharingStarted.Eagerly, buildSegmentDurations(_uiState.value.shootingDuration))
+        .map { buildSegmentDurations(it.shootingDuration, it.timerMode) }
+        .stateIn(
+            scope, SharingStarted.Eagerly,
+            buildSegmentDurations(_uiState.value.shootingDuration, _uiState.value.timerMode)
+        )
 
     val rangeFlow: StateFlow<IntRange> = _uiState
         .map { buildRange(it.shootingDuration) }
@@ -267,7 +270,7 @@ class TimerViewModel(
             // Snapshot directly from _uiState — stateIn-derived flows may not have
             // propagated the latest shootingDuration when start() is called from a test.
             val shootingDuration = _uiState.value.shootingDuration
-            val segments = buildSegmentDurations(shootingDuration)
+            val segments = buildSegmentDurations(shootingDuration, _uiState.value.timerMode)
             val total = segments.sum()
             val cues = activeCues(shootingDuration)
             val beepTime = beepTimeSeconds(shootingDuration)
@@ -379,10 +382,11 @@ class TimerViewModel(
             return
         }
         val shootingDuration = _uiState.value.shootingDuration
+        val mode = _uiState.value.timerMode
         val seekTime = when (command) {
             Command.AllReady -> -COMPETITION_ALL_READY_REMAINING_SECONDS
-            Command.Mark -> buildSegmentDurations(shootingDuration).sum()
-            else -> buildAudioCues(shootingDuration).first { it.second == command }.first
+            Command.Mark -> buildSegmentDurations(shootingDuration, mode).sum()
+            else -> buildAudioCues(shootingDuration, mode).first { it.second == command }.first
         }
         parkAt(
             seekTime,
@@ -432,10 +436,10 @@ class TimerViewModel(
      * negative clock ("Ladda!" at its start, "Alla klara!" at -10s).
      */
     private fun activeCues(shootingDuration: Float): List<Pair<Float, Command>> {
+        val mode = _uiState.value.timerMode
         val prepCues =
-            if (_uiState.value.timerMode == TimerMode.Competition) buildCompetitionPrepCues()
-            else emptyList()
-        return prepCues + buildAudioCues(shootingDuration)
+            if (mode == TimerMode.Competition) buildCompetitionPrepCues() else emptyList()
+        return prepCues + buildAudioCues(shootingDuration, mode)
     }
 
     private fun emitPassedBeep(time: Float, beepTime: Float) {

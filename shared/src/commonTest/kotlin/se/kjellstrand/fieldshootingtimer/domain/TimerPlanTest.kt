@@ -7,11 +7,31 @@ import kotlin.test.assertTrue
 class TimerPlanTest {
 
     @Test
-    fun `segment durations mirror timedCommands with Fire replaced`() {
-        // ...including the silent pacing delays (3s before UnloadWeapon,
-        // 2s before Visitation).
-        assertEquals(listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f), buildSegmentDurations(5f))
-        assertEquals(listOf(7f, 3f, 2.5f, 3f, 3f, 4f, 2f, 2f), buildSegmentDurations(2.5f))
+    fun `segment durations mirror the mode's timed commands with Fire replaced`() {
+        // Competition runs the full sequence including the silent pacing
+        // delays (3s before UnloadWeapon, 2s before Visitation)...
+        assertEquals(
+            listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f),
+            buildSegmentDurations(5f, TimerMode.Competition)
+        )
+        assertEquals(
+            listOf(7f, 3f, 2.5f, 3f, 3f, 4f, 2f, 2f),
+            buildSegmentDurations(2.5f, TimerMode.Competition)
+        )
+        // ...while training ends after UnloadWeapon.
+        assertEquals(
+            listOf(7f, 3f, 5f, 3f, 3f, 4f),
+            buildSegmentDurations(5f, TimerMode.Training)
+        )
+    }
+
+    @Test
+    fun `training's timed sequence drops the Visitation stretch`() {
+        assertEquals(Command.timedCommands, timedCommandsFor(TimerMode.Competition))
+        assertEquals(
+            Command.timedCommands - Command.VisitationDelay - Command.Visitation,
+            timedCommandsFor(TimerMode.Training)
+        )
     }
 
     @Test
@@ -23,23 +43,32 @@ class TimerPlanTest {
 
     @Test
     fun `cue times equal cumulative segment boundaries for integer and fractional durations`() {
-        for (shooting in listOf(0f, 2f, 2.5f, 5f, 7.75f, 20f)) {
-            val durations = buildSegmentDurations(shooting)
-            val cues = buildAudioCues(shooting)
-            var boundary = 0f
-            durations.forEachIndexed { index, duration ->
-                assertEquals(
-                    boundary, cues[index].first, 1e-4f,
-                    "cue $index for shooting=$shooting should start at its segment boundary"
-                )
-                boundary += duration
+        for (mode in TimerMode.entries) {
+            for (shooting in listOf(0f, 2f, 2.5f, 5f, 7.75f, 20f)) {
+                val durations = buildSegmentDurations(shooting, mode)
+                val cues = buildAudioCues(shooting, mode)
+                var boundary = 0f
+                durations.forEachIndexed { index, duration ->
+                    assertEquals(
+                        boundary, cues[index].first, 1e-4f,
+                        "cue $index for shooting=$shooting/$mode should start at its segment boundary"
+                    )
+                    boundary += duration
+                }
             }
         }
     }
 
     @Test
-    fun `cues follow the timedCommands sequence`() {
-        assertEquals(Command.timedCommands, buildAudioCues(5f).map { it.second })
+    fun `cues follow the mode's timed command sequence`() {
+        assertEquals(
+            Command.timedCommands,
+            buildAudioCues(5f, TimerMode.Competition).map { it.second }
+        )
+        assertEquals(
+            timedCommandsFor(TimerMode.Training),
+            buildAudioCues(5f, TimerMode.Training).map { it.second }
+        )
     }
 
     @Test
@@ -90,14 +119,14 @@ class TimerPlanTest {
 
     @Test
     fun `newlyPassedIndices includes a cue exactly at the current time`() {
-        val cues = buildAudioCues(5f)
+        val cues = buildAudioCues(5f, TimerMode.Training)
         // cue 1 (Ready) fires at t=7
         assertEquals(listOf(0, 1), newlyPassedIndices(7f, cues, emptySet()))
     }
 
     @Test
     fun `newlyPassedIndices is idempotent once indices are recorded`() {
-        val cues = buildAudioCues(5f)
+        val cues = buildAudioCues(5f, TimerMode.Training)
         val fired = newlyPassedIndices(8f, cues, emptySet()).toSet()
         assertTrue(newlyPassedIndices(8f, cues, fired).isEmpty())
     }

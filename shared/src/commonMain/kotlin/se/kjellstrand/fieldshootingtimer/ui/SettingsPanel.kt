@@ -38,7 +38,10 @@ fun SettingsPanel(
 
     val visibleCommands = when (timerMode) {
         TimerMode.Competition -> Command.listedCommands
-        TimerMode.Training -> Command.listedCommands - Command.Load - Command.AllReady
+        // Training runs neither the preparation phase nor the closing
+        // Visitation/Mark stretch — its sequence ends after UnloadWeapon.
+        TimerMode.Training -> Command.listedCommands -
+            Command.Load - Command.AllReady - Command.Visitation - Command.Mark
     }
     val highlighted = highlightedCommand(
         mode = timerMode,

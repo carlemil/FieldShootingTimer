@@ -60,8 +60,9 @@ class TimerViewModelTimingTest {
         runCurrent()
 
         vm.start()
-        // total = 7 + 3 + 2 + 3 + 3 + 4 + 2 + 2 = 26 seconds
-        advanceTimeBy(27_000)
+        // training total = 7 + 3 + 2 + 3 + 3 + 4 = 22 seconds (the
+        // Visitation stretch is competition-only)
+        advanceTimeBy(23_000)
         runCurrent()
         job.cancel()
 
@@ -72,9 +73,7 @@ class TimerViewModelTimingTest {
                 Command.Fire,
                 Command.CeaseFire,
                 Command.UnloadWeaponDelay,
-                Command.UnloadWeapon,
-                Command.VisitationDelay,
-                Command.Visitation
+                Command.UnloadWeapon
             ),
             collected
         )
@@ -143,7 +142,7 @@ class TimerViewModelTimingTest {
         }
 
         vm.start()
-        // run past t=13 (totalDuration with shooting=5 is 29)
+        // run past t=13 (training totalDuration with shooting=5 is 25)
         advanceTimeBy(14_000)
         runCurrent()
         job.cancel()
@@ -164,7 +163,7 @@ class TimerViewModelTimingTest {
         }
 
         vm.start()
-        advanceTimeBy(30_000) // past the full 29s sequence
+        advanceTimeBy(30_000) // past the full training sequence (25s)
         runCurrent()
         job.cancel()
 
@@ -260,12 +259,18 @@ class TimerViewModelTimingTest {
     // --- Guard tests: derived flows produce the expected values ---
 
     @Test
-    fun `segmentDurationsFlow reflects the timed commands with Fire set to shootingDuration`() = runTest {
+    fun `segmentDurationsFlow reflects the mode's timed commands with Fire set to shootingDuration`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope)
         vm.setShootingTime(4f)
         runCurrent()
-        // TenSecondsLeft=7, Ready=3, Fire=4 (user), CeaseFire=3,
-        // UnloadWeaponDelay=3, UnloadWeapon=4, VisitationDelay=2, Visitation=2
+        // Training: TenSecondsLeft=7, Ready=3, Fire=4 (user), CeaseFire=3,
+        // UnloadWeaponDelay=3, UnloadWeapon=4 — no Visitation stretch.
+        assertEquals(
+            listOf(7f, 3f, 4f, 3f, 3f, 4f),
+            vm.segmentDurationsFlow.value
+        )
+        vm.setTimerMode(se.kjellstrand.fieldshootingtimer.domain.TimerMode.Competition)
+        runCurrent()
         assertEquals(
             listOf(7f, 3f, 4f, 3f, 3f, 4f, 2f, 2f),
             vm.segmentDurationsFlow.value
@@ -277,8 +282,8 @@ class TimerViewModelTimingTest {
         val vm = TimerViewModel(externalScope = backgroundScope)
         vm.setShootingTime(5f)
         runCurrent()
-        // 7 + 3 + 5 + 3 + 3 + 4 + 2 + 2 = 29
-        assertEquals(29f, vm.segmentDurationsFlow.value.sum())
+        // Training: 7 + 3 + 5 + 3 + 3 + 4 = 25
+        assertEquals(25f, vm.segmentDurationsFlow.value.sum())
     }
 
     @Test

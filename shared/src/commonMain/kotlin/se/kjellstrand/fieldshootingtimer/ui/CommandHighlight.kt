@@ -3,6 +3,7 @@ package se.kjellstrand.fieldshootingtimer.ui
 import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REMAINING_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.Command
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
+import se.kjellstrand.fieldshootingtimer.domain.timedCommandsFor
 
 /**
  * The command to highlight in the command list.
@@ -32,14 +33,15 @@ internal fun highlightedCommand(
         if (currentTime < -COMPETITION_ALL_READY_REMAINING_SECONDS) return Command.Load
         if (currentTime < 0f) return Command.AllReady
     }
+    val timedCommands = timedCommandsFor(mode)
     var accumulatedTime = 0f
     segmentDurations.forEachIndexed { index, duration ->
         accumulatedTime += duration
         if (currentTime < accumulatedTime) {
-            return listedCommandAtOrBefore(index)
+            return listedCommandAtOrBefore(timedCommands, index)
         }
     }
-    return listedCommandAtOrBefore(Command.timedCommands.lastIndex)
+    return listedCommandAtOrBefore(timedCommands, timedCommands.lastIndex)
 }
 
 /**
@@ -47,10 +49,10 @@ internal fun highlightedCommand(
  * of them is running the previous listed command keeps the highlight — the
  * called command stays in force until the next is called.
  */
-private fun listedCommandAtOrBefore(index: Int): Command {
+private fun listedCommandAtOrBefore(timedCommands: List<Command>, index: Int): Command {
     for (i in index downTo 0) {
-        val command = Command.timedCommands[i]
+        val command = timedCommands[i]
         if (command.listed) return command
     }
-    return Command.timedCommands.first()
+    return timedCommands.first()
 }
