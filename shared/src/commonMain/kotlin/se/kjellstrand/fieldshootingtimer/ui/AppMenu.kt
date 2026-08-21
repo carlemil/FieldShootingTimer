@@ -82,7 +82,7 @@ private val MenuRowSpacing = 18.dp
 private val MenuTopOffset = 52.dp
 
 /** Horizontal stride between the two landscape columns — wide enough for
- * the longest label ("Röstkommando vid eld upphör"). */
+ * the longest label ("Signal vid eld upphör"). */
 private val MenuColumnStride = 250.dp
 
 /**

@@ -19,7 +19,7 @@
     <string name="shooting_duration">Skjuttid</string>
     <string name="command_beep">BEEP!</string>
     <string name="cease_fire_beep">Signal vid eld upphör</string>
-    <string name="cease_fire_voice">Röstkommando vid eld upphör</string>
+    <string name="cease_fire_voice">Röst vid eld upphör</string>
     <string name="menu">Meny</string>
     <string name="mode_competition">Tävlingsläge</string>
     <string name="mode_training">Träningsläge</string>
