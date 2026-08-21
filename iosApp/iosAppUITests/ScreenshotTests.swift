@@ -5,9 +5,9 @@ import XCTest
 // filesystem). Runs headless:
 //   xcodebuild test -scheme iosApp -destination id=<udid> \
 //     -only-testing:iosAppUITests/ScreenshotTests/<method>
-// Timings assume the seeded settings: training mode, 5 s fire time, so the
-// command sequence is 0-7 TenSecondsLeft, 7-10 Ready, 10-15 Fire,
-// 15-18 CeaseFire, 18-22 Unload, 22-24 Visitation.
+// Timings assume a fresh install: training mode, 5 s fire time, so the
+// sequence is 0-7 TenSecondsLeft, 7-10 Ready, 10-15 Fire, 15-18 CeaseFire,
+// 18-21 silent pause, 21-25 UnloadWeapon (training ends there).
 final class ScreenshotTests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -16,40 +16,71 @@ final class ScreenshotTests: XCTestCase {
             atPath: "/tmp/shots", withIntermediateDirectories: true)
     }
 
-    func testLandscapeRunScreenshots() throws {
-        let app = XCUIApplication()
-        app.launch()
-        sleep(3)
-        XCUIDevice.shared.orientation = .landscapeLeft
-        sleep(3)
-        save("ip_03_landscape")
-        tapPlay(app)
-        sleep(13); save("ip_04_landscape")  // ELD!
-        sleep(4);  save("ip_05_landscape")  // ELD UPPHÖR!
-        sleep(4);  save("ip_06_landscape")  // PATRON UR! PROPPA VAPEN!
-        sleep(2);  save("ip_07_landscape")  // VISITATION!
-    }
-
-    func testPortraitRunScreenshots() throws {
+    func testPortraitScreenshots() throws {
         let app = XCUIApplication()
         app.launch()
         sleep(3)
         XCUIDevice.shared.orientation = .portrait
         sleep(2)
-        save("ipad_01_idle")
-        let menu = app.descendants(matching: .any)["RadialMenuButton"].firstMatch
-        if menu.waitForExistence(timeout: 3) {
-            menu.tap()
-            sleep(2)
-            save("ipad_02_menu")
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.85)).tap()
-            sleep(2)
-        }
+        dismissTutorialIfPresent(app)
+
+        // Seed two partid flags via the menu (stays open between taps).
+        tapItem(app, "RadialMenuButton")
+        sleep(1)
+        tapItem(app, "RadialMenuItemAddTick")
+        tapItem(app, "RadialMenuItemAddTick")
+        closeMenu(app)
+        sleep(1)
+        save("01_portrait_idle")
+
+        tapItem(app, "RadialMenuButton")
+        sleep(2)
+        save("02_menu")
+
+        // Toggle dark mode (the menu stays open), close, shoot, restore.
+        tapItem(app, "RadialMenuItemTheme")
+        sleep(1)
+        closeMenu(app)
+        sleep(1)
+        save("03_portrait_dark")
+        tapItem(app, "RadialMenuButton")
+        sleep(1)
+        tapItem(app, "RadialMenuItemTheme")
+        closeMenu(app)
+        sleep(1)
+    }
+
+    func testLandscapeRunScreenshots() throws {
+        let app = XCUIApplication()
+        app.launch()
+        sleep(3)
+        dismissTutorialIfPresent(app)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        sleep(3)
         tapPlay(app)
-        sleep(13); save("ipad_03_eld")
-        sleep(4);  save("ipad_04_eldupphor")
-        sleep(4);  save("ipad_05_patronur")
-        sleep(2);  save("ipad_06_visitation")
+        sleep(13); save("04_landscape_eld")        // ELD! (10-15)
+        sleep(4);  save("05_landscape_eldupphor")  // ELD UPPHÖR! (15-18)
+        sleep(5);  save("06_landscape_patronur")   // PATRON UR! (21-25)
+    }
+
+    private func dismissTutorialIfPresent(_ app: XCUIApplication) {
+        let skip = app.descendants(matching: .any)["TutorialSkip"].firstMatch
+        if skip.waitForExistence(timeout: 3) {
+            skip.tap()
+            sleep(1)
+        }
+    }
+
+    private func tapItem(_ app: XCUIApplication, _ tag: String) {
+        let item = app.descendants(matching: .any)[tag].firstMatch
+        if item.waitForExistence(timeout: 3) {
+            item.tap()
+        }
+    }
+
+    private func closeMenu(_ app: XCUIApplication) {
+        // Tap the scrim well below the fanned-out items.
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.9)).tap()
     }
 
     private func tapPlay(_ app: XCUIApplication) {
