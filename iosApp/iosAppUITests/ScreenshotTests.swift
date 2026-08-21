@@ -23,14 +23,6 @@ final class ScreenshotTests: XCTestCase {
         XCUIDevice.shared.orientation = .portrait
         sleep(2)
         dismissTutorialIfPresent(app)
-
-        // Seed two partid flags via the menu (stays open between taps).
-        tapItem(app, "RadialMenuButton")
-        sleep(1)
-        tapItem(app, "RadialMenuItemAddTick")
-        tapItem(app, "RadialMenuItemAddTick")
-        closeMenu(app)
-        sleep(1)
         save("01_portrait_idle")
 
         tapItem(app, "RadialMenuButton")
@@ -55,6 +47,13 @@ final class ScreenshotTests: XCTestCase {
         app.launch()
         sleep(3)
         dismissTutorialIfPresent(app)
+        // Seed two partid flags so the landscape run shows them too.
+        tapItem(app, "RadialMenuButton")
+        sleep(1)
+        tapItem(app, "RadialMenuItemAddTick")
+        tapItem(app, "RadialMenuItemAddTick")
+        closeMenu(app)
+        sleep(1)
         XCUIDevice.shared.orientation = .landscapeLeft
         sleep(3)
         tapPlay(app)
