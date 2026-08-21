@@ -1,9 +1,11 @@
 Stor uppdatering!
-• Mörkt läge – växla i menyn
-• Partider som flaggor på uret, med automatiska start- och slutflaggor
+• Total skjuttid räknas ner på play-knappen
+• Ny meny med tydliga texter
+• Ställ eldtid och partider direkt på uret – nyp och dra
+• Mörkt läge
+• Partider som flaggor på uret
 • Tryck på ett kommando i listan för att ställa uret där
 • Valbar ljudsignal i stället för ELD UPPHÖR!
-• Tävlingsläge: 60 s LADDA-nedräkning, Alla klara!, Visitation klar! och Markera! med dialoger
-• Nyinspelade röstkommandon med jämn ljudnivå
-• Skicka feedback direkt från menyn
-• Ny hjälpguide och många buggfixar
+• Tävlingsläge: 60 s LADDA-nedräkning, Alla klara! och Markera!
+• Nyinspelade röstkommandon
+• Ny hjälpguide, feedback i menyn och buggfixar

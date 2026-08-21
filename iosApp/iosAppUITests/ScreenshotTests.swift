@@ -5,6 +5,9 @@ import XCTest
 // filesystem). Runs headless:
 //   xcodebuild test -scheme iosApp -destination id=<udid> \
 //     -only-testing:iosAppUITests/ScreenshotTests/<method>
+// The landscape PNGs come out in the device's native portrait frame with the
+// content rotated, so rotate them before they go in fastlane/screenshots/:
+//   sips -r 270 /tmp/shots/0[456]_landscape_*.png
 // Timings assume a fresh install: training mode, 5 s fire time, so the
 // sequence is 0-7 TenSecondsLeft, 7-10 Ready, 10-15 Fire, 15-18 CeaseFire,
 // 18-21 silent pause, 21-25 UnloadWeapon (training ends there).
