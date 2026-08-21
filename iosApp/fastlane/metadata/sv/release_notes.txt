@@ -1,8 +1,9 @@
-• Tävlingsläge: 60 s förberedelsetid, nedräkning på startknappen och frågan "Alla klara!"
-• Ny meny med +/− för partider, lägesväxling, delning och hjälp
-• Justera direkt på urtavlan: nyp för eldtid, dra partider, dra visaren för att spola
-• Tryck på ett kommando i listan för att hoppa dit
-• Partider visas som flaggor på urtavlan
-• Maxtiden höjd till 5 minuter
-• Guide vid första start
-• Ny appikon och mjukare visare
+Stor uppdatering!
+• Mörkt läge – växla i menyn
+• Partider som flaggor på uret, med automatiska start- och slutflaggor
+• Tryck på ett kommando i listan för att ställa uret där
+• Valbar ljudsignal i stället för ELD UPPHÖR!
+• Tävlingsläge: 60 s LADDA-nedräkning, Alla klara!, Visitation klar! och Markera! med dialoger
+• Nyinspelade röstkommandon med jämn ljudnivå
+• Skicka feedback direkt från menyn
+• Ny hjälpguide och många buggfixar
