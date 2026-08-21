@@ -21,7 +21,8 @@ private val DarkColorScheme = darkColorScheme(
     // below WCAG's 4.5:1 for button text; black measures 5.4:1.
     onPrimary = BlackColor,
     secondary = DarkModeGreenColor,
-    secondaryContainer = DarkModePaleGreenColor,
+    // The list highlight uses the same green as the dial's Fire segment.
+    secondaryContainer = DarkModeGreenColor,
     onSecondaryContainer = BlackColor,
     tertiary = DarkModeYellowColor,
     background = DarkBackgroundColor,
@@ -47,7 +48,8 @@ private val LightColorScheme = lightColorScheme(
     primary = LightGreenColor,
     onPrimary = BlackColor,
     secondary = LightGreenColor,
-    secondaryContainer = PaleGreenColor,
+    // The list highlight uses the same green as the dial's Fire segment.
+    secondaryContainer = LightGreenColor,
     onSecondaryContainer = BlackColor,
     tertiary = MutedYellowColor,
     background = GrayColor,

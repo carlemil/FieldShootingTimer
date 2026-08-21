@@ -38,7 +38,7 @@ import se.kjellstrand.fieldshootingtimer.ui.MENU_SCRIM_TAG
 import se.kjellstrand.fieldshootingtimer.ui.MarkConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.VisitationDoneConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
-import se.kjellstrand.fieldshootingtimer.ui.RadialMenu
+import se.kjellstrand.fieldshootingtimer.ui.AppMenu
 import se.kjellstrand.fieldshootingtimer.ui.ReadyConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
@@ -226,10 +226,10 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                         .testTag(MENU_SCRIM_TAG)
                 )
             }
-            // Top-right in portrait; top-left in landscape so it never overlaps the
-            // settings column that fills the right half in landscape. The menu
-            // fans its items toward the screen's interior from that corner.
-            RadialMenu(
+            // Anchored top-left in both orientations; the speed dial slides
+            // its labeled rows down from the button (two columns in
+            // landscape, where eight rows don't fit the height).
+            AppMenu(
                 open = menuOpen,
                 onOpenChange = { menuOpen = it },
                 timerMode = timerMode,
@@ -255,11 +255,14 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 ceaseFireBeep = ceaseFireBeep,
                 onToggleCeaseFireBeep = { timerViewModel.setCeaseFireBeep(!ceaseFireBeep) },
                 onSendFeedback = feedbackSender::sendFeedback,
-                openTowardsStart = !isLandscape,
+                twoColumns = isLandscape,
                 modifier = Modifier
-                    .align(if (isLandscape) Alignment.TopStart else Alignment.TopEnd)
+                    .align(Alignment.TopStart)
                     .systemBarsPadding()
-                    .padding(horizontal = Paddings.Large, vertical = Paddings.Medium)
+                    .padding(
+                        horizontal = Paddings.Large + Paddings.Medium,
+                        vertical = Paddings.Large
+                    )
             )
             // Competition countdown reached 0: modal "Alla klara!" question.
             val awaitingReadyConfirmation by timerViewModel.awaitingReadyConfirmationFlow.collectAsState(

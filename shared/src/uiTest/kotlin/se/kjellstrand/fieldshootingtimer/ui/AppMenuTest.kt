@@ -20,7 +20,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalTestApi::class)
-class RadialMenuTest {
+class AppMenuTest {
 
     // Fixed-size canvas so the fanned-out items stay inside the compose root
     // and remain clickable.
@@ -41,9 +41,9 @@ class RadialMenuTest {
     ) {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                Box(Modifier.size(300.dp)) {
+                Box(Modifier.size(300.dp, 520.dp)) {
                     var open by remember { mutableStateOf(false) }
-                    RadialMenu(
+                    AppMenu(
                         open = open,
                         onOpenChange = { open = it },
                         timerMode = timerMode,
@@ -59,7 +59,7 @@ class RadialMenuTest {
                         ceaseFireBeep = ceaseFireBeep,
                         onToggleCeaseFireBeep = onToggleCeaseFireBeep,
                         onSendFeedback = onSendFeedback,
-                        openTowardsStart = false
+                        twoColumns = false
                     )
                 }
             }

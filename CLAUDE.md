@@ -191,27 +191,28 @@ each with Android + iOS actuals (plus no-op jvm stubs for host tests).
 | `dynamicColorScheme(dark)` @Composable | `dynamic{Light,Dark}ColorScheme(ctx)` on Android 12+, else `null` | always `null` (falls back to static `Light/DarkColorScheme`) |
 | `Sharer` via `rememberSharer()` | `ACTION_SEND` `text/plain` chooser (`FLAG_ACTIVITY_NEW_TASK`) | `UIActivityViewController` presented from the topmost VC |
 
-The `RadialMenu` (`ui/RadialMenu.kt`) is overlaid by `MainScreen` in the
-`BoxWithConstraints` — top-end in portrait, top-start in landscape (so it
-clears the right-hand settings column), fanning its items toward the screen
-interior (`openTowardsStart`). Its items animate out on two arcs with a
-slightly underdamped spring, composed beneath the menu button so they hide
-under it at rest. Outer arc: add/remove tick (+/−, wired to
-`addNewThumbValue`/`dropLastThumbValue`; the menu stays open so several
-ticks can be added in a row; gated to a `NotStarted` timer), the
-competition/training mode toggle (enabled whenever not `Running`; switching
-resets a paused timer first), and the light/dark theme toggle (persisted
-`darkTheme`; null = follow system; applied by `MainScreen`'s
-`FieldShootingTimerTheme` wrap with dynamic color off, and mirrored to the
-system bars via the `SyncSystemBarsToTheme` platform expect). Inner arc:
-the cease-fire beep toggle (persisted `ceaseFireBeep`: skips the spoken
-CeaseFire cue and plays `files/beep.wav` at the yellow segment's end — it
-rides on UnloadWeapon's cue via the pure `cuePlayback()` in
-`MainScreen.kt`), share (the GitHub Pages landing page, `SHARE_URL` in
-`MainScreen.kt`), and help (reopens the tutorial). Toggle icons show the
-active state. The open state is hoisted to `MainScreen`, which puts a 50%
-black scrim between the app and the open menu — it swallows all presses and
-closes the menu on tap.
+The `AppMenu` (`ui/AppMenu.kt`) is overlaid by `MainScreen` in the
+`BoxWithConstraints`, anchored top-start in both orientations. It is a
+speed dial: labeled rows (round icon button + text pill) slide down from
+beneath the menu button with a slightly underdamped spring; portrait
+stacks all eight rows in one column, landscape (`twoColumns`) splits them
+4+4 since eight rows don't fit the height. Rows top to bottom: add/remove
+tick (+/−, wired to `addNewThumbValue`/`dropLastThumbValue`; the menu
+stays open so several ticks can be added in a row; gated to a `NotStarted`
+timer), the competition/training mode toggle (enabled whenever not
+`Running`; switching resets a paused timer first), the cease-fire beep
+toggle (persisted `ceaseFireBeep`: skips the spoken CeaseFire cue and
+plays `files/beep.wav` slightly before the yellow segment's end via
+`beepEventsFlow`), the light/dark theme toggle (persisted `darkTheme`;
+null = follow system; applied by `MainScreen`'s `FieldShootingTimerTheme`
+wrap with dynamic color off, and mirrored to the system bars via the
+`SyncSystemBarsToTheme` platform expect), share (the GitHub Pages landing
+page, `SHARE_URL` in `MainScreen.kt`), feedback (mail draft via the
+`FeedbackSender` platform expect), and help (reopens the tutorial).
+Toggle icons show the active state, and toggles keep the menu open. The
+open state is hoisted to `MainScreen`, which puts a 50% black scrim
+between the app and the open menu — it swallows all presses and closes
+the menu on tap.
 
 **Tutorial (`ui/Tutorial.kt`).** Four modal cards (`tutorialSteps`) teaching
 pinch, the menu's +/−, tick drag, and the mode toggle. `MainScreen` shows it when the
@@ -323,7 +324,7 @@ Live in `shared/src/commonMain/composeResources/`:
   which stays in `:app/src/main/res/values/strings.xml` because the Android
   launcher reads it from there.
 - `drawable/play_arrow.xml`, `stop.xml`, `skip_previous.xml`, `share.xml`,
-  `menu.xml`, `competition.xml`, `training.xml` — the PlayButton/RadialMenu
+  `menu.xml`, `competition.xml`, `training.xml` — the PlayButton/AppMenu
   icons (project-owned, not Material defaults).
 
 Access via the generated `Res` object in package

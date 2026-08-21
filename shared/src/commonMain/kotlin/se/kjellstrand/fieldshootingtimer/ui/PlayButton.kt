@@ -29,6 +29,7 @@ import se.kjellstrand.fieldshootingtimer.resources.stop
 import se.kjellstrand.fieldshootingtimer.resources.stop_action
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
+import se.kjellstrand.fieldshootingtimer.ui.theme.WhiteColor
 
 internal const val PLAY_BUTTON_TAG = "PlayButton"
 internal const val PLAY_ICON_TAG = "PlayButtonIconPlay"
@@ -61,13 +62,13 @@ fun PlayButton(
             contentPadding = PaddingValues(0.dp),
             border = BorderStroke(Paddings.Tiny, BlackColor),
             // Same green in every state — a white countdown background made
-            // the stop icon nearly invisible. secondary is the theme's green
-            // (dimmed in dark mode); onPrimary (black in both themes) is the
-            // only content color that clears WCAG on both greens — white on
-            // the light green measures 1.67:1.
+            // the stop icon nearly invisible. Content is pinned white by
+            // explicit design preference (the black onPrimary cleared WCAG
+            // better on the light green, but looked worse); the countdown
+            // digits inherit the same white.
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+                contentColor = WhiteColor
             )
         ) {
             if (countdownSeconds != null) {
