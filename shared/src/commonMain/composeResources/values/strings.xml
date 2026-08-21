@@ -33,7 +33,7 @@
     <string name="tutorial_step_drag_tick">Dra en flagga längs ringen för att flytta den. Hamnar två flaggor på samma sekund slås de ihop.</string>
     <string name="tutorial_step_seek">Tryck på ett kommando i listan för att ställa uret där — ljudet hörs först när du trycker på play. Visaren går också att dra direkt på uret.</string>
     <string name="tutorial_step_signal">Signalknappen i menyn ersätter röstkommandot ELD UPPHÖR! med en tydlig ljudsignal i samma ögonblick som eldmomentet är slut.</string>
-    <string name="tutorial_step_mode">Växla mellan tränings- och tävlingsläge i menyn. Tävlingsläget inleds med LADDA! och en minutlång nedräkning, och avslutas med dialogerna Visitation klar? och Markera?</string>
+    <string name="tutorial_step_mode">Växla mellan tränings- och tävlingsläge i menyn. Tävlingsläget inleds med LADDA! och en minutlång nedräkning, och avslutas med dialogerna Visitation klar! och Markera!</string>
     <string name="ready_confirm_question">Alla klara!</string>
     <string name="ready_confirm_continue">Fortsätt</string>
     <string name="ready_confirm_again">Fråga igen</string>
