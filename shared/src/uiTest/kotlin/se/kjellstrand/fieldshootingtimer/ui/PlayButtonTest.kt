@@ -66,6 +66,17 @@ class PlayButtonTest {
     }
 
     @Test
+    fun `notStarted shows the shooting total beside the play icon`() = runComposeUiTest {
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                PlayButton({}, TimerRunningState.NotStarted, 300.dp, countdownSeconds = 8)
+            }
+        }
+        onNodeWithTag(COUNTDOWN_TEXT_TAG, useUnmergedTree = true).assertTextEquals("8")
+        onNodeWithTag(PLAY_ICON_TAG, useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
     fun `no countdown digits without a countdown`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {

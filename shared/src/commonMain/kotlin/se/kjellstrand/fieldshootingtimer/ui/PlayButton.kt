@@ -38,9 +38,10 @@ internal const val RESET_ICON_TAG = "PlayButtonIconReset"
 internal const val COUNTDOWN_TEXT_TAG = "CountdownText"
 
 /**
- * While [countdownSeconds] is non-null (competition-mode preparation
- * countdown) the button shows the remaining seconds instead of an icon;
- * tapping it still stops the run.
+ * While [countdownSeconds] is non-null — the competition-mode preparation
+ * countdown, or the shooting stretch's remaining seconds — the button shows
+ * the digits beneath a shrunken state icon; tapping it behaves as the icon
+ * says.
  */
 @Composable
 fun PlayButton(
@@ -71,16 +72,27 @@ fun PlayButton(
                 contentColor = WhiteColor
             )
         ) {
+            val icon = when (timerRunningState) {
+                TimerRunningState.NotStarted ->
+                    Triple(Res.drawable.play_arrow, Res.string.play_action, PLAY_ICON_TAG)
+
+                TimerRunningState.Running ->
+                    Triple(Res.drawable.stop, Res.string.stop_action, STOP_ICON_TAG)
+
+                TimerRunningState.Finished, TimerRunningState.Stopped ->
+                    Triple(Res.drawable.skip_previous, Res.string.reset_action, RESET_ICON_TAG)
+            }
+            val (iconRes, iconDescription, iconTag) = icon
             if (countdownSeconds != null) {
-                // Stop icon stays visible above the digits: the tap target
-                // reads as "stop" (it cancels the countdown).
+                // The state icon shrinks and stays above the digits, so the
+                // tap target still reads as play/stop/reset while counting.
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        painter = painterResource(Res.drawable.stop),
-                        contentDescription = stringResource(Res.string.stop_action),
+                        painter = painterResource(iconRes),
+                        contentDescription = stringResource(iconDescription),
                         modifier = Modifier
                             .size(buttonSize * 0.35f)
-                            .testTag(STOP_ICON_TAG)
+                            .testTag(iconTag)
                     )
                     Text(
                         text = countdownSeconds.toString(),
@@ -90,36 +102,14 @@ fun PlayButton(
                         modifier = Modifier.testTag(COUNTDOWN_TEXT_TAG)
                     )
                 }
-            } else when (timerRunningState) {
-                TimerRunningState.NotStarted -> {
-                    Icon(
-                        painter = painterResource(Res.drawable.play_arrow),
-                        contentDescription = stringResource(Res.string.play_action),
-                        modifier = Modifier
-                            .size(buttonSize * 0.8f)
-                            .testTag(PLAY_ICON_TAG)
-                    )
-                }
-
-                TimerRunningState.Running -> {
-                    Icon(
-                        painter = painterResource(Res.drawable.stop),
-                        contentDescription = stringResource(Res.string.stop_action),
-                        modifier = Modifier
-                            .size(buttonSize * 0.8f)
-                            .testTag(STOP_ICON_TAG)
-                    )
-                }
-
-                TimerRunningState.Finished, TimerRunningState.Stopped -> {
-                    Icon(
-                        painter = painterResource(Res.drawable.skip_previous),
-                        contentDescription = stringResource(Res.string.reset_action),
-                        modifier = Modifier
-                            .size(buttonSize * 0.8f)
-                            .testTag(RESET_ICON_TAG)
-                    )
-                }
+            } else {
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = stringResource(iconDescription),
+                    modifier = Modifier
+                        .size(buttonSize * 0.8f)
+                        .testTag(iconTag)
+                )
             }
         }
     }

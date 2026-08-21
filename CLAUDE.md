@@ -294,6 +294,19 @@ the start and through most of the countdown, `AllReady` for the final 10s,
 then follows the running segment. Covered by `TimerViewModelCountdownTest`
 and `CommandHighlightTest`.
 
+**The play button's digits (`ui/TimerWithPlayButton.kt`).** Two pure
+functions feed `PlayButton`'s `countdownSeconds`, and whenever it is
+non-null the state icon (play/stop/reset) shrinks and the digits sit
+beneath it. `countdownSecondsOrNull` covers the competition preparation
+countdown described above and wins while it is `Running`; otherwise
+`shootingSecondsRemainingOrNull` counts the **shooting stretch** — the
+dial's green (Fire) plus yellow (CeaseFire) segments, i.e.
+`fireStartSeconds()`..`ceaseFireEndSeconds(shootingDuration)`. Before that
+stretch (a parked timer, the gray lead-in, the button at rest) it reads the
+full total, so the dialled-in shooting time is always visible; past the
+yellow segment's end it is null and the bare icon returns. Both are covered
+by `CountdownDisplayTest`.
+
 **Tap-to-seek on the command list.** Tapping any row (`CommandList`'s
 `onCommandClick` → `TimerViewModel.seekTo`) pauses an ongoing run and parks
 the timer at the second that command's segment starts. The parked state is
@@ -305,8 +318,9 @@ everything strictly before the seek time). The untimed rows map to their
 natural spots: `Load` → `reset()`, `AllReady` → -10s of the countdown,
 `Mark` → the finished end (`Finished`). Because a parked timer can now sit
 at a non-zero time, `highlightedCommand` treats competition + `NotStarted`
-as "before the start" only when `currentTime == 0`, and the play button
-shows countdown digits only while actually `Running`. Covered by
+as "before the start" only when `currentTime == 0`, and the *preparation*
+countdown owns the play button's digits only while actually `Running`.
+Covered by
 `TimerViewModelSeekTest`, `CommandHighlightTest`, and the row-click tests in
 `CommandListTest`/`SettingsPanelTest`.
 

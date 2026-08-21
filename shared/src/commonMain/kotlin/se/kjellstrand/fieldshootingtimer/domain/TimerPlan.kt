@@ -36,6 +36,20 @@ internal fun fireStartSeconds(): Float =
     (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()
 
 /**
+ * Second at which the CeaseFire segment ends — the end of the dial's yellow
+ * wedge, and so the dial's own end.
+ */
+internal fun ceaseFireEndSeconds(shootingDuration: Float): Float =
+    fireStartSeconds() + shootingDuration + Command.CeaseFire.duration
+
+/**
+ * The whole shooting stretch the shooter is timed over: the dial's green
+ * (Fire) plus yellow (CeaseFire) segments.
+ */
+internal fun totalShootingSeconds(shootingDuration: Float): Float =
+    ceaseFireEndSeconds(shootingDuration) - fireStartSeconds()
+
+/**
  * The cease-fire beep leads the yellow segment's end slightly, compensating
  * for tick granularity and audio latency so the signal lands on the boundary.
  */
@@ -43,8 +57,7 @@ internal const val CEASE_FIRE_BEEP_LEAD_SECONDS = 0.1f
 
 /** When the cease-fire beep fires: the yellow segment's end minus the lead. */
 internal fun beepTimeSeconds(shootingDuration: Float): Float =
-    fireStartSeconds() + shootingDuration + Command.CeaseFire.duration -
-        CEASE_FIRE_BEEP_LEAD_SECONDS
+    ceaseFireEndSeconds(shootingDuration) - CEASE_FIRE_BEEP_LEAD_SECONDS
 
 /**
  * The immovable boundary flags shown as soon as the user has placed at least
@@ -54,10 +67,7 @@ internal fun beepTimeSeconds(shootingDuration: Float): Float =
  */
 internal fun boundaryFlagSeconds(userTicks: List<Float>, shootingDuration: Float): List<Float> =
     if (userTicks.isEmpty()) emptyList()
-    else listOf(
-        fireStartSeconds(),
-        fireStartSeconds() + shootingDuration + Command.CeaseFire.duration
-    )
+    else listOf(fireStartSeconds(), ceaseFireEndSeconds(shootingDuration))
 
 /**
  * The timed sequence for [mode]: training ends after UnloadWeapon —
