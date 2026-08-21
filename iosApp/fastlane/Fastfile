@@ -75,13 +75,19 @@ platform :ios do
     )
   end
 
-  desc "Build a signed App Store archive and submit to the App Store (not for review)."
+  desc "Build a signed App Store archive and submit to the App Store (not for review). " \
+       "Screenshots are left to the metadata lane — run it after this one."
   lane :release do
     gen
     api_key = archive_for_app_store
     upload_to_app_store(
       api_key:           api_key,
-      skip_screenshots:  false,
+      # The metadata lane owns the screenshots. Uploading them from here too
+      # only ever made a mess: without overwrite_screenshots this lane hit the
+      # 10-per-device cap and silently skipped every retake ("Too many
+      # screenshots found for device ..."), while still logging "Successfully
+      # uploaded all screenshots".
+      skip_screenshots:  true,
       skip_metadata:     false,
       submit_for_review: false,
     )
@@ -111,6 +117,15 @@ platform :ios do
     )
   end
 
+  # NOTE: deliver's screenshot upload is not reliable on its own. It uploads
+  # the whole set, then re-reads it to confirm; ASC has not indexed the new
+  # assets yet, so deliver reports "<file> is missing on App Store Connect",
+  # fails the batch ("Tries remaining: 4") and re-uploads the first few — which
+  # lands as DUPLICATES even with overwrite_screenshots. Seen twice in a row on
+  # 1.11.0, always the same shape: the first four of each set doubled, filling
+  # it back to the 10 cap. Always verify the sets afterwards and delete the
+  # duplicates (keep one per file name) rather than re-running this lane; a
+  # re-run reproduces the duplicates instead of clearing them.
   desc "Push App Store metadata (text + screenshots) without uploading a binary."
   lane :metadata do
     api_key = app_store_connect_api_key(
