@@ -1,2 +1,3 @@
+• Lättare att träffa menyn – hela raden med knapp och text är klickbar
 • Mindre app som startar snabbare
 • Kortare menytext för rösten vid ELD UPPHÖR! så att den får plats i liggande läge

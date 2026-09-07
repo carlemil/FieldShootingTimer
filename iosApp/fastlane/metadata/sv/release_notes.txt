@@ -1,6 +1,6 @@
 Stor uppdatering!
 • Total skjuttid räknas ner på play-knappen
-• Ny meny med tydliga texter
+• Ny meny med tydliga texter – hela raden med knapp och text är klickbar
 • Ställ eldtid och partider direkt på uret – nyp och dra
 • Mörkt läge
 • Partider som flaggor på uret
