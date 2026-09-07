@@ -1,11 +1,3 @@
-Stor uppdatering!
-• Total skjuttid räknas ner på play-knappen
-• Ny meny med tydliga texter – hela raden med knapp och text är klickbar
-• Ställ eldtid och partider direkt på uret – nyp och dra
-• Mörkt läge
-• Partider som flaggor på uret
-• Tryck på ett kommando i listan för att ställa uret där
-• Valbar ljudsignal i stället för ELD UPPHÖR!
-• Tävlingsläge: 60 s LADDA-nedräkning, Alla klara! och Markera!
-• Nyinspelade röstkommandon
-• Ny hjälpguide, feedback i menyn och buggfixar
+• Lättare att träffa menyn – hela raden med knapp och text är klickbar
+• Kortare menytext för rösten vid ELD UPPHÖR! så att den får plats i liggande läge
+• Mindre buggfixar
