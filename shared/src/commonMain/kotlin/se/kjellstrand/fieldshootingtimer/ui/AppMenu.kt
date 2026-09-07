@@ -78,6 +78,11 @@ private val MenuItemSpacing = 10.dp
 /** Vertical air between the rows. */
 private val MenuRowSpacing = 18.dp
 
+/** Invisible touch slop around the menu button and each row (button, gap
+ * and label): half the row spacing, so neighbouring hit boxes meet without
+ * overlapping. */
+private val MenuHitSlop = MenuRowSpacing / 2
+
 /** First row's top offset below the menu button. */
 private val MenuTopOffset = 52.dp
 
@@ -196,6 +201,7 @@ fun AppMenu(
     val rowStridePx = with(density) { (MenuButtonSize + MenuRowSpacing).toPx() }
     val topOffsetPx = with(density) { MenuTopOffset.toPx() }
     val columnStridePx = with(density) { MenuColumnStride.toPx() }
+    val hitSlopPx = with(density) { MenuHitSlop.roundToPx() }
     val rowsPerColumn = if (twoColumns) 4 else entries.size
 
     Box(modifier = modifier) {
@@ -212,8 +218,8 @@ fun AppMenu(
                     modifier = Modifier
                         .offset {
                             IntOffset(
-                                (targetX * progress).roundToInt(),
-                                (targetY * progress).roundToInt()
+                                (targetX * progress).roundToInt() - hitSlopPx,
+                                (targetY * progress).roundToInt() - hitSlopPx
                             )
                         }
                         // Saturate at half the travel: the underdamped spring
@@ -221,6 +227,13 @@ fun AppMenu(
                         // across exactly 1.0 toggles the compositing layer on
                         // and off — visible as a flicker as the fan settles.
                         .graphicsLayer { alpha = (progress * 2f).coerceIn(0f, 1f) }
+                        // The whole row — button, gap, label and the slop
+                        // around them — is one invisible hit box; the offset
+                        // above backs off by the slop so nothing moves visually.
+                        .clickable(interactionSource = null, indication = null) {
+                            entry.onClick()
+                        }
+                        .padding(MenuHitSlop)
                 ) {
                     IconButton(
                         onClick = entry.onClick,
@@ -257,26 +270,36 @@ fun AppMenu(
                                 MaterialTheme.colorScheme.onBackground,
                                 RoundedCornerShape(6.dp)
                             )
-                            .clickable { entry.onClick() }
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
             }
         }
-        IconButton(
-            onClick = { onOpenChange(!open) },
-            modifier = Modifier
-                .size(MenuButtonSize)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                .border(Paddings.Tiny, MaterialTheme.colorScheme.onBackground, CircleShape)
-                .testTag(MENU_BUTTON_TAG)
+        // Same invisible slop around the menu button, backed off so the
+        // button itself stays put at the anchor.
+        Box(
+            Modifier
+                .offset(-MenuHitSlop, -MenuHitSlop)
+                .clickable(interactionSource = null, indication = null) {
+                    onOpenChange(!open)
+                }
+                .padding(MenuHitSlop)
         ) {
-            Icon(
-                painter = painterResource(Res.drawable.menu),
-                contentDescription = stringResource(Res.string.menu),
-                tint = MaterialTheme.colorScheme.onSurface
-            )
+            IconButton(
+                onClick = { onOpenChange(!open) },
+                modifier = Modifier
+                    .size(MenuButtonSize)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .border(Paddings.Tiny, MaterialTheme.colorScheme.onBackground, CircleShape)
+                    .testTag(MENU_BUTTON_TAG)
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.menu),
+                    contentDescription = stringResource(Res.string.menu),
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
         }
     }
 }

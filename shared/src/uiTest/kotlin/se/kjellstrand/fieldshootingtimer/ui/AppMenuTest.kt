@@ -7,10 +7,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
@@ -106,6 +110,20 @@ class AppMenuTest {
         onNodeWithTag(MENU_ITEM_BEEP_TAG).performClick()
         assertEquals(1, toggles)
         onNodeWithTag(MENU_ITEM_BEEP_TAG).assertExists()
+    }
+
+    @Test
+    fun `row hit box covers the gap beside the button and the slop below it`() = runComposeUiTest {
+        var toggles = 0
+        setMenuContent(onToggleCeaseFireBeep = { toggles++ })
+        onNodeWithTag(MENU_BUTTON_TAG).performClick()
+        val button = onNodeWithTag(MENU_ITEM_BEEP_TAG).fetchSemanticsNode().boundsInRoot
+        val slop = with(density) { 4.dp.toPx() }
+        // In the gap between the round button and its label.
+        onRoot().performTouchInput { click(Offset(button.right + slop, button.center.y)) }
+        // Just below the button, in the invisible slop.
+        onRoot().performTouchInput { click(Offset(button.center.x, button.bottom + slop)) }
+        assertEquals(2, toggles)
     }
 
     @Test
