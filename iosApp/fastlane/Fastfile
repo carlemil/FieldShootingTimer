@@ -135,11 +135,10 @@ platform :ios do
   # the whole set, then re-reads it to confirm; ASC has not indexed the new
   # assets yet, so deliver reports "<file> is missing on App Store Connect",
   # fails the batch ("Tries remaining: 4") and re-uploads the first few — which
-  # lands as DUPLICATES even with overwrite_screenshots. Seen twice in a row on
-  # 1.11.0, always the same shape: the first four of each set doubled, filling
-  # it back to the 10 cap. Always verify the sets afterwards and delete the
-  # duplicates (keep one per file name) rather than re-running this lane; a
-  # re-run reproduces the duplicates instead of clearing them.
+  # lands as DUPLICATES even with overwrite_screenshots. Seen on 1.11.0 and
+  # 1.13.0, always the same shape: the first four of each set doubled, filling
+  # it back to the 10 cap. dedupe_screenshots runs at the end to clear them;
+  # don't re-run this lane to fix a set, a re-run reproduces the duplicates.
   desc "Push App Store metadata (text + screenshots) without uploading a binary."
   lane :metadata do
     api_key = app_store_connect_api_key(
@@ -158,5 +157,35 @@ platform :ios do
       # this, retaken screenshots hit the 10-per-device cap and are skipped.
       overwrite_screenshots: true,
     )
+    dedupe_screenshots
+  end
+
+  desc "Delete duplicate screenshots (same file name twice in a set) on the " \
+       "editable App Store version, keeping the first of each."
+  lane :dedupe_screenshots do
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id:    ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      filepath:  ENV.fetch("ASC_KEY_PATH"),
+    )
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    version = app.get_edit_app_store_version(platform: "IOS")
+    UI.user_error!("No editable App Store version to clean up") unless version
+    deleted = 0
+    version.get_app_store_version_localizations.each do |loc|
+      loc.get_app_screenshot_sets.each do |set|
+        seen = {}
+        set.app_screenshots.each do |shot|
+          if seen[shot.file_name]
+            UI.message("#{loc.locale} #{set.screenshot_display_type}: deleting duplicate #{shot.file_name}")
+            shot.delete!
+            deleted += 1
+          else
+            seen[shot.file_name] = true
+          end
+        end
+      end
+    end
+    UI.success("Removed #{deleted} duplicate screenshot(s) from #{version.version_string}")
   end
 end
