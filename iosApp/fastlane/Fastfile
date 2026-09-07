@@ -103,28 +103,32 @@ platform :ios do
     )
   end
 
+  # Talks to the ASC API directly: deliver only attaches a build on the way
+  # into submit_for_review, so with submit_for_review: false it created the
+  # version and silently left the build unset (seen on 1.13.0).
   desc "Attach an already-uploaded, processed build to the App Store version " \
        "(API only: no binary upload, no metadata, not submitted for review)."
   lane :select_build do
-    api_key = app_store_connect_api_key(
-      key_id:       ENV.fetch("ASC_KEY_ID"),
-      issuer_id:    ENV.fetch("ASC_ISSUER_ID"),
-      key_filepath: ENV.fetch("ASC_KEY_PATH"),
-      in_house:     false,
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id:    ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      filepath:  ENV.fetch("ASC_KEY_PATH"),
     )
     plist = File.expand_path("../iosApp/Info.plist", __dir__)
     app_version = `/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "#{plist}"`.strip
     UI.message("Selecting build #{@build_number} for App Store version #{app_version}")
-    upload_to_app_store(
-      api_key:            api_key,
-      app_version:        app_version,
-      build_number:       @build_number,
-      skip_binary_upload: true,
-      skip_screenshots:   true,
-      skip_metadata:      true,
-      submit_for_review:  false,
-      force:              true,
-    )
+
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    # Creates the version, or renames the editable one, if needed.
+    app.ensure_version!(app_version, platform: "IOS")
+    version = app.get_edit_app_store_version(platform: "IOS")
+    build = Spaceship::ConnectAPI::Build.all(
+      app_id: app.id, version: app_version, build_number: @build_number
+    ).first
+    UI.user_error!("Build #{app_version} (#{@build_number}) not found on App Store Connect") unless build
+    UI.user_error!("Build #{@build_number} is still processing (#{build.processing_state})") unless build.processing_state == "VALID"
+    version.select_build(build_id: build.id)
+    UI.success("Attached build #{@build_number} to App Store version #{version.version_string}")
   end
 
   # NOTE: deliver's screenshot upload is not reliable on its own. It uploads
