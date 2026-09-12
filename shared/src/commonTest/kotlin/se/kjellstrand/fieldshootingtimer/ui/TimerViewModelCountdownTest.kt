@@ -188,17 +188,12 @@ class TimerViewModelCountdownTest {
         val vm = competitionVm()
         vm.setShootingTime(2f)
         runCurrent()
-        val total = vm.segmentDurationsFlow.value.sum() // 21s
+        val total = vm.segmentDurationsFlow.value.sum() // 15s
 
         vm.start()
         vm.confirmLoad()
         vm.confirmAllReady()
         advanceTimeBy(3_000 + (total * 1000).toLong() + 500)
-        runCurrent()
-        // Parked behind "Patron ur?" at the end of CeaseFire.
-        assertTrue(vm.uiStateFlow.value.awaitingUnloadConfirmation)
-        vm.confirmUnload()
-        advanceTimeBy((total * 1000).toLong())
         runCurrent()
 
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)

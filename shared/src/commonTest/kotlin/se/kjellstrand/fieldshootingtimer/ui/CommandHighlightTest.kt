@@ -8,11 +8,9 @@ import kotlin.test.assertEquals
 
 class CommandHighlightTest {
 
-    // Training boundaries: 7, 10, 15, 18, 22.
-    private val trainingSegments = listOf(7f, 3f, 5f, 3f, 4f)
-
-    // Competition boundaries: 7, 10, 15, 18, 22 (delay), 24, 26.
-    private val competitionSegments = listOf(7f, 3f, 5f, 3f, 4f, 2f, 2f)
+    // Boundaries: 7, 10, 15, 18 — the same in both modes.
+    private val trainingSegments = listOf(7f, 3f, 5f, 3f)
+    private val competitionSegments = trainingSegments
 
     private fun training(time: Float, state: TimerRunningState = TimerRunningState.Running) =
         highlightedCommand(TimerMode.Training, state, time, trainingSegments)
@@ -31,33 +29,48 @@ class CommandHighlightTest {
         assertEquals(Command.Ready, training(7f))
         assertEquals(Command.Fire, training(10f))
         assertEquals(Command.CeaseFire, training(15f))
-        assertEquals(Command.UnloadWeapon, training(18f))
-        // The Visitation stretch exists in competition only.
-        assertEquals(Command.Visitation, competition(24f))
-    }
-
-    @Test
-    fun `the silent pacing delay keeps the previous command highlighted`() {
-        // VisitationDelay runs 22..24 (competition): the unload row stays lit.
-        assertEquals(Command.UnloadWeapon, competition(22f))
-        assertEquals(Command.UnloadWeapon, competition(23.9f))
     }
 
     @Test
     fun `past the end the last timed command stays highlighted`() {
-        assertEquals(Command.UnloadWeapon, training(25f))
-        assertEquals(Command.UnloadWeapon, training(999f))
-        assertEquals(Command.Visitation, competition(29f))
-        assertEquals(Command.Visitation, competition(999f))
+        assertEquals(Command.CeaseFire, training(18f))
+        assertEquals(Command.CeaseFire, training(999f))
+        assertEquals(Command.CeaseFire, competition(999f))
     }
 
     @Test
-    fun `a finished competition timer highlights Mark`() {
+    fun `a finished timer highlights the last call of its mode's closing chain`() {
         // Tapping "MARKERA!" parks the timer Finished at the sequence end —
         // and a run that completes naturally lands in the same phase.
-        assertEquals(Command.Mark, competition(29f, TimerRunningState.Finished))
-        // Training has no Mark row: the last shown command keeps the highlight.
-        assertEquals(Command.UnloadWeapon, training(25f, TimerRunningState.Finished))
+        assertEquals(Command.Mark, competition(18f, TimerRunningState.Finished))
+        // Training's chain ends with "Patron ur!".
+        assertEquals(Command.UnloadWeapon, training(18f, TimerRunningState.Finished))
+    }
+
+    @Test
+    fun `an open closing dialog highlights its own row`() {
+        val finished = TimerRunningState.Finished
+        assertEquals(
+            Command.UnloadWeapon,
+            highlightedCommand(
+                TimerMode.Training, finished, 18f, trainingSegments,
+                awaitingUnloadConfirmation = true
+            )
+        )
+        assertEquals(
+            Command.Visitation,
+            highlightedCommand(
+                TimerMode.Competition, finished, 18f, competitionSegments,
+                awaitingVisitationConfirmation = true
+            )
+        )
+        assertEquals(
+            Command.VisitationDone,
+            highlightedCommand(
+                TimerMode.Competition, finished, 18f, competitionSegments,
+                awaitingVisitationDoneConfirmation = true
+            )
+        )
     }
 
     @Test

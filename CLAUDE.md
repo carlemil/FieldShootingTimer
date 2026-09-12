@@ -150,28 +150,19 @@ parked states draw the collected `currentTime`.
 Each entry bundles `audioPath: String?` (e.g. `"files/eld.mp3"`),
 `stringRes: StringResource` (e.g. `Res.string.command_eld`), a `duration` in
 seconds, and a `color`. The ordered `Command.entries` list with `duration >= 0`
-defines the timer's sequence: `TenSecondsLeft (7s) → Ready (3s) → Fire
-(configurable) → CeaseFire (3s) → UnloadWeapon (4s) → VisitationDelay (2s,
-silent) → Visitation (2s)`. The sequence is mode-aware via
-`timedCommandsFor(mode)`: training ends after UnloadWeapon — the Visitation
-stretch (and the Visitation/Mark list rows) are competition-only.
-`VisitationDelay` is a silent pacing gap: timed, but `listed = false` (no
-command-list row — `Command.listedCommands` filters it; the highlight stays
-on UnloadWeapon while it runs). UnloadWeapon's call is dialog-driven: the
-run parks at the end of CeaseFire (`awaitingUnloadConfirmation`, "Patron
-ur?"), `confirmUnload()` plays the call and resumes into its 4s beat, and
-the UnloadWeapon row's tap parks there and asks the same (`seekTo`). `Load` and `AllReady`
-have `duration = -1` and a `null` audioPath — list rows only. `Mark` is also
-untimed but has audio: tapping its row plays the call (`seekTo` emits its
-cue). The cease-fire beep setting (`ceaseFireBeep`, persisted) mutes the
+defines the timer's sequence — the whole dial: `TenSecondsLeft (7s) → Ready
+(3s) → Fire (configurable) → CeaseFire (3s)`, identical in both modes. Every
+other command has `duration = -1` and is dialog-driven: `Load`/`AllReady`
+open a competition run (see the mode section below); the finished end
+chains the closing questions "Patron ur?" (`awaitingUnloadConfirmation`,
+both modes) → competition only: "Visitation?" → "Visitation klar?" →
+"Markera?", each `confirmX()` playing the call and setting the next flag
+(`playRowCall`). Tapping an untimed row parks the timer at its natural spot
+(`seekTo`: Load/AllReady at the untouched start, the rest at the finished
+end) and opens the same dialog. The cease-fire beep setting (`ceaseFireBeep`, persisted) mutes the
 CeaseFire voice and plays `files/beep.wav` via the ViewModel's
 `beepEventsFlow`, fired at `beepTimeSeconds()` — the yellow segment's end
-minus a 0.1s lead. The `onDial` flag marks which timed
-commands are drawn as dial segments (`Command.dialCommands`, the prefix
-through `CeaseFire`); `UnloadWeapon` and `Visitation` still run on the timer
-(audio cues, list highlight) but the dial ends at CeaseFire and the hand
-parks there — `ShootTimer` slices dial durations with
-`take(dialCommands.size)`. To add or reorder a command, edit
+minus a 0.1s lead. To add or reorder a command, edit
 this enum; everything else derives from it via the pure functions in
 `domain/TimerPlan.kt` (`buildSegmentDurations`, `buildAudioCues` — cue times
 are the cumulative segment boundaries — `buildRange`, crossing predicates),
@@ -279,8 +270,8 @@ button shows `ceil(-currentTime)` as digits beneath the stop icon
 "Stäng" in either dialog (`dismissLoadConfirmation` /
 `dismissReadyConfirmation`) closes without calling; the AllReady row reopens
 its dialog directly. Both dialogs are `CallConfirmationOverlay` instances in
-`ui/CallConfirmation.kt`, alongside the Patron-ur, Visitation-klar and
-Markera ones. The
+`ui/CallConfirmation.kt`, alongside the Patron-ur, Visitation,
+Visitation-klar and Markera ones. The
 command-list highlight (`ui/CommandHighlight.kt`, `highlightedCommand(...)`)
 returns `Load` before the start, `AllReady` behind its dialog and through the
 gap, then follows the running segment. Covered by

@@ -37,6 +37,7 @@
     <string name="load_confirm_question">Ladda?</string>
     <string name="ready_confirm_question">Alla klara?</string>
     <string name="unload_confirm_question">Patron ur?</string>
+    <string name="visitation_confirm_question">Visitation?</string>
     <string name="ready_confirm_continue">Fortsätt</string>
     <string name="mark_confirm_question">Markera?</string>
     <string name="mark_confirm_mark">Markera</string>

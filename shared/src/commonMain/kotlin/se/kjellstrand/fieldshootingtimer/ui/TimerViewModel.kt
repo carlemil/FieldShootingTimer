@@ -61,11 +61,12 @@ data class TimerUiState(
     // the timer is parked at the finished end and the "Markera?" dialog
     // decides whether the call is made.
     val awaitingMarkConfirmation: Boolean = false,
-    // The run reached the end of CeaseFire (or the row was tapped) and is
-    // parked there: "Patron ur?" — confirming makes the call and runs on.
+    // The closing dialogs, chained from the finished end of the sequence
+    // (or opened by their rows): "Patron ur?" (both modes), then in
+    // competition "Visitation?" and "Visitation klar?" — each confirmation
+    // makes the call and hands over to the next, ending in "Markera?".
     val awaitingUnloadConfirmation: Boolean = false,
-    // A competition run just finished (or the row was tapped): "Visitation
-    // klar?" — confirming makes the call and hands over to the Mark dialog.
+    val awaitingVisitationConfirmation: Boolean = false,
     val awaitingVisitationDoneConfirmation: Boolean = false
 )
 
@@ -111,14 +112,16 @@ class TimerViewModel(
         _uiState.map { it.awaitingMarkConfirmation }.distinctUntilChanged()
     val awaitingUnloadConfirmationFlow =
         _uiState.map { it.awaitingUnloadConfirmation }.distinctUntilChanged()
+    val awaitingVisitationConfirmationFlow =
+        _uiState.map { it.awaitingVisitationConfirmation }.distinctUntilChanged()
     val awaitingVisitationDoneConfirmationFlow =
         _uiState.map { it.awaitingVisitationDoneConfirmation }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
-        .map { buildSegmentDurations(it.shootingDuration, it.timerMode) }
+        .map { buildSegmentDurations(it.shootingDuration) }
         .stateIn(
             scope, SharingStarted.Eagerly,
-            buildSegmentDurations(_uiState.value.shootingDuration, _uiState.value.timerMode)
+            buildSegmentDurations(_uiState.value.shootingDuration)
         )
 
     val rangeFlow: StateFlow<IntRange> = _uiState
@@ -295,9 +298,9 @@ class TimerViewModel(
             // Snapshot directly from _uiState — stateIn-derived flows may not have
             // propagated the latest shootingDuration when start() is called from a test.
             val shootingDuration = _uiState.value.shootingDuration
-            val segments = buildSegmentDurations(shootingDuration, _uiState.value.timerMode)
+            val segments = buildSegmentDurations(shootingDuration)
             val total = segments.sum()
-            val cues = buildAudioCues(shootingDuration, _uiState.value.timerMode)
+            val cues = buildAudioCues(shootingDuration)
             val beepTime = beepTimeSeconds(shootingDuration)
             // The immovable boundary flags (shown once any user flag exists)
             // vibrate on crossing just like the user-placed ones.
@@ -308,28 +311,9 @@ class TimerViewModel(
             emitPassedCues(initialTime, cues)
             emitPassedThumbs(initialTime, thumbs)
 
-            // The run does not roll straight into "Patron ur!": at the end
-            // of CeaseFire it parks and asks. Only when crossing that point
-            // from before — a run resumed from it continues normally.
-            val unloadStart = cues.first { it.second == Command.UnloadWeapon }.first
-            val pauseAtUnload = initialTime < unloadStart
-
             while (isActive && _uiState.value.timerRunningState == TimerRunningState.Running) {
                 delay(tickMs)
                 val elapsed = (timeSourceMs() - startEpochMs) / 1000f
-                if (pauseAtUnload && elapsed >= unloadStart) {
-                    runAnchorEpochMs = null
-                    setCurrentTime(unloadStart)
-                    // The call itself waits for the dialog; everything else
-                    // at the boundary (end flag, beep) fires now.
-                    markPlayed(Command.UnloadWeapon, cues)
-                    emitPassedCues(unloadStart, cues)
-                    emitPassedThumbs(unloadStart, thumbs)
-                    emitPassedBeep(unloadStart, beepTime)
-                    _uiState.update { it.copy(awaitingUnloadConfirmation = true) }
-                    setTimerState(TimerRunningState.Stopped)
-                    break
-                }
                 if (elapsed >= total) {
                     runAnchorEpochMs = null
                     setCurrentTime(total)
@@ -337,12 +321,8 @@ class TimerViewModel(
                     emitPassedThumbs(total, thumbs)
                     emitPassedBeep(total, beepTime)
                     setTimerState(TimerRunningState.Finished)
-                    // A competition round ends in the "Visitation klar?"
-                    // question; confirming it hands over to "Markera?".
-                    // Training has no Visitation/Mark stretch, so no dialogs.
-                    if (_uiState.value.timerMode == TimerMode.Competition) {
-                        _uiState.update { it.copy(awaitingVisitationDoneConfirmation = true) }
-                    }
+                    // The finished end opens the closing dialog chain.
+                    _uiState.update { it.copy(awaitingUnloadConfirmation = true) }
                     break
                 }
                 setCurrentTime(elapsed)
@@ -379,6 +359,7 @@ class TimerViewModel(
                 awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
                 awaitingUnloadConfirmation = false,
+                awaitingVisitationConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
                 parkedBySeek = false
@@ -435,8 +416,8 @@ class TimerViewModel(
      * ongoing run. The parked state is NotStarted — the dial stays editable
      * and the play button reads "play" — so starting runs from the parked
      * time, firing [command]'s own cue but none of the earlier ones. The
-     * untimed rows park at their natural spots: Load and AllReady at the
-     * untouched start behind their dialogs, Mark at the finished end.
+     * untimed rows park at their natural spots behind their dialogs: Load
+     * and AllReady at the untouched start, the rest at the finished end.
      */
     fun seekTo(command: Command) {
         if (command == Command.Load || command == Command.AllReady) {
@@ -450,11 +431,10 @@ class TimerViewModel(
             return
         }
         val shootingDuration = _uiState.value.shootingDuration
-        val mode = _uiState.value.timerMode
-        val parksAtEnd = command == Command.Mark || command == Command.VisitationDone
+        val parksAtEnd = command.duration < 0
         val seekTime = when {
-            parksAtEnd -> buildSegmentDurations(shootingDuration, mode).sum()
-            else -> buildAudioCues(shootingDuration, mode).first { it.second == command }.first
+            parksAtEnd -> buildSegmentDurations(shootingDuration).sum()
+            else -> buildAudioCues(shootingDuration).first { it.second == command }.first
         }
         parkAt(
             seekTime,
@@ -464,12 +444,10 @@ class TimerViewModel(
         // resumes from the parked spot (its cue sits exactly there), and the
         // dialog-driven calls wait for their dialogs.
         when (command) {
-            Command.UnloadWeapon -> {
-                // The row asks before calling; the call is not left for the
-                // timer to fire on resume.
-                markPlayed(command, buildAudioCues(shootingDuration, mode))
+            Command.UnloadWeapon ->
                 _uiState.update { it.copy(awaitingUnloadConfirmation = true) }
-            }
+            Command.Visitation ->
+                _uiState.update { it.copy(awaitingVisitationConfirmation = true) }
             Command.Mark ->
                 _uiState.update { it.copy(awaitingMarkConfirmation = true) }
             Command.VisitationDone ->
@@ -479,20 +457,40 @@ class TimerViewModel(
     }
 
     /**
-     * "Fortsätt" in the "Patron ur?" dialog: make the call and run on —
-     * through the 4s beat into Visitation in competition, to the finished
-     * end in training.
+     * "Fortsätt" in the "Patron ur?" dialog: make the call; competition
+     * asks "Visitation?" next, training is done.
      */
     fun confirmUnload() {
         if (!_uiState.value.awaitingUnloadConfirmation) return
-        _uiState.update { it.copy(awaitingUnloadConfirmation = false) }
+        _uiState.update {
+            it.copy(
+                awaitingUnloadConfirmation = false,
+                awaitingVisitationConfirmation = it.timerMode == TimerMode.Competition
+            )
+        }
         playRowCall(Command.UnloadWeapon)
-        start()
     }
 
     /** "Stäng" in the "Patron ur?" dialog: close without calling. */
     fun dismissUnloadConfirmation() {
         _uiState.update { it.copy(awaitingUnloadConfirmation = false) }
+    }
+
+    /** "Fortsätt" in the "Visitation?" dialog: make the call, then ask "Visitation klar?". */
+    fun confirmVisitation() {
+        if (!_uiState.value.awaitingVisitationConfirmation) return
+        _uiState.update {
+            it.copy(
+                awaitingVisitationConfirmation = false,
+                awaitingVisitationDoneConfirmation = true
+            )
+        }
+        playRowCall(Command.Visitation)
+    }
+
+    /** "Stäng" in the "Visitation?" dialog: close without calling. */
+    fun dismissVisitationConfirmation() {
+        _uiState.update { it.copy(awaitingVisitationConfirmation = false) }
     }
 
     /**
@@ -527,12 +525,7 @@ class TimerViewModel(
         _uiState.update { it.copy(awaitingMarkConfirmation = false) }
     }
 
-    /** Counts [command]'s cue as already fired for the rest of the run. */
-    private fun markPlayed(command: Command, cues: List<Pair<Float, Command>>) {
-        cues.indices.filter { cues[it].second == command }.forEach { playedCueIndices.add(it) }
-    }
-
-    /** Plays a dialog-confirmed call (Load, AllReady, UnloadWeapon, VisitationDone, Mark). */
+    /** Plays a dialog-confirmed call (every untimed command). */
     private fun playRowCall(command: Command) {
         if (command.audioPath == null) return
         _cueEventsFlow.tryEmit(command)
@@ -557,6 +550,7 @@ class TimerViewModel(
                 awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
                 awaitingUnloadConfirmation = false,
+                awaitingVisitationConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
                 parkedBySeek = true
@@ -565,7 +559,7 @@ class TimerViewModel(
         // Cues and thumbs strictly before the park point count as already
         // fired, so resuming plays the cue at the parked time and nothing
         // older.
-        val cues = buildAudioCues(_uiState.value.shootingDuration, _uiState.value.timerMode)
+        val cues = buildAudioCues(_uiState.value.shootingDuration)
         playedCueIndices.clear()
         cues.indices.filterTo(playedCueIndices) { cues[it].first < seconds }
         crossedThumbs.clear()

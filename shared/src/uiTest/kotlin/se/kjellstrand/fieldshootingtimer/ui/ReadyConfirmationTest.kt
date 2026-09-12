@@ -60,4 +60,19 @@ class ReadyConfirmationTest {
         assertEquals(1, continues)
         assertEquals(1, closes)
     }
+
+    @Test
+    fun `the Visitation dialog has its own tags`() = runComposeUiTest {
+        var continues = 0
+        var closes = 0
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                VisitationConfirmationOverlay(onContinue = { continues++ }, onClose = { closes++ })
+            }
+        }
+        onNodeWithTag(VISITATION_CONTINUE_TAG).performClick()
+        onNodeWithTag(VISITATION_CLOSE_TAG).performClick()
+        assertEquals(1, continues)
+        assertEquals(1, closes)
+    }
 }

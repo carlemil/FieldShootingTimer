@@ -21,7 +21,7 @@ class CommandListTest {
     fun `highlights exactly one item`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                CommandList(commands = Command.listedCommands, highlighted = Command.Fire)
+                CommandList(commands = Command.entries, highlighted = Command.Fire)
             }
         }
         onAllNodes(isSelected()).assertCountEquals(1)
@@ -31,7 +31,7 @@ class CommandListTest {
     fun `highlighted row matches the given command`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                CommandList(commands = Command.listedCommands, highlighted = Command.Fire)
+                CommandList(commands = Command.entries, highlighted = Command.Fire)
             }
         }
         onNodeWithTag("$COMMAND_LIST_ROW_TAG${Command.Fire.name}").assertIsSelected()
@@ -43,7 +43,7 @@ class CommandListTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
                 CommandList(
-                    commands = Command.listedCommands,
+                    commands = Command.entries,
                     highlighted = null,
                     onCommandClick = { clicked = it }
                 )
@@ -58,7 +58,7 @@ class CommandListTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
                 CommandList(
-                    commands = Command.listedCommands,
+                    commands = Command.entries,
                     highlighted = null,
                     ceaseFireBeep = true
                 )
@@ -72,7 +72,7 @@ class CommandListTest {
     fun `cease fire row keeps its voice label when the beep setting is off`() = runComposeUiTest {
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                CommandList(commands = Command.listedCommands, highlighted = null)
+                CommandList(commands = Command.entries, highlighted = null)
             }
         }
         onNodeWithText("ELD UPPHÖR!").assertExists()
@@ -81,7 +81,7 @@ class CommandListTest {
 
     @Test
     fun `only the given commands are shown`() = runComposeUiTest {
-        val withoutPreparation = Command.listedCommands - Command.Load - Command.AllReady
+        val withoutPreparation = Command.entries - Command.Load - Command.AllReady
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
                 CommandList(commands = withoutPreparation, highlighted = Command.Fire)

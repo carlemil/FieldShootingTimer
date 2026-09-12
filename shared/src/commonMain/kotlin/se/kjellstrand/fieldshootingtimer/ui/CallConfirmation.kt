@@ -33,6 +33,7 @@ import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_continue
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.unload_confirm_question
+import se.kjellstrand.fieldshootingtimer.resources.visitation_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.visitation_done_confirm_action
 import se.kjellstrand.fieldshootingtimer.resources.visitation_done_confirm_question
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
@@ -50,6 +51,9 @@ internal const val UNLOAD_CLOSE_TAG = "UnloadConfirmClose"
 internal const val MARK_CONFIRM_TAG = "MarkConfirmOverlay"
 internal const val MARK_CONFIRM_MARK_TAG = "MarkConfirmMark"
 internal const val MARK_CONFIRM_CLOSE_TAG = "MarkConfirmClose"
+internal const val VISITATION_CONFIRM_TAG = "VisitationConfirmOverlay"
+internal const val VISITATION_CONTINUE_TAG = "VisitationConfirmContinue"
+internal const val VISITATION_CLOSE_TAG = "VisitationConfirmClose"
 internal const val VISITATION_DONE_CONFIRM_TAG = "VisitationDoneConfirmOverlay"
 internal const val VISITATION_DONE_CONFIRM_ACTION_TAG = "VisitationDoneConfirmAction"
 internal const val VISITATION_DONE_CONFIRM_CLOSE_TAG = "VisitationDoneConfirmClose"
@@ -97,9 +101,9 @@ internal fun ReadyConfirmationOverlay(
 )
 
 /**
- * Modal question when the run reaches the end of CeaseFire (or the row is
- * tapped): [onContinue] makes the "Patron ur!" call and runs on,
- * [onClose] closes without calling.
+ * Modal question when the run finishes (or the row is tapped):
+ * [onContinue] makes the "Patron ur!" call, [onClose] closes without
+ * calling.
  */
 @Composable
 internal fun UnloadConfirmationOverlay(
@@ -112,6 +116,23 @@ internal fun UnloadConfirmationOverlay(
     overlayTag = UNLOAD_CONFIRM_TAG,
     confirmTag = UNLOAD_CONTINUE_TAG,
     closeTag = UNLOAD_CLOSE_TAG,
+    onConfirm = onContinue,
+    onClose = onClose,
+    modifier = modifier
+)
+
+/** Competition's next question after "Patron ur!": make the "Visitation!" call or close. */
+@Composable
+internal fun VisitationConfirmationOverlay(
+    onContinue: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) = CallConfirmationOverlay(
+    question = Res.string.visitation_confirm_question,
+    confirmText = Res.string.ready_confirm_continue,
+    overlayTag = VISITATION_CONFIRM_TAG,
+    confirmTag = VISITATION_CONTINUE_TAG,
+    closeTag = VISITATION_CLOSE_TAG,
     onConfirm = onContinue,
     onClose = onClose,
     modifier = modifier

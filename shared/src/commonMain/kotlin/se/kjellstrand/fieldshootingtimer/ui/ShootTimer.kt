@@ -43,7 +43,7 @@ fun ShootTimer(
     ) {
         // All segments follow the theme so dark mode gets dimmed variants:
         // green = secondary, yellow = tertiary, gray = surfaceVariant.
-        val segmentColors = Command.dialCommands.map { command ->
+        val segmentColors = Command.timedCommands.map { command ->
             when (command) {
                 Command.Fire -> MaterialTheme.colorScheme.secondary
                 Command.CeaseFire -> MaterialTheme.colorScheme.tertiary
@@ -54,12 +54,7 @@ fun ShootTimer(
         val borderWidth = 2.dp
         val ringThickness = 60.dp
 
-        // The dial only draws the segments through CeaseFire; the timer keeps
-        // running past them (UnloadWeapon + Visitation audio cues and list
-        // highlight are unaffected) while the hand parks at the dial's end.
-        // dialCommands is a prefix of timedCommands, so a plain take() slices
-        // the matching durations.
-        val dialSegments = segmentDurations.take(Command.dialCommands.size)
+        val dialSegments = segmentDurations
         val dialSeconds = dialSegments.sum()
 
         require(dialSeconds > 0) {

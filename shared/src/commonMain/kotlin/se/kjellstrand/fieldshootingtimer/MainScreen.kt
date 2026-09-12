@@ -42,6 +42,7 @@ import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.AppMenu
 import se.kjellstrand.fieldshootingtimer.ui.ReadyConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.UnloadConfirmationOverlay
+import se.kjellstrand.fieldshootingtimer.ui.VisitationConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
@@ -286,8 +287,8 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                     onClose = timerViewModel::dismissReadyConfirmation
                 )
             }
-            // The run parked at the end of CeaseFire (or the row's tap):
-            // "Patron ur?" — make the call and run on, or close.
+            // The finished run (or the row's tap): "Patron ur?" — make the
+            // call, or close.
             val awaitingUnloadConfirmation by timerViewModel.awaitingUnloadConfirmationFlow.collectAsState(
                 initial = false, context = Dispatchers.Main
             )
@@ -297,8 +298,17 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                     onClose = timerViewModel::dismissUnloadConfirmation
                 )
             }
-            // A finished competition round (or the row's tap): "Visitation
-            // klar?" — confirming makes the call and hands over to "Markera?".
+            // Competition's next question (or the row's tap): "Visitation?".
+            val awaitingVisitation by timerViewModel.awaitingVisitationConfirmationFlow
+                .collectAsState(initial = false, context = Dispatchers.Main)
+            if (awaitingVisitation) {
+                VisitationConfirmationOverlay(
+                    onContinue = timerViewModel::confirmVisitation,
+                    onClose = timerViewModel::dismissVisitationConfirmation
+                )
+            }
+            // Then "Visitation klar?" (or the row's tap) — confirming makes
+            // the call and hands over to "Markera?".
             val awaitingVisitationDone by timerViewModel.awaitingVisitationDoneConfirmationFlow
                 .collectAsState(initial = false, context = Dispatchers.Main)
             if (awaitingVisitationDone) {
