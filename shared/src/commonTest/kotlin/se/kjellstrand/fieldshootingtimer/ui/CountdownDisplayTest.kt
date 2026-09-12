@@ -7,32 +7,16 @@ import kotlin.test.assertNull
 class CountdownDisplayTest {
 
     @Test
-    fun `the Ladda phase counts its own sixty seconds`() {
-        // -70..-10 is the Ladda stretch: digits 60 → 1.
-        assertEquals(60, countdownSecondsOrNull(-70f))
-        assertEquals(33, countdownSecondsOrNull(-42.3f))
-        assertEquals(1, countdownSecondsOrNull(-10.1f))
-    }
-
-    @Test
-    fun `the Alla klara wait counts its final ten seconds`() {
-        assertEquals(10, countdownSecondsOrNull(-10f))
-        assertEquals(5, countdownSecondsOrNull(-4.3f))
+    fun `the gap before the sequence counts down`() {
+        assertEquals(3, countdownSecondsOrNull(-3f))
+        assertEquals(2, countdownSecondsOrNull(-1.5f))
         assertEquals(1, countdownSecondsOrNull(-0.1f))
-    }
-
-    @Test
-    fun `the repeated wait counts its full span`() {
-        assertEquals(15, countdownSecondsOrNull(-15f, allReadyRepeat = true))
-        assertEquals(12, countdownSecondsOrNull(-11.5f, allReadyRepeat = true))
-        assertEquals(1, countdownSecondsOrNull(-0.1f, allReadyRepeat = true))
     }
 
     @Test
     fun `no digits at or after zero`() {
         assertNull(countdownSecondsOrNull(0f))
         assertNull(countdownSecondsOrNull(12f))
-        assertNull(countdownSecondsOrNull(0f, allReadyRepeat = true))
     }
 
     // The shooting stretch is green + yellow: Fire starts at 10s (7 + 3) and
@@ -47,10 +31,10 @@ class CountdownDisplayTest {
 
     @Test
     fun `before the stretch it reads the full total`() {
-        // Parked, mid gray lead-in, and back in the competition countdown.
+        // Parked, mid gray lead-in, and back in the competition gap.
         assertEquals(8, shootingSecondsRemainingOrNull(0f, 5f))
         assertEquals(8, shootingSecondsRemainingOrNull(7f, 5f))
-        assertEquals(8, shootingSecondsRemainingOrNull(-70f, 5f))
+        assertEquals(8, shootingSecondsRemainingOrNull(-3f, 5f))
     }
 
     @Test

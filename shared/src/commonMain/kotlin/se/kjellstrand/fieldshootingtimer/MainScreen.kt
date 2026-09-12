@@ -35,6 +35,7 @@ import se.kjellstrand.fieldshootingtimer.domain.Command
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.ui.LandscapeLayout
 import se.kjellstrand.fieldshootingtimer.ui.MENU_SCRIM_TAG
+import se.kjellstrand.fieldshootingtimer.ui.LoadConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.MarkConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.VisitationDoneConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
@@ -264,14 +265,24 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                         vertical = Paddings.Large
                     )
             )
-            // Competition countdown reached 0: modal "Alla klara!" question.
+            // Competition play (or the Ladda row): "Ladda?" — confirming
+            // makes the call and asks "Alla klara?", which starts the run.
+            val awaitingLoadConfirmation by timerViewModel.awaitingLoadConfirmationFlow.collectAsState(
+                initial = false, context = Dispatchers.Main
+            )
+            if (awaitingLoadConfirmation) {
+                LoadConfirmationOverlay(
+                    onContinue = timerViewModel::confirmLoad,
+                    onClose = timerViewModel::dismissLoadConfirmation
+                )
+            }
             val awaitingReadyConfirmation by timerViewModel.awaitingReadyConfirmationFlow.collectAsState(
                 initial = false, context = Dispatchers.Main
             )
             if (awaitingReadyConfirmation) {
                 ReadyConfirmationOverlay(
                     onContinue = timerViewModel::confirmAllReady,
-                    onAskAgain = timerViewModel::repeatAllReady
+                    onClose = timerViewModel::dismissReadyConfirmation
                 )
             }
             // A finished competition round (or the row's tap): "Visitation

@@ -31,9 +31,9 @@ enum class Command(
     // their stringRes is a never-shown placeholder.
     val listed: Boolean = true
 ) {
-    // Untimed but audible: called during the competition preparation
-    // countdown (Load at its start, AllReady at -10s) via
-    // buildCompetitionPrepCues.
+    // Untimed, dialog-driven calls that open a competition run: play (or
+    // the row) asks "Ladda?", confirming asks "Alla klara?", confirming
+    // that starts the timed sequence.
     Load("files/ladda.mp3", Res.string.command_load, -1, LightGrayColor),
     AllReady("files/alla_klara.mp3", Res.string.command_all_ready, -1, LightGrayColor),
     TenSecondsLeft("files/tio_sekunder_kvar.mp3", Res.string.command_10_seconds, 7, LightGrayColor, onDial = true),

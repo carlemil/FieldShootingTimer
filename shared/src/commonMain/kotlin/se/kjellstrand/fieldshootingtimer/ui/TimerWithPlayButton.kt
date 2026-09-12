@@ -8,30 +8,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.Dispatchers
-import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REMAINING_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.ceaseFireEndSeconds
 import se.kjellstrand.fieldshootingtimer.domain.fireStartSeconds
 import kotlin.math.ceil
 import kotlin.math.max
 
 /**
- * Remaining whole seconds of the CURRENT countdown phase while
- * [currentTime] is negative, else null: the 60s Ladda stretch counts 60→1,
- * the Alla klara wait 10→1 — and the repeated wait after "Fråga igen"
- * ([allReadyRepeat]) counts its full span.
+ * Remaining whole seconds of the silent gap before the sequence while
+ * [currentTime] is negative, else null.
  */
-internal fun countdownSecondsOrNull(
-    currentTime: Float,
-    allReadyRepeat: Boolean = false
-): Int? {
-    if (currentTime >= 0f) return null
-    val remaining = ceil(-currentTime).toInt()
-    return if (!allReadyRepeat && currentTime < -COMPETITION_ALL_READY_REMAINING_SECONDS) {
-        remaining - COMPETITION_ALL_READY_REMAINING_SECONDS.toInt()
-    } else {
-        remaining
-    }
-}
+internal fun countdownSecondsOrNull(currentTime: Float): Int? =
+    if (currentTime >= 0f) null else ceil(-currentTime).toInt()
 
 /**
  * Remaining whole seconds of the shooting stretch — the dial's green (Fire)
@@ -69,9 +56,6 @@ internal fun TimerWithPlayButton(
     val currentTime by timerViewModel.currentTimeFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
-    val allReadyRepeat by timerViewModel.allReadyRepeatFlow.collectAsState(
-        initial = false, context = Dispatchers.Main
-    )
     val shootingDuration by timerViewModel.shootingDurationFlow.collectAsState(
         initial = 0f, context = Dispatchers.Main
     )
@@ -91,7 +75,7 @@ internal fun TimerWithPlayButton(
             // The preparation countdown owns the digits while it actually
             // runs — a timer parked at a negative time by seekTo falls
             // through to the shooting total instead.
-            countdownSeconds = countdownSecondsOrNull(currentTime, allReadyRepeat)
+            countdownSeconds = countdownSecondsOrNull(currentTime)
                 ?.takeIf { timerRunningState == TimerRunningState.Running }
                 ?: shootingSecondsRemainingOrNull(currentTime, shootingDuration)
         )

@@ -135,10 +135,12 @@ class TimerViewModelSeekTest {
     }
 
     @Test
-    fun `seekTo Load resets the timer`() = runTest {
+    fun `seekTo Load resets the timer and asks Ladda`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
+        vm.setTimerMode(TimerMode.Competition)
         vm.setShootingTime(5f)
 
+        vm.seekTo(Command.Fire)
         vm.start()
         advanceTimeBy(2_000)
         runCurrent()
@@ -148,10 +150,11 @@ class TimerViewModelSeekTest {
 
         assertEquals(0f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
+        assertTrue(vm.uiStateFlow.value.awaitingLoadConfirmation)
     }
 
     @Test
-    fun `seekTo AllReady parks at the final countdown stretch and resumes from there`() = runTest {
+    fun `seekTo AllReady resets the timer and asks Alla klara`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setTimerMode(TimerMode.Competition)
         vm.setShootingTime(5f)
@@ -159,15 +162,16 @@ class TimerViewModelSeekTest {
         vm.seekTo(Command.AllReady)
         runCurrent()
 
-        assertEquals(-10f, vm.uiStateFlow.value.currentTime)
+        assertEquals(0f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
+        assertTrue(vm.uiStateFlow.value.awaitingReadyConfirmation)
 
-        // Resuming must keep the parked countdown position, not reseed -60.
-        vm.start()
+        // Confirming runs the sequence after the gap, skipping Ladda.
+        vm.confirmAllReady()
         advanceTimeBy(1_000)
         runCurrent()
         val t = vm.uiStateFlow.value.currentTime
-        assertTrue(t in -9.1f..-8.9f, "expected ~-9 after 1s of resumed countdown, got $t")
+        assertTrue(t in -2.1f..-1.9f, "expected ~-2 after 1s of the gap, got $t")
     }
 
     @Test
@@ -237,7 +241,7 @@ class TimerViewModelSeekTest {
     }
 
     @Test
-    fun `in competition a park at the sequence start runs the sequence - not the countdown`() = runTest {
+    fun `in competition a park at the sequence start runs the sequence - no Ladda dialog`() = runTest {
         val vm = TimerViewModel(externalScope = backgroundScope, tickMs = 10L, timeSourceMs = { testScheduler.currentTime })
         vm.setTimerMode(TimerMode.Competition)
         vm.setShootingTime(5f)
@@ -251,20 +255,18 @@ class TimerViewModelSeekTest {
         runCurrent()
         assertTrue(
             vm.uiStateFlow.value.currentTime > 0f,
-            "play from the parked sequence start must not run the countdown, " +
+            "play from the parked sequence start must run, " +
                 "got ${vm.uiStateFlow.value.currentTime}"
         )
+        assertFalse(vm.uiStateFlow.value.awaitingLoadConfirmation)
 
-        // A reset restores the untouched state: play runs the countdown again.
+        // A reset restores the untouched state: play asks Ladda again.
         vm.reset()
         runCurrent()
         vm.start()
-        advanceTimeBy(1_000)
         runCurrent()
-        assertTrue(
-            vm.uiStateFlow.value.currentTime < 0f,
-            "after reset the countdown must run, got ${vm.uiStateFlow.value.currentTime}"
-        )
+        assertTrue(vm.uiStateFlow.value.awaitingLoadConfirmation)
+        assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
     }
 
     @Test

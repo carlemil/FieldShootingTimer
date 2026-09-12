@@ -21,14 +21,11 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.TimeSource
-import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REMAINING_SECONDS
-import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REPEAT_SECONDS
-import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_COUNTDOWN_SECONDS
+import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_GAP_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.domain.beepTimeSeconds
 import se.kjellstrand.fieldshootingtimer.domain.boundaryFlagSeconds
 import se.kjellstrand.fieldshootingtimer.domain.buildAudioCues
-import se.kjellstrand.fieldshootingtimer.domain.buildCompetitionPrepCues
 import se.kjellstrand.fieldshootingtimer.domain.buildRange
 import se.kjellstrand.fieldshootingtimer.domain.buildSegmentDurations
 import se.kjellstrand.fieldshootingtimer.domain.findNextFreeThumbSpot
@@ -50,8 +47,11 @@ data class TimerUiState(
     // true = a short beep at the end of the yellow (CeaseFire) segment
     // replaces the drawn-out "Eld upphör!" voice at its start.
     val ceaseFireBeep: Boolean = false,
-    // Competition only: the countdown has just hit 0 and the timer is parked
-    // there waiting for the "Alla klara!" dialog to be answered.
+    // Competition only: play (or the Ladda row) opened the "Ladda?" dialog;
+    // confirming makes the call and hands over to "Alla klara?".
+    val awaitingLoadConfirmation: Boolean = false,
+    // Competition only: the "Alla klara?" dialog is open; confirming makes
+    // the call and starts the timed sequence.
     val awaitingReadyConfirmation: Boolean = false,
     // True when the user explicitly parked the timer (row tap or hand
     // scrub). Distinguishes "parked at 0" from an untouched timer, which
@@ -63,11 +63,7 @@ data class TimerUiState(
     val awaitingMarkConfirmation: Boolean = false,
     // A competition run just finished (or the row was tapped): "Visitation
     // klar?" — confirming makes the call and hands over to the Mark dialog.
-    val awaitingVisitationDoneConfirmation: Boolean = false,
-    // "Fråga igen" is running its repeated Alla klara wait: the whole
-    // negative stretch is the AllReady phase, and the ready question is NOT
-    // asked again when it reaches 0 — once per play press.
-    val allReadyRepeat: Boolean = false
+    val awaitingVisitationDoneConfirmation: Boolean = false
 )
 
 enum class TimerRunningState {
@@ -103,6 +99,8 @@ class TimerViewModel(
     val tutorialSeenFlow = _uiState.map { it.tutorialSeen }.distinctUntilChanged()
     val darkThemeFlow = _uiState.map { it.darkTheme }.distinctUntilChanged()
     val ceaseFireBeepFlow = _uiState.map { it.ceaseFireBeep }.distinctUntilChanged()
+    val awaitingLoadConfirmationFlow =
+        _uiState.map { it.awaitingLoadConfirmation }.distinctUntilChanged()
     val awaitingReadyConfirmationFlow =
         _uiState.map { it.awaitingReadyConfirmation }.distinctUntilChanged()
     val parkedBySeekFlow = _uiState.map { it.parkedBySeek }.distinctUntilChanged()
@@ -110,7 +108,6 @@ class TimerViewModel(
         _uiState.map { it.awaitingMarkConfirmation }.distinctUntilChanged()
     val awaitingVisitationDoneConfirmationFlow =
         _uiState.map { it.awaitingVisitationDoneConfirmation }.distinctUntilChanged()
-    val allReadyRepeatFlow = _uiState.map { it.allReadyRepeat }.distinctUntilChanged()
 
     val segmentDurationsFlow: StateFlow<List<Float>> = _uiState
         .map { buildSegmentDurations(it.shootingDuration, it.timerMode) }
@@ -271,20 +268,17 @@ class TimerViewModel(
 
     fun start() {
         if (timerJob?.isActive == true) return
-        // Competition prefixes the sequence with a preparation countdown,
-        // modeled as currentTime rising from -COMPETITION_COUNTDOWN_SECONDS
-        // to 0 — every cue time is >= 0, so the normal loop machinery stays
-        // silent until the countdown ends. Seeded only on a fresh start;
-        // resuming from Stopped keeps the (possibly negative) stop time.
+        // A fresh competition start opens the "Ladda?" dialog instead of
+        // running: confirmAllReady() is what starts the clock. A timer
+        // explicitly parked at 0 (the "10 sekunder kvar!" row, or the hand
+        // scrubbed to 0) runs the sequence directly.
         if (_uiState.value.timerMode == TimerMode.Competition &&
             _uiState.value.timerRunningState == TimerRunningState.NotStarted &&
             _uiState.value.currentTime == 0f &&
-            // A timer explicitly parked at 0 (the "10 sekunder kvar!" row,
-            // or the hand scrubbed to 0) starts the sequence, not the
-            // countdown.
             !_uiState.value.parkedBySeek
         ) {
-            setCurrentTime(-COMPETITION_COUNTDOWN_SECONDS)
+            _uiState.update { it.copy(awaitingLoadConfirmation = true) }
+            return
         }
         // Anchor against wall clock so dropped frames or scheduler hiccups
         // don't accumulate drift — currentTime is always (now - epoch).
@@ -298,7 +292,7 @@ class TimerViewModel(
             val shootingDuration = _uiState.value.shootingDuration
             val segments = buildSegmentDurations(shootingDuration, _uiState.value.timerMode)
             val total = segments.sum()
-            val cues = activeCues(shootingDuration)
+            val cues = buildAudioCues(shootingDuration, _uiState.value.timerMode)
             val beepTime = beepTimeSeconds(shootingDuration)
             // The immovable boundary flags (shown once any user flag exists)
             // vibrate on crossing just like the user-placed ones.
@@ -309,24 +303,9 @@ class TimerViewModel(
             emitPassedCues(initialTime, cues)
             emitPassedThumbs(initialTime, thumbs)
 
-            // A competition countdown does not roll straight into the timed
-            // sequence: at 0 the timer parks and asks "Alla klara!". The
-            // question comes at most once per play press — the repeated wait
-            // after "Fråga igen" runs straight through 0 into the sequence.
-            val confirmAtZero =
-                _uiState.value.timerMode == TimerMode.Competition && initialTime < 0f &&
-                    !_uiState.value.allReadyRepeat
-
             while (isActive && _uiState.value.timerRunningState == TimerRunningState.Running) {
                 delay(tickMs)
                 val elapsed = (timeSourceMs() - startEpochMs) / 1000f
-                if (confirmAtZero && elapsed >= 0f) {
-                    runAnchorEpochMs = null
-                    setCurrentTime(0f)
-                    _uiState.update { it.copy(awaitingReadyConfirmation = true) }
-                    setTimerState(TimerRunningState.Stopped)
-                    break
-                }
                 if (elapsed >= total) {
                     runAnchorEpochMs = null
                     setCurrentTime(total)
@@ -352,8 +331,8 @@ class TimerViewModel(
 
     fun stop() {
         if (_uiState.value.timerRunningState != TimerRunningState.Running) return
-        // Stopping during the competition preparation countdown cancels it
-        // outright — there is nothing worth resuming mid-countdown.
+        // Stopping in the silent gap before the sequence cancels the run
+        // outright — there is nothing worth resuming there.
         if (_uiState.value.currentTime < 0f) {
             reset()
             return
@@ -373,10 +352,10 @@ class TimerViewModel(
         beepEmitted = false
         _uiState.update {
             it.copy(
+                awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
-                allReadyRepeat = false,
                 parkedBySeek = false
             )
         }
@@ -384,31 +363,37 @@ class TimerViewModel(
         setTimerState(TimerRunningState.NotStarted)
     }
 
-    /** "Fortsätt" in the ready dialog: run the timed sequence from 0. */
-    fun confirmAllReady() {
-        if (!_uiState.value.awaitingReadyConfirmation) return
-        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
-        start()
+    /**
+     * "Fortsätt" in the "Ladda?" dialog: make the call and ask
+     * "Alla klara?" next.
+     */
+    fun confirmLoad() {
+        if (!_uiState.value.awaitingLoadConfirmation) return
+        _uiState.update {
+            it.copy(awaitingLoadConfirmation = false, awaitingReadyConfirmation = true)
+        }
+        playRowCall(Command.Load)
+    }
+
+    /** "Stäng" in the "Ladda?" dialog: close without calling. */
+    fun dismissLoadConfirmation() {
+        _uiState.update { it.copy(awaitingLoadConfirmation = false) }
     }
 
     /**
-     * "Fråga igen" in the ready dialog: call "Alla klara!" right away, run
-     * the slightly longer repeated wait, and roll straight into the
-     * sequence at 0 — the question is never asked twice in one play press.
+     * "Fortsätt" in the "Alla klara?" dialog: make the call and run the
+     * timed sequence after the short silent gap.
      */
-    fun repeatAllReady() {
+    fun confirmAllReady() {
         if (!_uiState.value.awaitingReadyConfirmation) return
-        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
-        parkAt(-COMPETITION_ALL_READY_REPEAT_SECONDS, TimerRunningState.NotStarted)
-        _uiState.update { it.copy(allReadyRepeat = true) }
-        _cueEventsFlow.tryEmit(Command.AllReady)
-        // The -10s AllReady cue must not refire mid-wait — the call was
-        // just made.
-        val cues = activeCues(_uiState.value.shootingDuration)
-        cues.indices
-            .filter { cues[it].second == Command.AllReady }
-            .forEach { playedCueIndices.add(it) }
+        playRowCall(Command.AllReady)
+        parkAt(-COMPETITION_ALL_READY_GAP_SECONDS, TimerRunningState.NotStarted)
         start()
+    }
+
+    /** "Stäng" in the "Alla klara?" dialog: close without calling. */
+    fun dismissReadyConfirmation() {
+        _uiState.update { it.copy(awaitingReadyConfirmation = false) }
     }
 
     /**
@@ -425,21 +410,24 @@ class TimerViewModel(
      * ongoing run. The parked state is NotStarted — the dial stays editable
      * and the play button reads "play" — so starting runs from the parked
      * time, firing [command]'s own cue but none of the earlier ones. The
-     * untimed rows park at their natural spots: Load at the untouched start,
-     * AllReady at the final stretch of the preparation countdown, and Mark
-     * at the finished end of the sequence.
+     * untimed rows park at their natural spots: Load and AllReady at the
+     * untouched start behind their dialogs, Mark at the finished end.
      */
     fun seekTo(command: Command) {
-        if (command == Command.Load) {
-            // Silent: "Ladda!" is called when play starts the countdown.
+        if (command == Command.Load || command == Command.AllReady) {
             reset()
+            _uiState.update {
+                it.copy(
+                    awaitingLoadConfirmation = command == Command.Load,
+                    awaitingReadyConfirmation = command == Command.AllReady
+                )
+            }
             return
         }
         val shootingDuration = _uiState.value.shootingDuration
         val mode = _uiState.value.timerMode
         val parksAtEnd = command == Command.Mark || command == Command.VisitationDone
         val seekTime = when {
-            command == Command.AllReady -> -COMPETITION_ALL_READY_REMAINING_SECONDS
             parksAtEnd -> buildSegmentDurations(shootingDuration, mode).sum()
             else -> buildAudioCues(shootingDuration, mode).first { it.second == command }.first
         }
@@ -491,7 +479,7 @@ class TimerViewModel(
         _uiState.update { it.copy(awaitingMarkConfirmation = false) }
     }
 
-    /** Plays a dialog-confirmed call (VisitationDone, Mark). */
+    /** Plays a dialog-confirmed call (Load, AllReady, VisitationDone, Mark). */
     private fun playRowCall(command: Command) {
         if (command.audioPath == null) return
         _cueEventsFlow.tryEmit(command)
@@ -513,17 +501,17 @@ class TimerViewModel(
         runAnchorEpochMs = null
         _uiState.update {
             it.copy(
+                awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
-                allReadyRepeat = false,
                 parkedBySeek = true
             )
         }
         // Cues and thumbs strictly before the park point count as already
         // fired, so resuming plays the cue at the parked time and nothing
         // older.
-        val cues = activeCues(_uiState.value.shootingDuration)
+        val cues = buildAudioCues(_uiState.value.shootingDuration, _uiState.value.timerMode)
         playedCueIndices.clear()
         cues.indices.filterTo(playedCueIndices) { cues[it].first < seconds }
         crossedThumbs.clear()
@@ -533,18 +521,6 @@ class TimerViewModel(
         beepEmitted = beepTimeSeconds(_uiState.value.shootingDuration) < seconds
         setCurrentTime(seconds)
         setTimerState(state)
-    }
-
-    /**
-     * The full cue plan for the current mode: competition prefixes the
-     * timed-command cues with the preparation calls on the countdown's
-     * negative clock ("Ladda!" at its start, "Alla klara!" at -10s).
-     */
-    private fun activeCues(shootingDuration: Float): List<Pair<Float, Command>> {
-        val mode = _uiState.value.timerMode
-        val prepCues =
-            if (mode == TimerMode.Competition) buildCompetitionPrepCues() else emptyList()
-        return prepCues + buildAudioCues(shootingDuration, mode)
     }
 
     private fun emitPassedBeep(time: Float, beepTime: Float) {

@@ -42,9 +42,6 @@ fun SettingsPanel(
         timerViewModel.awaitingVisitationDoneConfirmationFlow.collectAsState(
             initial = false, context = Dispatchers.Main
         )
-    val allReadyRepeat by timerViewModel.allReadyRepeatFlow.collectAsState(
-        initial = false, context = Dispatchers.Main
-    )
 
     val visibleCommands = when (timerMode) {
         TimerMode.Competition -> Command.listedCommands
@@ -60,8 +57,7 @@ fun SettingsPanel(
         segmentDurations = segmentDurations,
         awaitingReadyConfirmation = awaitingReadyConfirmation,
         parkedBySeek = parkedBySeek,
-        awaitingVisitationDoneConfirmation = awaitingVisitationDoneConfirmation,
-        allReadyRepeat = allReadyRepeat
+        awaitingVisitationDoneConfirmation = awaitingVisitationDoneConfirmation
     )
 
     // Owns its column so callers don't have to provide a specific layout.

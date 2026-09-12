@@ -265,40 +265,30 @@ contract: live updates during the gesture (`setThumbValues` /
 
 **Competition vs training mode (`domain/TimerMode.kt`).** Training runs the
 sequence immediately and hides the `Load`/`AllReady` rows from the command
-list. Competition prefixes the run with a 60s preparation countdown,
-**modeled as `currentTime` running from -70 to 0** (constants in
-`domain/TimerPlan.kt`: a 60s Ladda phase + the 10s Alla klara wait) — this
-reuses the whole timer loop untouched. The preparation calls ride the same
-cue machinery on the negative clock (`buildCompetitionPrepCues`: "Ladda!"
-at -70, "Alla klara!" at -10, prepended to the cue list in competition mode
-only); the timed cues are all ≥ 0 so none fire until the countdown ends.
-The play button's digits count the CURRENT phase (60→1, then 10→1;
-`countdownSecondsOrNull`). The ready question is asked at most once per
-play press: "Fråga igen" calls "Alla klara!" immediately, runs a 15s
-repeated wait (`allReadyRepeat` in TimerUiState — all-AllReady for
-highlight/digits), and rolls straight through 0 into the sequence. `stop()` during
-the countdown (negative time) cancels it back to `NotStarted`; after 0 it
-pauses normally. Renderers clamp: the dial hand coerces to ≥ 0; while time
-is negative the play button shows `ceil(-currentTime)` as countdown digits
-beneath the stop icon (tap = cancel), keeping its normal green background.
-The countdown does NOT roll straight into the sequence: at 0 the loop parks
-(`Stopped`, `awaitingReadyConfirmation = true` in `TimerUiState`) without
-firing the 0-second cue, and `MainScreen` shows the modal "Alla klara!"
-dialog (`ui/ReadyConfirmation.kt`). `confirmAllReady()` resumes from 0 (the
-TenSecondsLeft cue fires then); `repeatAllReady()` re-runs the AllReady
-stretch from -10, which ends in the same question. While waiting, the list
-highlight stays on `AllReady`. Covered by `TimerViewModelReadyConfirmTest`
-and `ReadyConfirmationTest`. The command-list highlight
-(`ui/CommandHighlight.kt`, `highlightedCommand(...)`) returns `Load` before
-the start and through most of the countdown, `AllReady` for the final 10s,
-then follows the running segment. Covered by `TimerViewModelCountdownTest`
-and `CommandHighlightTest`.
+list. Competition opens with two dialogs instead of a countdown: play (or the
+Ladda row) sets `awaitingLoadConfirmation` and shows "Ladda?"; `confirmLoad()`
+plays the call and sets `awaitingReadyConfirmation` ("Alla klara?");
+`confirmAllReady()` plays that call and starts the run at
+`-COMPETITION_ALL_READY_GAP_SECONDS` (3s, `domain/TimerPlan.kt`) — a silent
+beat so the two clips don't overlap — rolling straight through 0 into the
+sequence. Every timed cue is ≥ 0, so nothing fires during the gap; the play
+button shows `ceil(-currentTime)` as digits beneath the stop icon
+(`countdownSecondsOrNull`) and `stop()` there cancels back to `NotStarted`.
+"Stäng" in either dialog (`dismissLoadConfirmation` /
+`dismissReadyConfirmation`) closes without calling; the AllReady row reopens
+its dialog directly. Both dialogs are `CallConfirmationOverlay` instances in
+`ui/CallConfirmation.kt`, alongside the Visitation-klar and Markera ones. The
+command-list highlight (`ui/CommandHighlight.kt`, `highlightedCommand(...)`)
+returns `Load` before the start, `AllReady` behind its dialog and through the
+gap, then follows the running segment. Covered by
+`TimerViewModelCountdownTest`, `CommandHighlightTest` and
+`ReadyConfirmationTest`.
 
 **The play button's digits (`ui/TimerWithPlayButton.kt`).** Two pure
 functions feed `PlayButton`'s `countdownSeconds`, and whenever it is
 non-null the state icon (play/stop/reset) shrinks and the digits sit
-beneath it. `countdownSecondsOrNull` covers the competition preparation
-countdown described above and wins while it is `Running`; otherwise
+beneath it. `countdownSecondsOrNull` covers the competition gap described
+above and wins while it is `Running`; otherwise
 `shootingSecondsRemainingOrNull` counts the **shooting stretch** — the
 dial's green (Fire) plus yellow (CeaseFire) segments, i.e.
 `fireStartSeconds()`..`ceaseFireEndSeconds(shootingDuration)`. Before that
@@ -315,11 +305,10 @@ play button reads "play" — and `start()` anchors on `currentTime`, so play
 resumes from the parked spot, firing the tapped command's own cue but none
 of the earlier ones (`playedCueIndices`/`crossedThumbs` are pre-marked for
 everything strictly before the seek time). The untimed rows map to their
-natural spots: `Load` → `reset()`, `AllReady` → -10s of the countdown,
+natural spots: `Load` and `AllReady` → `reset()` plus their dialog,
 `Mark` → the finished end (`Finished`). Because a parked timer can now sit
 at a non-zero time, `highlightedCommand` treats competition + `NotStarted`
-as "before the start" only when `currentTime == 0`, and the *preparation*
-countdown owns the play button's digits only while actually `Running`.
+as "before the start" only when `currentTime == 0`.
 Covered by
 `TimerViewModelSeekTest`, `CommandHighlightTest`, and the row-click tests in
 `CommandListTest`/`SettingsPanelTest`.

@@ -1,6 +1,5 @@
 package se.kjellstrand.fieldshootingtimer.ui
 
-import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_REMAINING_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.Command
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.domain.timedCommandsFor
@@ -8,10 +7,9 @@ import se.kjellstrand.fieldshootingtimer.domain.timedCommandsFor
 /**
  * The command to highlight in the command list.
  *
- * Competition mode owns the pre-sequence phase: "Ladda!" from before the
- * start through most of the countdown (negative [currentTime]), handing over
- * to "Alla klara!" for the final [COMPETITION_ALL_READY_REMAINING_SECONDS].
- * From 0 onward — and always in training mode — the highlight follows the
+ * Competition mode owns the pre-sequence phase: "Ladda!" before the start
+ * and behind its dialog, "Alla klara!" behind its dialog and through the
+ * silent gap (negative [currentTime]) before the sequence. From 0 onward — and always in training mode — the highlight follows the
  * running segment, mapped back through [Command.timedCommands] so reordering
  * the enum can't silently shift it. Past the last boundary the final timed
  * command stays lit.
@@ -23,11 +21,9 @@ internal fun highlightedCommand(
     segmentDurations: List<Float>,
     awaitingReadyConfirmation: Boolean = false,
     parkedBySeek: Boolean = false,
-    awaitingVisitationDoneConfirmation: Boolean = false,
-    allReadyRepeat: Boolean = false
+    awaitingVisitationDoneConfirmation: Boolean = false
 ): Command {
-    // Parked at 0 behind the "Alla klara!" dialog — conceptually still
-    // in the AllReady phase.
+    // Behind the "Alla klara?" dialog — the AllReady phase.
     if (awaitingReadyConfirmation) return Command.AllReady
     // The "Visitation klar?" dialog owns its row while it is open.
     if (awaitingVisitationDoneConfirmation) return Command.VisitationDone
@@ -44,17 +40,8 @@ internal fun highlightedCommand(
         if (runningState == TimerRunningState.NotStarted && currentTime == 0f && !parkedBySeek) {
             return Command.Load
         }
-        if (currentTime < 0f) {
-            // The repeated wait after "Fråga igen" is all AllReady; the
-            // first countdown hands over from Ladda with 10s left.
-            return if (allReadyRepeat ||
-                currentTime >= -COMPETITION_ALL_READY_REMAINING_SECONDS
-            ) {
-                Command.AllReady
-            } else {
-                Command.Load
-            }
-        }
+        // The silent gap after the confirmed "Alla klara!" call.
+        if (currentTime < 0f) return Command.AllReady
     }
     val timedCommands = timedCommandsFor(mode)
     var accumulatedTime = 0f

@@ -9,27 +9,13 @@ import kotlin.math.roundToInt
  * on any target.
  */
 
-/** The "Ladda!" phase of the competition preparation countdown. */
-internal const val COMPETITION_LOAD_SECONDS = 60f
-
 /**
- * The "Alla klara!" wait after the Ladda phase — called with this many
- * seconds left, and the ready question pops when they run out.
+ * The silent beat between the confirmed "Alla klara!" call and the first
+ * timed call, so the two clips never overlap: a competition run starts at
+ * currentTime -[COMPETITION_ALL_READY_GAP_SECONDS] and rolls into the
+ * sequence at 0. Every cue time is >= 0, so nothing fires during the gap.
  */
-internal const val COMPETITION_ALL_READY_REMAINING_SECONDS = 10f
-
-/**
- * Competition-mode preparation, run as currentTime -70..0: a 60s Ladda
- * phase followed by the 10s Alla klara wait.
- */
-internal const val COMPETITION_COUNTDOWN_SECONDS =
-    COMPETITION_LOAD_SECONDS + COMPETITION_ALL_READY_REMAINING_SECONDS
-
-/**
- * "Fråga igen" in the ready dialog: the repeated Alla klara wait, slightly
- * longer — and it rolls straight into the sequence without asking again.
- */
-internal const val COMPETITION_ALL_READY_REPEAT_SECONDS = 15f
+internal const val COMPETITION_ALL_READY_GAP_SECONDS = 3f
 
 /** Second at which the Fire segment starts (end of the pre-fire commands). */
 internal fun fireStartSeconds(): Float =
@@ -98,17 +84,6 @@ internal fun buildAudioCues(shootingDuration: Float, mode: TimerMode): List<Pair
         cue
     }
 }
-
-/**
- * The competition preparation calls, timed on the countdown's negative
- * clock: "Ladda!" as the countdown starts and "Alla klara!" with
- * [COMPETITION_ALL_READY_REMAINING_SECONDS] left. Training mode never
- * includes these — its runs start at 0.
- */
-internal fun buildCompetitionPrepCues(): List<Pair<Float, Command>> = listOf(
-    -COMPETITION_COUNTDOWN_SECONDS to Command.Load,
-    -COMPETITION_ALL_READY_REMAINING_SECONDS to Command.AllReady
-)
 
 internal fun buildRange(shootingDuration: Float): IntRange {
     val offset = Command.TenSecondsLeft.duration + Command.Ready.duration

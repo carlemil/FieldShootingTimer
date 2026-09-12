@@ -35,9 +35,9 @@ The dial **is** the interface — everything is adjusted directly on it:
 Two modes:
 
 - **Training** starts the command sequence immediately.
-- **Competition** prefixes it with the full range procedure: "Ladda!", "Alla klara!" and a
-  60-second preparation countdown shown on the play button. When the countdown hits zero the
-  timer asks **"Alla klara!"** — continue into the sequence, or repeat the all-ready call.
+- **Competition** prefixes it with the range procedure as two dialogs: **"Ladda?"** and then
+  **"Alla klara?"** — each "Fortsätt" makes the call and moves on, and the timed sequence starts a
+  few seconds after the all-ready call.
 
 Practical details: the screen stays awake while the timer runs, audio follows the phone's
 ringer mode on Android (silent means silent) and the silent switch on iOS, portrait and

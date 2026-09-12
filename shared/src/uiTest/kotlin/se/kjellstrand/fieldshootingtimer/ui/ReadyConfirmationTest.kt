@@ -8,54 +8,41 @@ import se.kjellstrand.fieldshootingtimer.ui.theme.FieldShootingTimerTheme
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-/** Drives [ReadyConfirmationOverlay] directly with plain callbacks. */
+/** Drives [LoadConfirmationOverlay] and [ReadyConfirmationOverlay] with plain callbacks. */
 @OptIn(ExperimentalTestApi::class)
 class ReadyConfirmationTest {
 
     @Test
-    fun `continue fires its callback`() = runComposeUiTest {
+    fun `continue and close fire their callbacks`() = runComposeUiTest {
         var continues = 0
-        var agains = 0
+        var closes = 0
         setContent {
             FieldShootingTimerTheme(dynamicColor = false) {
-                ReadyConfirmationOverlay(
-                    onContinue = { continues++ },
-                    onAskAgain = { agains++ }
-                )
+                ReadyConfirmationOverlay(onContinue = { continues++ }, onClose = { closes++ })
             }
         }
         onNodeWithTag(READY_CONTINUE_TAG).performClick()
         assertEquals(1, continues)
-        assertEquals(0, agains)
-    }
-
-    @Test
-    fun `ask again fires its callback`() = runComposeUiTest {
-        var continues = 0
-        var agains = 0
-        setContent {
-            FieldShootingTimerTheme(dynamicColor = false) {
-                ReadyConfirmationOverlay(
-                    onContinue = { continues++ },
-                    onAskAgain = { agains++ }
-                )
-            }
-        }
-        onNodeWithTag(READY_AGAIN_TAG).performClick()
-        assertEquals(0, continues)
-        assertEquals(1, agains)
-    }
-
-    @Test
-    fun `the scrim swallows presses`() = runComposeUiTest {
-        var continues = 0
-        setContent {
-            FieldShootingTimerTheme(dynamicColor = false) {
-                ReadyConfirmationOverlay(onContinue = { continues++ }, onAskAgain = {})
-            }
-        }
+        onNodeWithTag(READY_CLOSE_TAG).performClick()
+        assertEquals(1, closes)
         // Press outside the card: nothing happens, the overlay stays modal.
         onNodeWithTag(READY_CONFIRM_TAG).performClick()
-        assertEquals(0, continues)
+        assertEquals(1, continues)
+        assertEquals(1, closes)
+    }
+
+    @Test
+    fun `the Ladda dialog has its own tags`() = runComposeUiTest {
+        var continues = 0
+        var closes = 0
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                LoadConfirmationOverlay(onContinue = { continues++ }, onClose = { closes++ })
+            }
+        }
+        onNodeWithTag(LOAD_CONTINUE_TAG).performClick()
+        onNodeWithTag(LOAD_CLOSE_TAG).performClick()
+        assertEquals(1, continues)
+        assertEquals(1, closes)
     }
 }

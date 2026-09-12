@@ -26,20 +26,71 @@ import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import se.kjellstrand.fieldshootingtimer.resources.Res
+import se.kjellstrand.fieldshootingtimer.resources.load_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_close
 import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_mark
 import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_question
+import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_continue
+import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.visitation_done_confirm_action
 import se.kjellstrand.fieldshootingtimer.resources.visitation_done_confirm_question
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
 import se.kjellstrand.fieldshootingtimer.ui.theme.Paddings
 
+internal const val LOAD_CONFIRM_TAG = "LoadConfirmOverlay"
+internal const val LOAD_CONTINUE_TAG = "LoadConfirmContinue"
+internal const val LOAD_CLOSE_TAG = "LoadConfirmClose"
+internal const val READY_CONFIRM_TAG = "ReadyConfirmOverlay"
+internal const val READY_CONTINUE_TAG = "ReadyConfirmContinue"
+internal const val READY_CLOSE_TAG = "ReadyConfirmClose"
 internal const val MARK_CONFIRM_TAG = "MarkConfirmOverlay"
 internal const val MARK_CONFIRM_MARK_TAG = "MarkConfirmMark"
 internal const val MARK_CONFIRM_CLOSE_TAG = "MarkConfirmClose"
 internal const val VISITATION_DONE_CONFIRM_TAG = "VisitationDoneConfirmOverlay"
 internal const val VISITATION_DONE_CONFIRM_ACTION_TAG = "VisitationDoneConfirmAction"
 internal const val VISITATION_DONE_CONFIRM_CLOSE_TAG = "VisitationDoneConfirmClose"
+
+/**
+ * Modal question shown when play is pressed in competition mode (or the
+ * Ladda row is tapped): [onContinue] makes the "Ladda!" call — the caller
+ * then asks "Alla klara?" — and [onClose] closes without calling.
+ */
+@Composable
+internal fun LoadConfirmationOverlay(
+    onContinue: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) = CallConfirmationOverlay(
+    question = Res.string.load_confirm_question,
+    confirmText = Res.string.ready_confirm_continue,
+    overlayTag = LOAD_CONFIRM_TAG,
+    confirmTag = LOAD_CONTINUE_TAG,
+    closeTag = LOAD_CLOSE_TAG,
+    onConfirm = onContinue,
+    onClose = onClose,
+    modifier = modifier
+)
+
+/**
+ * Modal question after "Ladda!" (or when the Alla klara row is tapped):
+ * [onContinue] makes the "Alla klara!" call and starts the timed sequence,
+ * [onClose] closes without calling.
+ */
+@Composable
+internal fun ReadyConfirmationOverlay(
+    onContinue: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) = CallConfirmationOverlay(
+    question = Res.string.ready_confirm_question,
+    confirmText = Res.string.ready_confirm_continue,
+    overlayTag = READY_CONFIRM_TAG,
+    confirmTag = READY_CONTINUE_TAG,
+    closeTag = READY_CLOSE_TAG,
+    onConfirm = onContinue,
+    onClose = onClose,
+    modifier = modifier
+)
 
 /**
  * Modal question shown when the Markera row is tapped (or the visitation-
@@ -84,8 +135,7 @@ internal fun VisitationDoneConfirmationOverlay(
 )
 
 /**
- * The shared "call this command?" dialog, mirroring the "Alla klara!" one:
- * a modal card over a press-swallowing scrim with a secondary close text
+ * The shared "call this command?" dialog: a modal card over a press-swallowing scrim with a secondary close text
  * and a primary confirm button.
  */
 @Composable

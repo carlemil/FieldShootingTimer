@@ -82,19 +82,13 @@ class CommandHighlightTest {
     }
 
     @Test
-    fun `competition highlights Load through most of the countdown`() {
-        assertEquals(Command.Load, competition(-60f))
-        assertEquals(Command.Load, competition(-10.1f))
-    }
-
-    @Test
-    fun `competition hands over to AllReady for the final ten countdown seconds`() {
-        assertEquals(Command.AllReady, competition(-10f))
+    fun `competition highlights AllReady through the gap before the sequence`() {
+        assertEquals(Command.AllReady, competition(-3f))
         assertEquals(Command.AllReady, competition(-0.1f))
     }
 
     @Test
-    fun `competition follows the segments once the countdown ends`() {
+    fun `competition follows the segments once the gap ends`() {
         assertEquals(Command.TenSecondsLeft, competition(0f))
         assertEquals(Command.Fire, competition(10f))
     }
@@ -110,16 +104,11 @@ class CommandHighlightTest {
     }
 
     @Test
-    fun `competition parked in the countdown highlights AllReady`() {
-        assertEquals(Command.AllReady, competition(-10f, TimerRunningState.NotStarted))
-    }
-
-    @Test
-    fun `awaiting ready confirmation keeps AllReady highlighted at zero`() {
+    fun `awaiting ready confirmation highlights AllReady at zero`() {
         assertEquals(
             Command.AllReady,
             highlightedCommand(
-                TimerMode.Competition, TimerRunningState.Stopped, 0f, competitionSegments,
+                TimerMode.Competition, TimerRunningState.NotStarted, 0f, competitionSegments,
                 awaitingReadyConfirmation = true
             )
         )
