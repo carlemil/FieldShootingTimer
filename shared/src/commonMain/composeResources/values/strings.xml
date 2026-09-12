@@ -36,6 +36,7 @@
     <string name="tutorial_step_mode">Växla mellan tränings- och tävlingsläge i menyn. Tävlingsläget inleds med dialogerna Ladda? och Alla klara? — Fortsätt gör anropet — och avslutas med Visitation klar? och Markera?</string>
     <string name="load_confirm_question">Ladda?</string>
     <string name="ready_confirm_question">Alla klara?</string>
+    <string name="unload_confirm_question">Patron ur?</string>
     <string name="ready_confirm_continue">Fortsätt</string>
     <string name="mark_confirm_question">Markera?</string>
     <string name="mark_confirm_mark">Markera</string>

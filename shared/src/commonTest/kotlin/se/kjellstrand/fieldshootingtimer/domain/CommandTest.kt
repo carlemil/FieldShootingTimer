@@ -16,7 +16,6 @@ class CommandTest {
                 Command.Ready,
                 Command.Fire,
                 Command.CeaseFire,
-                Command.UnloadWeaponDelay,
                 Command.UnloadWeapon,
                 Command.VisitationDelay,
                 Command.Visitation
@@ -54,19 +53,18 @@ class CommandTest {
 
     @Test
     fun `silent pacing delays are timed but neither listed nor audible`() {
-        listOf(Command.UnloadWeaponDelay, Command.VisitationDelay).forEach { cmd ->
+        listOf(Command.VisitationDelay).forEach { cmd ->
             assertTrue(cmd.duration >= 0, "${cmd.name} must be timed")
             assertTrue(!cmd.listed, "${cmd.name} must not get a list row")
             assertNull(cmd.audioPath, "${cmd.name} must be silent")
         }
-        assertEquals(3, Command.UnloadWeaponDelay.duration)
         assertEquals(2, Command.VisitationDelay.duration)
     }
 
     @Test
     fun `listedCommands is entries without the pacing delays`() {
         assertEquals(
-            Command.entries - Command.UnloadWeaponDelay - Command.VisitationDelay,
+            Command.entries - Command.VisitationDelay,
             Command.listedCommands
         )
     }
@@ -99,8 +97,8 @@ class CommandTest {
     }
 
     @Test
-    fun `Command enum has the full set of 12 entries`() {
-        assertEquals(12, Command.entries.size)
+    fun `Command enum has the full set of 11 entries`() {
+        assertEquals(11, Command.entries.size)
     }
 
     @Test

@@ -8,11 +8,11 @@ import kotlin.test.assertEquals
 
 class CommandHighlightTest {
 
-    // Training boundaries: 7, 10, 15, 18 (delay), 21, 25.
-    private val trainingSegments = listOf(7f, 3f, 5f, 3f, 3f, 4f)
+    // Training boundaries: 7, 10, 15, 18, 22.
+    private val trainingSegments = listOf(7f, 3f, 5f, 3f, 4f)
 
-    // Competition boundaries: 7, 10, 15, 18 (delay), 21, 25 (delay), 27, 29.
-    private val competitionSegments = listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f)
+    // Competition boundaries: 7, 10, 15, 18, 22 (delay), 24, 26.
+    private val competitionSegments = listOf(7f, 3f, 5f, 3f, 4f, 2f, 2f)
 
     private fun training(time: Float, state: TimerRunningState = TimerRunningState.Running) =
         highlightedCommand(TimerMode.Training, state, time, trainingSegments)
@@ -31,19 +31,16 @@ class CommandHighlightTest {
         assertEquals(Command.Ready, training(7f))
         assertEquals(Command.Fire, training(10f))
         assertEquals(Command.CeaseFire, training(15f))
-        assertEquals(Command.UnloadWeapon, training(21f))
+        assertEquals(Command.UnloadWeapon, training(18f))
         // The Visitation stretch exists in competition only.
-        assertEquals(Command.Visitation, competition(27f))
+        assertEquals(Command.Visitation, competition(24f))
     }
 
     @Test
-    fun `silent pacing delays keep the previous command highlighted`() {
-        // UnloadWeaponDelay runs 18..21: the cease-fire row stays lit.
-        assertEquals(Command.CeaseFire, training(18f))
-        assertEquals(Command.CeaseFire, training(20.9f))
-        // VisitationDelay runs 25..27 (competition): the unload row stays lit.
-        assertEquals(Command.UnloadWeapon, competition(25f))
-        assertEquals(Command.UnloadWeapon, competition(26.9f))
+    fun `the silent pacing delay keeps the previous command highlighted`() {
+        // VisitationDelay runs 22..24 (competition): the unload row stays lit.
+        assertEquals(Command.UnloadWeapon, competition(22f))
+        assertEquals(Command.UnloadWeapon, competition(23.9f))
     }
 
     @Test

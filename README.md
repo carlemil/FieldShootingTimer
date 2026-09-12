@@ -38,6 +38,8 @@ Two modes:
 - **Competition** prefixes it with the range procedure as two dialogs: **"Ladda?"** and then
   **"Alla klara?"** — each "Fortsätt" makes the call and moves on, and the timed sequence starts a
   few seconds after the all-ready call.
+- In both modes the run pauses after "Eld upphör" and asks **"Patron ur?"** — "Fortsätt" makes
+  the call and runs on.
 
 Practical details: the screen stays awake while the timer runs, audio follows the phone's
 ringer mode on Android (silent means silent) and the silent switch on iOS, portrait and

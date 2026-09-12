@@ -43,6 +43,11 @@ class TimerViewModelTimingTest {
         vm.start()
         advanceTimeBy((total * 1000).toLong() + 500)
         runCurrent()
+        // Parked at the end of CeaseFire behind "Patron ur?" first.
+        assertTrue(vm.uiStateFlow.value.awaitingUnloadConfirmation)
+        vm.confirmUnload()
+        advanceTimeBy((total * 1000).toLong())
+        runCurrent()
 
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
         assertEquals(total, vm.uiStateFlow.value.currentTime, 0.1f)
@@ -60,9 +65,16 @@ class TimerViewModelTimingTest {
         runCurrent()
 
         vm.start()
-        // training total = 7 + 3 + 2 + 3 + 3 + 4 = 22 seconds (the
-        // Visitation stretch is competition-only)
-        advanceTimeBy(23_000)
+        // The run parks at the end of CeaseFire (7 + 3 + 2 + 3 = 15) behind
+        // "Patron ur?"; confirming calls it and runs the last 4s.
+        advanceTimeBy(16_000)
+        runCurrent()
+        assertEquals(
+            listOf(Command.TenSecondsLeft, Command.Ready, Command.Fire, Command.CeaseFire),
+            collected
+        )
+        vm.confirmUnload()
+        advanceTimeBy(5_000)
         runCurrent()
         job.cancel()
 
@@ -72,7 +84,6 @@ class TimerViewModelTimingTest {
                 Command.Ready,
                 Command.Fire,
                 Command.CeaseFire,
-                Command.UnloadWeaponDelay,
                 Command.UnloadWeapon
             ),
             collected
@@ -228,6 +239,10 @@ class TimerViewModelTimingTest {
         vm.start() // resume
         advanceTimeBy((30_000))
         runCurrent()
+        assertNull(vm.frameTimeSeconds(), "anchor must clear at the Patron ur park")
+        vm.confirmUnload()
+        advanceTimeBy((30_000))
+        runCurrent()
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
         assertNull(vm.frameTimeSeconds(), "anchor must clear when the run finishes")
     }
@@ -264,15 +279,15 @@ class TimerViewModelTimingTest {
         vm.setShootingTime(4f)
         runCurrent()
         // Training: TenSecondsLeft=7, Ready=3, Fire=4 (user), CeaseFire=3,
-        // UnloadWeaponDelay=3, UnloadWeapon=4 — no Visitation stretch.
+        // UnloadWeapon=4 — no Visitation stretch.
         assertEquals(
-            listOf(7f, 3f, 4f, 3f, 3f, 4f),
+            listOf(7f, 3f, 4f, 3f, 4f),
             vm.segmentDurationsFlow.value
         )
         vm.setTimerMode(se.kjellstrand.fieldshootingtimer.domain.TimerMode.Competition)
         runCurrent()
         assertEquals(
-            listOf(7f, 3f, 4f, 3f, 3f, 4f, 2f, 2f),
+            listOf(7f, 3f, 4f, 3f, 4f, 2f, 2f),
             vm.segmentDurationsFlow.value
         )
     }
@@ -282,8 +297,8 @@ class TimerViewModelTimingTest {
         val vm = TimerViewModel(externalScope = backgroundScope)
         vm.setShootingTime(5f)
         runCurrent()
-        // Training: 7 + 3 + 5 + 3 + 3 + 4 = 25
-        assertEquals(25f, vm.segmentDurationsFlow.value.sum())
+        // Training: 7 + 3 + 5 + 3 + 4 = 22
+        assertEquals(22f, vm.segmentDurationsFlow.value.sum())
     }
 
     @Test

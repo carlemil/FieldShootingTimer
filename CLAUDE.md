@@ -151,14 +151,16 @@ Each entry bundles `audioPath: String?` (e.g. `"files/eld.mp3"`),
 `stringRes: StringResource` (e.g. `Res.string.command_eld`), a `duration` in
 seconds, and a `color`. The ordered `Command.entries` list with `duration >= 0`
 defines the timer's sequence: `TenSecondsLeft (7s) → Ready (3s) → Fire
-(configurable) → CeaseFire (3s) → UnloadWeaponDelay (3s, silent) →
-UnloadWeapon (4s) → VisitationDelay (2s, silent) → Visitation (2s)`. The
-sequence is mode-aware via `timedCommandsFor(mode)`: training ends after
-UnloadWeapon — the Visitation stretch (and the Visitation/Mark list rows)
-are competition-only. The two
-`*Delay` entries are silent pacing gaps: timed, but `listed = false` (no
-command-list row — `Command.listedCommands` filters them; the highlight
-stays on the previous listed command while one runs). `Load` and `AllReady`
+(configurable) → CeaseFire (3s) → UnloadWeapon (4s) → VisitationDelay (2s,
+silent) → Visitation (2s)`. The sequence is mode-aware via
+`timedCommandsFor(mode)`: training ends after UnloadWeapon — the Visitation
+stretch (and the Visitation/Mark list rows) are competition-only.
+`VisitationDelay` is a silent pacing gap: timed, but `listed = false` (no
+command-list row — `Command.listedCommands` filters it; the highlight stays
+on UnloadWeapon while it runs). UnloadWeapon's call is dialog-driven: the
+run parks at the end of CeaseFire (`awaitingUnloadConfirmation`, "Patron
+ur?"), `confirmUnload()` plays the call and resumes into its 4s beat, and
+the UnloadWeapon row's tap parks there and asks the same (`seekTo`). `Load` and `AllReady`
 have `duration = -1` and a `null` audioPath — list rows only. `Mark` is also
 untimed but has audio: tapping its row plays the call (`seekTo` emits its
 cue). The cease-fire beep setting (`ceaseFireBeep`, persisted) mutes the
@@ -277,7 +279,8 @@ button shows `ceil(-currentTime)` as digits beneath the stop icon
 "Stäng" in either dialog (`dismissLoadConfirmation` /
 `dismissReadyConfirmation`) closes without calling; the AllReady row reopens
 its dialog directly. Both dialogs are `CallConfirmationOverlay` instances in
-`ui/CallConfirmation.kt`, alongside the Visitation-klar and Markera ones. The
+`ui/CallConfirmation.kt`, alongside the Patron-ur, Visitation-klar and
+Markera ones. The
 command-list highlight (`ui/CommandHighlight.kt`, `highlightedCommand(...)`)
 returns `Load` before the start, `AllReady` behind its dialog and through the
 gap, then follows the running segment. Covered by

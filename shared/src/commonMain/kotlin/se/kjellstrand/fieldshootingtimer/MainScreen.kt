@@ -41,6 +41,7 @@ import se.kjellstrand.fieldshootingtimer.ui.VisitationDoneConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.AppMenu
 import se.kjellstrand.fieldshootingtimer.ui.ReadyConfirmationOverlay
+import se.kjellstrand.fieldshootingtimer.ui.UnloadConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
 import se.kjellstrand.fieldshootingtimer.ui.TimerRunningState
 import se.kjellstrand.fieldshootingtimer.ui.TimerViewModel
@@ -283,6 +284,17 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 ReadyConfirmationOverlay(
                     onContinue = timerViewModel::confirmAllReady,
                     onClose = timerViewModel::dismissReadyConfirmation
+                )
+            }
+            // The run parked at the end of CeaseFire (or the row's tap):
+            // "Patron ur?" — make the call and run on, or close.
+            val awaitingUnloadConfirmation by timerViewModel.awaitingUnloadConfirmationFlow.collectAsState(
+                initial = false, context = Dispatchers.Main
+            )
+            if (awaitingUnloadConfirmation) {
+                UnloadConfirmationOverlay(
+                    onContinue = timerViewModel::confirmUnload,
+                    onClose = timerViewModel::dismissUnloadConfirmation
                 )
             }
             // A finished competition round (or the row's tap): "Visitation

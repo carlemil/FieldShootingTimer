@@ -45,4 +45,19 @@ class ReadyConfirmationTest {
         assertEquals(1, continues)
         assertEquals(1, closes)
     }
+
+    @Test
+    fun `the Patron ur dialog has its own tags`() = runComposeUiTest {
+        var continues = 0
+        var closes = 0
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                UnloadConfirmationOverlay(onContinue = { continues++ }, onClose = { closes++ })
+            }
+        }
+        onNodeWithTag(UNLOAD_CONTINUE_TAG).performClick()
+        onNodeWithTag(UNLOAD_CLOSE_TAG).performClick()
+        assertEquals(1, continues)
+        assertEquals(1, closes)
+    }
 }

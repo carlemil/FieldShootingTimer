@@ -19,7 +19,7 @@ class CuePlaybackTest {
 
     @Test
     fun `silent pacing delays never play a voice`() {
-        listOf(Command.UnloadWeaponDelay, Command.VisitationDelay).forEach { command ->
+        listOf(Command.VisitationDelay).forEach { command ->
             assertFalse(shouldPlayCueVoice(command, ceaseFireBeep = false))
             assertFalse(shouldPlayCueVoice(command, ceaseFireBeep = true))
         }

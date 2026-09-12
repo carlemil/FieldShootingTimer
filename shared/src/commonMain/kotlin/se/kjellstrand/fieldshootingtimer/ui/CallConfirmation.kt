@@ -32,6 +32,7 @@ import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_mark
 import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_continue
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_question
+import se.kjellstrand.fieldshootingtimer.resources.unload_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.visitation_done_confirm_action
 import se.kjellstrand.fieldshootingtimer.resources.visitation_done_confirm_question
 import se.kjellstrand.fieldshootingtimer.ui.theme.BlackColor
@@ -43,6 +44,9 @@ internal const val LOAD_CLOSE_TAG = "LoadConfirmClose"
 internal const val READY_CONFIRM_TAG = "ReadyConfirmOverlay"
 internal const val READY_CONTINUE_TAG = "ReadyConfirmContinue"
 internal const val READY_CLOSE_TAG = "ReadyConfirmClose"
+internal const val UNLOAD_CONFIRM_TAG = "UnloadConfirmOverlay"
+internal const val UNLOAD_CONTINUE_TAG = "UnloadConfirmContinue"
+internal const val UNLOAD_CLOSE_TAG = "UnloadConfirmClose"
 internal const val MARK_CONFIRM_TAG = "MarkConfirmOverlay"
 internal const val MARK_CONFIRM_MARK_TAG = "MarkConfirmMark"
 internal const val MARK_CONFIRM_CLOSE_TAG = "MarkConfirmClose"
@@ -87,6 +91,27 @@ internal fun ReadyConfirmationOverlay(
     overlayTag = READY_CONFIRM_TAG,
     confirmTag = READY_CONTINUE_TAG,
     closeTag = READY_CLOSE_TAG,
+    onConfirm = onContinue,
+    onClose = onClose,
+    modifier = modifier
+)
+
+/**
+ * Modal question when the run reaches the end of CeaseFire (or the row is
+ * tapped): [onContinue] makes the "Patron ur!" call and runs on,
+ * [onClose] closes without calling.
+ */
+@Composable
+internal fun UnloadConfirmationOverlay(
+    onContinue: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) = CallConfirmationOverlay(
+    question = Res.string.unload_confirm_question,
+    confirmText = Res.string.ready_confirm_continue,
+    overlayTag = UNLOAD_CONFIRM_TAG,
+    confirmTag = UNLOAD_CONTINUE_TAG,
+    closeTag = UNLOAD_CLOSE_TAG,
     onConfirm = onContinue,
     onClose = onClose,
     modifier = modifier

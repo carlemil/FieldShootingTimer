@@ -61,6 +61,9 @@ data class TimerUiState(
     // the timer is parked at the finished end and the "Markera?" dialog
     // decides whether the call is made.
     val awaitingMarkConfirmation: Boolean = false,
+    // The run reached the end of CeaseFire (or the row was tapped) and is
+    // parked there: "Patron ur?" — confirming makes the call and runs on.
+    val awaitingUnloadConfirmation: Boolean = false,
     // A competition run just finished (or the row was tapped): "Visitation
     // klar?" — confirming makes the call and hands over to the Mark dialog.
     val awaitingVisitationDoneConfirmation: Boolean = false
@@ -106,6 +109,8 @@ class TimerViewModel(
     val parkedBySeekFlow = _uiState.map { it.parkedBySeek }.distinctUntilChanged()
     val awaitingMarkConfirmationFlow =
         _uiState.map { it.awaitingMarkConfirmation }.distinctUntilChanged()
+    val awaitingUnloadConfirmationFlow =
+        _uiState.map { it.awaitingUnloadConfirmation }.distinctUntilChanged()
     val awaitingVisitationDoneConfirmationFlow =
         _uiState.map { it.awaitingVisitationDoneConfirmation }.distinctUntilChanged()
 
@@ -303,9 +308,28 @@ class TimerViewModel(
             emitPassedCues(initialTime, cues)
             emitPassedThumbs(initialTime, thumbs)
 
+            // The run does not roll straight into "Patron ur!": at the end
+            // of CeaseFire it parks and asks. Only when crossing that point
+            // from before — a run resumed from it continues normally.
+            val unloadStart = cues.first { it.second == Command.UnloadWeapon }.first
+            val pauseAtUnload = initialTime < unloadStart
+
             while (isActive && _uiState.value.timerRunningState == TimerRunningState.Running) {
                 delay(tickMs)
                 val elapsed = (timeSourceMs() - startEpochMs) / 1000f
+                if (pauseAtUnload && elapsed >= unloadStart) {
+                    runAnchorEpochMs = null
+                    setCurrentTime(unloadStart)
+                    // The call itself waits for the dialog; everything else
+                    // at the boundary (end flag, beep) fires now.
+                    markPlayed(Command.UnloadWeapon, cues)
+                    emitPassedCues(unloadStart, cues)
+                    emitPassedThumbs(unloadStart, thumbs)
+                    emitPassedBeep(unloadStart, beepTime)
+                    _uiState.update { it.copy(awaitingUnloadConfirmation = true) }
+                    setTimerState(TimerRunningState.Stopped)
+                    break
+                }
                 if (elapsed >= total) {
                     runAnchorEpochMs = null
                     setCurrentTime(total)
@@ -354,6 +378,7 @@ class TimerViewModel(
             it.copy(
                 awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
+                awaitingUnloadConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
                 parkedBySeek = false
@@ -439,12 +464,35 @@ class TimerViewModel(
         // resumes from the parked spot (its cue sits exactly there), and the
         // dialog-driven calls wait for their dialogs.
         when (command) {
+            Command.UnloadWeapon -> {
+                // The row asks before calling; the call is not left for the
+                // timer to fire on resume.
+                markPlayed(command, buildAudioCues(shootingDuration, mode))
+                _uiState.update { it.copy(awaitingUnloadConfirmation = true) }
+            }
             Command.Mark ->
                 _uiState.update { it.copy(awaitingMarkConfirmation = true) }
             Command.VisitationDone ->
                 _uiState.update { it.copy(awaitingVisitationDoneConfirmation = true) }
             else -> Unit
         }
+    }
+
+    /**
+     * "Fortsätt" in the "Patron ur?" dialog: make the call and run on —
+     * through the 4s beat into Visitation in competition, to the finished
+     * end in training.
+     */
+    fun confirmUnload() {
+        if (!_uiState.value.awaitingUnloadConfirmation) return
+        _uiState.update { it.copy(awaitingUnloadConfirmation = false) }
+        playRowCall(Command.UnloadWeapon)
+        start()
+    }
+
+    /** "Stäng" in the "Patron ur?" dialog: close without calling. */
+    fun dismissUnloadConfirmation() {
+        _uiState.update { it.copy(awaitingUnloadConfirmation = false) }
     }
 
     /**
@@ -479,7 +527,12 @@ class TimerViewModel(
         _uiState.update { it.copy(awaitingMarkConfirmation = false) }
     }
 
-    /** Plays a dialog-confirmed call (Load, AllReady, VisitationDone, Mark). */
+    /** Counts [command]'s cue as already fired for the rest of the run. */
+    private fun markPlayed(command: Command, cues: List<Pair<Float, Command>>) {
+        cues.indices.filter { cues[it].second == command }.forEach { playedCueIndices.add(it) }
+    }
+
+    /** Plays a dialog-confirmed call (Load, AllReady, UnloadWeapon, VisitationDone, Mark). */
     private fun playRowCall(command: Command) {
         if (command.audioPath == null) return
         _cueEventsFlow.tryEmit(command)
@@ -503,6 +556,7 @@ class TimerViewModel(
             it.copy(
                 awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
+                awaitingUnloadConfirmation = false,
                 awaitingMarkConfirmation = false,
                 awaitingVisitationDoneConfirmation = false,
                 parkedBySeek = true

@@ -40,8 +40,9 @@ enum class Command(
     Ready("files/fardiga.mp3", Res.string.command_ready, 3, LightGrayColor, onDial = true),
     Fire("files/eld.mp3", Res.string.command_fire, 0, LightGreenColor, onDial = true),
     CeaseFire("files/eld_upp_hor.mp3", Res.string.command_cease_fire, 3, MutedYellowColor, onDial = true),
-    // The beat after the cease-fire moment before "Patron ur!" is called.
-    UnloadWeaponDelay(null, Res.string.command_unload_weapon, 3, LightGrayColor, listed = false),
+    // Timed, but its call is dialog-driven: the run parks at the end of
+    // CeaseFire and asks "Patron ur?"; confirming makes the call and runs
+    // this 4s beat before Visitation.
     UnloadWeapon("files/patron_ur_proppa_vapen.mp3", Res.string.command_unload_weapon, 4, RedColor),
     // The beat before "Visitation!" is called.
     VisitationDelay(null, Res.string.command_inspection, 2, LightGrayColor, listed = false),

@@ -195,6 +195,11 @@ class TimerViewModelCountdownTest {
         vm.confirmAllReady()
         advanceTimeBy(3_000 + (total * 1000).toLong() + 500)
         runCurrent()
+        // Parked behind "Patron ur?" at the end of CeaseFire.
+        assertTrue(vm.uiStateFlow.value.awaitingUnloadConfirmation)
+        vm.confirmUnload()
+        advanceTimeBy((total * 1000).toLong())
+        runCurrent()
 
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
         assertEquals(total, vm.uiStateFlow.value.currentTime, 0.1f)

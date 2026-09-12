@@ -18,8 +18,8 @@ import kotlin.test.assertTrue
 class TimerViewModelSeekTest {
 
     // Training segment starts with shooting=5: TenSecondsLeft 0, Ready 7,
-    // Fire 10, CeaseFire 15, UnloadWeaponDelay 18, UnloadWeapon 21;
-    // total 25 (the Visitation stretch is competition-only).
+    // Fire 10, CeaseFire 15, UnloadWeapon 18 (behind its dialog);
+    // total 22 (the Visitation stretch is competition-only).
 
     @Test
     fun `seekTo while running pauses at the tapped command's start`() = runTest {
@@ -71,18 +71,19 @@ class TimerViewModelSeekTest {
 
         assertEquals(listOf(Command.CeaseFire), collected)
 
-        advanceTimeBy(11_000) // 15 → past 25: the delay (18) and UnloadWeapon (21)
+        advanceTimeBy(4_000) // 15 → past 18: parks behind "Patron ur?"
+        runCurrent()
+        assertEquals(listOf(Command.CeaseFire), collected)
+        assertTrue(vm.uiStateFlow.value.awaitingUnloadConfirmation)
+        assertEquals(TimerRunningState.Stopped, vm.uiStateFlow.value.timerRunningState)
+
+        vm.confirmUnload() // the call, then the run continues to the end
+        advanceTimeBy(5_000)
         runCurrent()
         job.cancel()
 
-        assertEquals(
-            listOf(
-                Command.CeaseFire,
-                Command.UnloadWeaponDelay,
-                Command.UnloadWeapon
-            ),
-            collected
-        )
+        assertEquals(listOf(Command.CeaseFire, Command.UnloadWeapon), collected)
+        assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
     }
 
     @Test
@@ -281,7 +282,7 @@ class TimerViewModelSeekTest {
         }
         runCurrent()
 
-        vm.seekTo(Command.Visitation) // 27s of 29 in competition
+        vm.seekTo(Command.Visitation) // 24s of 26 in competition
         runCurrent()
         vm.start()
         advanceTimeBy(3_000)
@@ -301,13 +302,14 @@ class TimerViewModelSeekTest {
         assertTrue(vm.uiStateFlow.value.awaitingMarkConfirmation)
         job.cancel()
 
-        // Training's run ends after UnloadWeapon — no dialogs.
+        // Training's run ends after UnloadWeapon — only its own dialog.
         vm.reset()
         vm.setTimerMode(TimerMode.Training)
         runCurrent()
-        vm.seekTo(Command.UnloadWeapon) // 21s of 25 in training
+        vm.seekTo(Command.UnloadWeapon) // 18s of 22 in training, asks first
         runCurrent()
-        vm.start()
+        assertTrue(vm.uiStateFlow.value.awaitingUnloadConfirmation)
+        vm.confirmUnload()
         advanceTimeBy(5_000)
         runCurrent()
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
@@ -324,7 +326,7 @@ class TimerViewModelSeekTest {
         vm.seekTo(Command.VisitationDone)
         runCurrent()
 
-        assertEquals(29f, vm.uiStateFlow.value.currentTime)
+        assertEquals(26f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
         assertTrue(vm.uiStateFlow.value.awaitingVisitationDoneConfirmation)
     }
@@ -337,7 +339,7 @@ class TimerViewModelSeekTest {
         vm.seekTo(Command.Mark)
         runCurrent()
 
-        assertEquals(25f, vm.uiStateFlow.value.currentTime)
+        assertEquals(22f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)
     }
 

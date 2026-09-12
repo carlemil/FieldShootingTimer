@@ -9,18 +9,18 @@ class TimerPlanTest {
     @Test
     fun `segment durations mirror the mode's timed commands with Fire replaced`() {
         // Competition runs the full sequence including the silent pacing
-        // delays (3s before UnloadWeapon, 2s before Visitation)...
+        // delay before Visitation...
         assertEquals(
-            listOf(7f, 3f, 5f, 3f, 3f, 4f, 2f, 2f),
+            listOf(7f, 3f, 5f, 3f, 4f, 2f, 2f),
             buildSegmentDurations(5f, TimerMode.Competition)
         )
         assertEquals(
-            listOf(7f, 3f, 2.5f, 3f, 3f, 4f, 2f, 2f),
+            listOf(7f, 3f, 2.5f, 3f, 4f, 2f, 2f),
             buildSegmentDurations(2.5f, TimerMode.Competition)
         )
         // ...while training ends after UnloadWeapon.
         assertEquals(
-            listOf(7f, 3f, 5f, 3f, 3f, 4f),
+            listOf(7f, 3f, 5f, 3f, 4f),
             buildSegmentDurations(5f, TimerMode.Training)
         )
     }
