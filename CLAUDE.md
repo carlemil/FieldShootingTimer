@@ -258,32 +258,24 @@ contract: live updates during the gesture (`setThumbValues` /
 
 **Competition vs training mode (`domain/TimerMode.kt`).** Training runs the
 sequence immediately and hides the `Load`/`AllReady` rows from the command
-list. Competition opens with two dialogs instead of a countdown: play (or the
-Ladda row) sets `awaitingLoadConfirmation` and shows "Ladda?"; `confirmLoad()`
-plays the call and sets `awaitingReadyConfirmation` ("Alla klara?");
-`confirmAllReady()` plays that call and starts the run at
-`-COMPETITION_ALL_READY_GAP_SECONDS` (3s, `domain/TimerPlan.kt`) — a silent
-beat so the two clips don't overlap — rolling straight through 0 into the
-sequence. Every timed cue is ≥ 0, so nothing fires during the gap; the play
-button shows `ceil(-currentTime)` as digits beneath the stop icon
-(`countdownSecondsOrNull`) and `stop()` there cancels back to `NotStarted`.
-"Stäng" in either dialog (`dismissLoadConfirmation` /
-`dismissReadyConfirmation`) closes without calling; the AllReady row reopens
-its dialog directly. Both dialogs are `CallConfirmationOverlay` instances in
-`ui/CallConfirmation.kt`, alongside the Patron-ur, Visitation,
-Visitation-klar and Markera ones. The
-command-list highlight (`ui/CommandHighlight.kt`, `highlightedCommand(...)`)
-returns `Load` before the start, `AllReady` behind its dialog and through the
-gap, then follows the running segment. Covered by
+list. Competition opens with three chained dialogs: play (or the Ladda row)
+sets `awaitingLoadConfirmation` and shows "Ladda?"; `confirmLoad()` plays
+the call and sets `awaitingReadyConfirmation` ("Alla klara?");
+`confirmAllReady()` plays that call and sets `awaitingTenSecondsConfirmation`
+("10 sekunder kvar?"); `confirmTenSeconds()` parks at 0 and starts the run,
+whose first cue is that call. "Stäng" in any of them (`dismissXConfirmation`)
+closes without calling; the AllReady row reopens its dialog directly. All
+dialogs are `CallConfirmationOverlay` instances in `ui/CallConfirmation.kt`.
+The command-list highlight (`ui/CommandHighlight.kt`,
+`highlightedCommand(...)`) returns `Load` before the start, each open
+dialog's own row, then follows the running segment. Covered by
 `TimerViewModelCountdownTest`, `CommandHighlightTest` and
 `ReadyConfirmationTest`.
 
-**The play button's digits (`ui/TimerWithPlayButton.kt`).** Two pure
-functions feed `PlayButton`'s `countdownSeconds`, and whenever it is
-non-null the state icon (play/stop/reset) shrinks and the digits sit
-beneath it. `countdownSecondsOrNull` covers the competition gap described
-above and wins while it is `Running`; otherwise
-`shootingSecondsRemainingOrNull` counts the **shooting stretch** — the
+**The play button's digits (`ui/TimerWithPlayButton.kt`).**
+`shootingSecondsRemainingOrNull` feeds `PlayButton`'s `countdownSeconds`,
+and whenever it is non-null the state icon (play/stop/reset) shrinks and
+the digits sit beneath it. It counts the **shooting stretch** — the
 dial's green (Fire) plus yellow (CeaseFire) segments, i.e.
 `fireStartSeconds()`..`ceaseFireEndSeconds(shootingDuration)`. Before that
 stretch (a parked timer, the gray lead-in, the button at rest) it reads the

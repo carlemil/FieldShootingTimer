@@ -7,9 +7,8 @@ import se.kjellstrand.fieldshootingtimer.domain.TimerMode
  * The command to highlight in the command list.
  *
  * An open dialog owns its row. Competition mode owns the pre-sequence
- * phase: "Ladda!" before the start, "Alla klara!" through the silent gap
- * (negative [currentTime]). From 0 onward — and always in training mode —
- * the highlight follows the running segment, mapped back through
+ * phase: "Ladda!" before the start. From 0 onward — and always in training
+ * mode — the highlight follows the running segment, mapped back through
  * [Command.timedCommands] so reordering the enum can't silently shift it.
  * A finished timer sits on the last call of its mode's closing chain.
  */
@@ -19,12 +18,14 @@ internal fun highlightedCommand(
     currentTime: Float,
     segmentDurations: List<Float>,
     awaitingReadyConfirmation: Boolean = false,
+    awaitingTenSecondsConfirmation: Boolean = false,
     parkedBySeek: Boolean = false,
     awaitingUnloadConfirmation: Boolean = false,
     awaitingVisitationConfirmation: Boolean = false,
     awaitingVisitationDoneConfirmation: Boolean = false
 ): Command {
     if (awaitingReadyConfirmation) return Command.AllReady
+    if (awaitingTenSecondsConfirmation) return Command.TenSecondsLeft
     if (awaitingUnloadConfirmation) return Command.UnloadWeapon
     if (awaitingVisitationConfirmation) return Command.Visitation
     if (awaitingVisitationDoneConfirmation) return Command.VisitationDone
@@ -38,8 +39,6 @@ internal fun highlightedCommand(
         if (runningState == TimerRunningState.NotStarted && currentTime == 0f && !parkedBySeek) {
             return Command.Load
         }
-        // The silent gap after the confirmed "Alla klara!" call.
-        if (currentTime < 0f) return Command.AllReady
     }
     var accumulatedTime = 0f
     segmentDurations.forEachIndexed { index, duration ->

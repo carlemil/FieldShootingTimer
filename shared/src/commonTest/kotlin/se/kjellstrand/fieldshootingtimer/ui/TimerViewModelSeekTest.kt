@@ -166,12 +166,11 @@ class TimerViewModelSeekTest {
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
         assertTrue(vm.uiStateFlow.value.awaitingReadyConfirmation)
 
-        // Confirming runs the sequence after the gap, skipping Ladda.
+        // Confirming asks 10 sekunder kvar next, skipping Ladda.
         vm.confirmAllReady()
-        advanceTimeBy(1_000)
         runCurrent()
-        val t = vm.uiStateFlow.value.currentTime
-        assertTrue(t in -2.1f..-1.9f, "expected ~-2 after 1s of the gap, got $t")
+        assertTrue(vm.uiStateFlow.value.awaitingTenSecondsConfirmation)
+        assertFalse(vm.uiStateFlow.value.awaitingLoadConfirmation)
     }
 
     @Test

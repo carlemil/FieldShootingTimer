@@ -15,8 +15,8 @@ import kotlin.test.assertTrue
 
 /**
  * Competition-mode preparation: play asks "Ladda?", confirming calls it and
- * asks "Alla klara?", confirming that calls it and runs the sequence after
- * the short silent gap (currentTime -3..0).
+ * asks "Alla klara?", confirming that calls it and asks "10 sekunder kvar?",
+ * confirming that runs the sequence (whose first cue is that call).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimerViewModelCountdownTest {
@@ -80,7 +80,7 @@ class TimerViewModelCountdownTest {
     }
 
     @Test
-    fun `confirming Alla klara calls it and runs the sequence after the gap`() = runTest {
+    fun `confirming Alla klara calls it and asks 10 sekunder kvar`() = runTest {
         val vm = competitionVm()
         val cues = collectCues(vm)
         vm.start()
@@ -88,21 +88,36 @@ class TimerViewModelCountdownTest {
         vm.confirmAllReady()
         runCurrent()
         assertFalse(vm.uiStateFlow.value.awaitingReadyConfirmation)
+        assertTrue(vm.uiStateFlow.value.awaitingTenSecondsConfirmation)
+        assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
+        assertEquals(listOf(Command.Load, Command.AllReady), cues)
+
+        advanceTimeBy(5_000) // nothing runs while the dialog is open
+        runCurrent()
+        assertEquals(listOf(Command.Load, Command.AllReady), cues)
+        assertEquals(0f, vm.uiStateFlow.value.currentTime)
+    }
+
+    @Test
+    fun `confirming 10 sekunder kvar runs the sequence with the call as its first cue`() = runTest {
+        val vm = competitionVm()
+        val cues = collectCues(vm)
+        vm.start()
+        vm.confirmLoad()
+        vm.confirmAllReady()
+        vm.confirmTenSeconds()
+        runCurrent()
+        assertFalse(vm.uiStateFlow.value.awaitingTenSecondsConfirmation)
         assertEquals(TimerRunningState.Running, vm.uiStateFlow.value.timerRunningState)
-        assertTrue(
-            vm.uiStateFlow.value.currentTime <= -2.9f,
-            "expected the -3s gap, got ${vm.uiStateFlow.value.currentTime}"
-        )
-        assertEquals(listOf(Command.Load, Command.AllReady), cues)
-
-        advanceTimeBy(2_000) // still in the gap: nothing more
-        runCurrent()
-        assertEquals(listOf(Command.Load, Command.AllReady), cues)
-
-        advanceTimeBy(1_500) // past 0: the first timed call
-        runCurrent()
         assertEquals(listOf(Command.Load, Command.AllReady, Command.TenSecondsLeft), cues)
-        assertTrue(vm.uiStateFlow.value.currentTime > 0f)
+
+        advanceTimeBy(7_500) // past Ready at 7
+        runCurrent()
+        assertEquals(
+            listOf(Command.Load, Command.AllReady, Command.TenSecondsLeft, Command.Ready),
+            cues
+        )
+        assertTrue(vm.uiStateFlow.value.currentTime > 7f)
     }
 
     @Test
@@ -111,6 +126,7 @@ class TimerViewModelCountdownTest {
         val cues = collectCues(vm)
         vm.confirmLoad()
         vm.confirmAllReady()
+        vm.confirmTenSeconds()
         runCurrent()
         assertEquals(emptyList(), cues)
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
@@ -135,32 +151,30 @@ class TimerViewModelCountdownTest {
     }
 
     @Test
-    fun `stop in the gap cancels back to NotStarted at zero`() = runTest {
+    fun `closing 10 sekunder kvar leaves the timer at rest and play asks Ladda again`() = runTest {
         val vm = competitionVm()
         vm.start()
         vm.confirmLoad()
         vm.confirmAllReady()
-        advanceTimeBy(1_000)
+        vm.dismissTenSecondsConfirmation()
         runCurrent()
-        vm.stop()
-        runCurrent()
-
+        assertFalse(vm.uiStateFlow.value.awaitingTenSecondsConfirmation)
         assertEquals(0f, vm.uiStateFlow.value.currentTime)
         assertEquals(TimerRunningState.NotStarted, vm.uiStateFlow.value.timerRunningState)
 
-        // Starting again asks Ladda afresh.
         vm.start()
         runCurrent()
         assertTrue(vm.uiStateFlow.value.awaitingLoadConfirmation)
     }
 
     @Test
-    fun `stop after the gap pauses the sequence normally`() = runTest {
+    fun `stop pauses the sequence normally`() = runTest {
         val vm = competitionVm()
         vm.start()
         vm.confirmLoad()
         vm.confirmAllReady()
-        advanceTimeBy(8_000) // 5s into the sequence
+        vm.confirmTenSeconds()
+        advanceTimeBy(5_000) // 5s into the sequence
         runCurrent()
         vm.stop()
         runCurrent()
@@ -184,7 +198,7 @@ class TimerViewModelCountdownTest {
     }
 
     @Test
-    fun `full competition run finishes after the gap plus sequence`() = runTest {
+    fun `full competition run finishes after the dialogs plus sequence`() = runTest {
         val vm = competitionVm()
         vm.setShootingTime(2f)
         runCurrent()
@@ -193,7 +207,8 @@ class TimerViewModelCountdownTest {
         vm.start()
         vm.confirmLoad()
         vm.confirmAllReady()
-        advanceTimeBy(3_000 + (total * 1000).toLong() + 500)
+        vm.confirmTenSeconds()
+        advanceTimeBy((total * 1000).toLong() + 500)
         runCurrent()
 
         assertEquals(TimerRunningState.Finished, vm.uiStateFlow.value.timerRunningState)

@@ -32,6 +32,10 @@ fun SettingsPanel(
     val awaitingReadyConfirmation by timerViewModel.awaitingReadyConfirmationFlow.collectAsState(
         initial = false, context = Dispatchers.Main
     )
+    val awaitingTenSecondsConfirmation by
+        timerViewModel.awaitingTenSecondsConfirmationFlow.collectAsState(
+            initial = false, context = Dispatchers.Main
+        )
     val ceaseFireBeep by timerViewModel.ceaseFireBeepFlow.collectAsState(
         initial = false, context = Dispatchers.Main
     )
@@ -63,6 +67,7 @@ fun SettingsPanel(
         currentTime = currentTime,
         segmentDurations = segmentDurations,
         awaitingReadyConfirmation = awaitingReadyConfirmation,
+        awaitingTenSecondsConfirmation = awaitingTenSecondsConfirmation,
         parkedBySeek = parkedBySeek,
         awaitingUnloadConfirmation = awaitingUnloadConfirmation,
         awaitingVisitationConfirmation = awaitingVisitationConfirmation,

@@ -14,16 +14,8 @@ import kotlin.math.ceil
 import kotlin.math.max
 
 /**
- * Remaining whole seconds of the silent gap before the sequence while
- * [currentTime] is negative, else null.
- */
-internal fun countdownSecondsOrNull(currentTime: Float): Int? =
-    if (currentTime >= 0f) null else ceil(-currentTime).toInt()
-
-/**
  * Remaining whole seconds of the shooting stretch — the dial's green (Fire)
- * plus yellow (CeaseFire) segments — counted down the same way the
- * preparation countdown counts its own phase.
+ * plus yellow (CeaseFire) segments.
  *
  * Before the stretch starts (the gray lead-in, a parked timer, the play
  * button at rest) it reads the full total, so the dialled-in shooting time is
@@ -72,12 +64,7 @@ internal fun TimerWithPlayButton(
             onClickPlayButton = onClickPlayButton,
             timerRunningState = timerRunningState,
             timerSize = timerSize,
-            // The preparation countdown owns the digits while it actually
-            // runs — a timer parked at a negative time by seekTo falls
-            // through to the shooting total instead.
-            countdownSeconds = countdownSecondsOrNull(currentTime)
-                ?.takeIf { timerRunningState == TimerRunningState.Running }
-                ?: shootingSecondsRemainingOrNull(currentTime, shootingDuration)
+            countdownSeconds = shootingSecondsRemainingOrNull(currentTime, shootingDuration)
         )
     }
 }

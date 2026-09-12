@@ -41,6 +41,7 @@ import se.kjellstrand.fieldshootingtimer.ui.VisitationDoneConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.PortraitLayout
 import se.kjellstrand.fieldshootingtimer.ui.AppMenu
 import se.kjellstrand.fieldshootingtimer.ui.ReadyConfirmationOverlay
+import se.kjellstrand.fieldshootingtimer.ui.TenSecondsConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.UnloadConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.VisitationConfirmationOverlay
 import se.kjellstrand.fieldshootingtimer.ui.SettingsPanel
@@ -285,6 +286,15 @@ internal fun MainScreen(timerViewModel: TimerViewModel) {
                 ReadyConfirmationOverlay(
                     onContinue = timerViewModel::confirmAllReady,
                     onClose = timerViewModel::dismissReadyConfirmation
+                )
+            }
+            // Then "10 sekunder kvar?" — confirming starts the clock.
+            val awaitingTenSeconds by timerViewModel.awaitingTenSecondsConfirmationFlow
+                .collectAsState(initial = false, context = Dispatchers.Main)
+            if (awaitingTenSeconds) {
+                TenSecondsConfirmationOverlay(
+                    onContinue = timerViewModel::confirmTenSeconds,
+                    onClose = timerViewModel::dismissTenSecondsConfirmation
                 )
             }
             // The finished run (or the row's tap): "Patron ur?" — make the

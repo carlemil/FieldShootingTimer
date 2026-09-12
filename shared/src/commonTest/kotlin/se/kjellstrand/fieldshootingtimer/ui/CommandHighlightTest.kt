@@ -92,13 +92,18 @@ class CommandHighlightTest {
     }
 
     @Test
-    fun `competition highlights AllReady through the gap before the sequence`() {
-        assertEquals(Command.AllReady, competition(-3f))
-        assertEquals(Command.AllReady, competition(-0.1f))
+    fun `awaiting the 10 sekunder kvar confirmation highlights its row at zero`() {
+        assertEquals(
+            Command.TenSecondsLeft,
+            highlightedCommand(
+                TimerMode.Competition, TimerRunningState.NotStarted, 0f, competitionSegments,
+                awaitingTenSecondsConfirmation = true
+            )
+        )
     }
 
     @Test
-    fun `competition follows the segments once the gap ends`() {
+    fun `competition follows the segments once running`() {
         assertEquals(Command.TenSecondsLeft, competition(0f))
         assertEquals(Command.Fire, competition(10f))
     }

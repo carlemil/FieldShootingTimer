@@ -9,14 +9,6 @@ import kotlin.math.roundToInt
  * on any target.
  */
 
-/**
- * The silent beat between the confirmed "Alla klara!" call and the first
- * timed call, so the two clips never overlap: a competition run starts at
- * currentTime -[COMPETITION_ALL_READY_GAP_SECONDS] and rolls into the
- * sequence at 0. Every cue time is >= 0, so nothing fires during the gap.
- */
-internal const val COMPETITION_ALL_READY_GAP_SECONDS = 3f
-
 /** Second at which the Fire segment starts (end of the pre-fire commands). */
 internal fun fireStartSeconds(): Float =
     (Command.TenSecondsLeft.duration + Command.Ready.duration).toFloat()

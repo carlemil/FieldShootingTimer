@@ -47,6 +47,21 @@ class ReadyConfirmationTest {
     }
 
     @Test
+    fun `the 10 sekunder kvar dialog has its own tags`() = runComposeUiTest {
+        var continues = 0
+        var closes = 0
+        setContent {
+            FieldShootingTimerTheme(dynamicColor = false) {
+                TenSecondsConfirmationOverlay(onContinue = { continues++ }, onClose = { closes++ })
+            }
+        }
+        onNodeWithTag(TEN_SECONDS_CONTINUE_TAG).performClick()
+        onNodeWithTag(TEN_SECONDS_CLOSE_TAG).performClick()
+        assertEquals(1, continues)
+        assertEquals(1, closes)
+    }
+
+    @Test
     fun `the Patron ur dialog has its own tags`() = runComposeUiTest {
         var continues = 0
         var closes = 0

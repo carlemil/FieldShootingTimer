@@ -32,6 +32,7 @@ import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_mark
 import se.kjellstrand.fieldshootingtimer.resources.mark_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_continue
 import se.kjellstrand.fieldshootingtimer.resources.ready_confirm_question
+import se.kjellstrand.fieldshootingtimer.resources.ten_seconds_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.unload_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.visitation_confirm_question
 import se.kjellstrand.fieldshootingtimer.resources.visitation_done_confirm_action
@@ -45,6 +46,9 @@ internal const val LOAD_CLOSE_TAG = "LoadConfirmClose"
 internal const val READY_CONFIRM_TAG = "ReadyConfirmOverlay"
 internal const val READY_CONTINUE_TAG = "ReadyConfirmContinue"
 internal const val READY_CLOSE_TAG = "ReadyConfirmClose"
+internal const val TEN_SECONDS_CONFIRM_TAG = "TenSecondsConfirmOverlay"
+internal const val TEN_SECONDS_CONTINUE_TAG = "TenSecondsConfirmContinue"
+internal const val TEN_SECONDS_CLOSE_TAG = "TenSecondsConfirmClose"
 internal const val UNLOAD_CONFIRM_TAG = "UnloadConfirmOverlay"
 internal const val UNLOAD_CONTINUE_TAG = "UnloadConfirmContinue"
 internal const val UNLOAD_CLOSE_TAG = "UnloadConfirmClose"
@@ -95,6 +99,26 @@ internal fun ReadyConfirmationOverlay(
     overlayTag = READY_CONFIRM_TAG,
     confirmTag = READY_CONTINUE_TAG,
     closeTag = READY_CLOSE_TAG,
+    onConfirm = onContinue,
+    onClose = onClose,
+    modifier = modifier
+)
+
+/**
+ * Competition's last question before the clock: [onContinue] starts the
+ * timed sequence, whose first cue is the "10 sekunder kvar!" call.
+ */
+@Composable
+internal fun TenSecondsConfirmationOverlay(
+    onContinue: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) = CallConfirmationOverlay(
+    question = Res.string.ten_seconds_confirm_question,
+    confirmText = Res.string.ready_confirm_continue,
+    overlayTag = TEN_SECONDS_CONFIRM_TAG,
+    confirmTag = TEN_SECONDS_CONTINUE_TAG,
+    closeTag = TEN_SECONDS_CLOSE_TAG,
     onConfirm = onContinue,
     onClose = onClose,
     modifier = modifier

@@ -21,7 +21,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import kotlin.time.TimeSource
-import se.kjellstrand.fieldshootingtimer.domain.COMPETITION_ALL_READY_GAP_SECONDS
 import se.kjellstrand.fieldshootingtimer.domain.TimerMode
 import se.kjellstrand.fieldshootingtimer.domain.beepTimeSeconds
 import se.kjellstrand.fieldshootingtimer.domain.boundaryFlagSeconds
@@ -51,8 +50,11 @@ data class TimerUiState(
     // confirming makes the call and hands over to "Alla klara?".
     val awaitingLoadConfirmation: Boolean = false,
     // Competition only: the "Alla klara?" dialog is open; confirming makes
-    // the call and starts the timed sequence.
+    // the call and hands over to "10 sekunder kvar?".
     val awaitingReadyConfirmation: Boolean = false,
+    // Competition only: the "10 sekunder kvar?" dialog is open; confirming
+    // starts the timed sequence, whose first cue is that call.
+    val awaitingTenSecondsConfirmation: Boolean = false,
     // True when the user explicitly parked the timer (row tap or hand
     // scrub). Distinguishes "parked at 0" from an untouched timer, which
     // competition mode otherwise treats as "run the countdown first".
@@ -107,6 +109,8 @@ class TimerViewModel(
         _uiState.map { it.awaitingLoadConfirmation }.distinctUntilChanged()
     val awaitingReadyConfirmationFlow =
         _uiState.map { it.awaitingReadyConfirmation }.distinctUntilChanged()
+    val awaitingTenSecondsConfirmationFlow =
+        _uiState.map { it.awaitingTenSecondsConfirmation }.distinctUntilChanged()
     val parkedBySeekFlow = _uiState.map { it.parkedBySeek }.distinctUntilChanged()
     val awaitingMarkConfirmationFlow =
         _uiState.map { it.awaitingMarkConfirmation }.distinctUntilChanged()
@@ -335,12 +339,6 @@ class TimerViewModel(
 
     fun stop() {
         if (_uiState.value.timerRunningState != TimerRunningState.Running) return
-        // Stopping in the silent gap before the sequence cancels the run
-        // outright — there is nothing worth resuming there.
-        if (_uiState.value.currentTime < 0f) {
-            reset()
-            return
-        }
         timerJob?.cancel()
         timerJob = null
         runAnchorEpochMs = null
@@ -358,6 +356,7 @@ class TimerViewModel(
             it.copy(
                 awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
+                awaitingTenSecondsConfirmation = false,
                 awaitingUnloadConfirmation = false,
                 awaitingVisitationConfirmation = false,
                 awaitingMarkConfirmation = false,
@@ -387,19 +386,35 @@ class TimerViewModel(
     }
 
     /**
-     * "Fortsätt" in the "Alla klara?" dialog: make the call and run the
-     * timed sequence after the short silent gap.
+     * "Fortsätt" in the "Alla klara?" dialog: make the call and ask
+     * "10 sekunder kvar?" next.
      */
     fun confirmAllReady() {
         if (!_uiState.value.awaitingReadyConfirmation) return
+        _uiState.update {
+            it.copy(awaitingReadyConfirmation = false, awaitingTenSecondsConfirmation = true)
+        }
         playRowCall(Command.AllReady)
-        parkAt(-COMPETITION_ALL_READY_GAP_SECONDS, TimerRunningState.NotStarted)
-        start()
     }
 
     /** "Stäng" in the "Alla klara?" dialog: close without calling. */
     fun dismissReadyConfirmation() {
         _uiState.update { it.copy(awaitingReadyConfirmation = false) }
+    }
+
+    /**
+     * "Fortsätt" in the "10 sekunder kvar?" dialog: run the timed sequence
+     * from 0 — its first cue is the call itself.
+     */
+    fun confirmTenSeconds() {
+        if (!_uiState.value.awaitingTenSecondsConfirmation) return
+        parkAt(0f, TimerRunningState.NotStarted)
+        start()
+    }
+
+    /** "Stäng" in the "10 sekunder kvar?" dialog: close without calling. */
+    fun dismissTenSecondsConfirmation() {
+        _uiState.update { it.copy(awaitingTenSecondsConfirmation = false) }
     }
 
     /**
@@ -549,6 +564,7 @@ class TimerViewModel(
             it.copy(
                 awaitingLoadConfirmation = false,
                 awaitingReadyConfirmation = false,
+                awaitingTenSecondsConfirmation = false,
                 awaitingUnloadConfirmation = false,
                 awaitingVisitationConfirmation = false,
                 awaitingMarkConfirmation = false,

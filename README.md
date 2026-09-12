@@ -35,9 +35,9 @@ The dial **is** the interface — everything is adjusted directly on it:
 Two modes:
 
 - **Training** starts the command sequence immediately.
-- **Competition** prefixes it with the range procedure as two dialogs: **"Ladda?"** and then
-  **"Alla klara?"** — each "Fortsätt" makes the call and moves on, and the timed sequence starts a
-  few seconds after the all-ready call.
+- **Competition** prefixes it with the range procedure as dialogs: **"Ladda?"**, **"Alla klara?"**
+  and **"10 sekunder kvar?"** — each "Fortsätt" makes the call and moves on, the last one starting
+  the timed sequence.
 - After "Eld upphör" the timer is done and the rest is dialogs: **"Patron ur?"** in both modes,
   then in competition **"Visitation?"** and **"Visitation klar?"** — each "Fortsätt" makes the
   call and asks the next.
