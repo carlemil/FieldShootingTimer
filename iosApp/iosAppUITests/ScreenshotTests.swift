@@ -9,8 +9,8 @@ import XCTest
 // content rotated, so rotate them before they go in fastlane/screenshots/:
 //   sips -r 270 /tmp/shots/0[456]_landscape_*.png
 // Timings assume a fresh install: training mode, 5 s fire time, so the
-// sequence is 0-7 TenSecondsLeft, 7-10 Ready, 10-15 Fire, 15-18 CeaseFire,
-// 18-21 silent pause, 21-25 UnloadWeapon (training ends there).
+// sequence is 0-7 TenSecondsLeft, 7-10 Ready, 10-15 Fire, 15-18 CeaseFire;
+// the finished run then asks "Patron ur?" in a dialog.
 final class ScreenshotTests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -62,7 +62,9 @@ final class ScreenshotTests: XCTestCase {
         tapPlay(app)
         sleep(13); save("04_landscape_eld")        // ELD! (10-15)
         sleep(4);  save("05_landscape_eldupphor")  // ELD UPPHÖR! (15-18)
-        sleep(5);  save("06_landscape_patronur")   // PATRON UR! (21-25)
+        sleep(2)                                   // finished at 18: "Patron ur?"
+        tapItem(app, "UnloadConfirmContinue")
+        sleep(1);  save("06_landscape_patronur")   // PATRON UR! called
     }
 
     private func dismissTutorialIfPresent(_ app: XCUIApplication) {

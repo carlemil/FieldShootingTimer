@@ -38,8 +38,8 @@ internal const val RESET_ICON_TAG = "PlayButtonIconReset"
 internal const val COUNTDOWN_TEXT_TAG = "CountdownText"
 
 /**
- * While [countdownSeconds] is non-null — the competition-mode preparation
- * countdown, or the shooting stretch's remaining seconds — the button shows
+ * While [countdownSeconds] is non-null — the shooting stretch's remaining
+ * seconds — the button shows
  * the digits beneath a shrunken state icon; tapping it behaves as the icon
  * says.
  */

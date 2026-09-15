@@ -102,8 +102,7 @@ fun ShootTimer(
             }
 
             DialHand(
-                // Negative during a competition countdown (hand waits at 0);
-                // past the dial's end during UnloadWeapon/Visitation (parks).
+                // Clamped so a scrub or seek can never push the hand off the dial.
                 currentTime = (if (running) handTime.value else currentTime)
                     .coerceIn(0f, dialSeconds),
                 totalTime = dialSeconds,

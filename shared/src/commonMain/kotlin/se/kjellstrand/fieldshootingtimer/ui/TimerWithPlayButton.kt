@@ -32,9 +32,8 @@ internal fun shootingSecondsRemainingOrNull(
 }
 
 /**
- * The dial with the play/stop/reset button overlaid at its center. During a
- * competition-mode preparation countdown (negative currentTime) the play
- * button shows the remaining seconds.
+ * The dial with the play/stop/reset button overlaid at its center, showing
+ * the shooting stretch's remaining seconds.
  */
 @Composable
 internal fun TimerWithPlayButton(

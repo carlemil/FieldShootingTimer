@@ -57,7 +57,7 @@ data class TimerUiState(
     val awaitingTenSecondsConfirmation: Boolean = false,
     // True when the user explicitly parked the timer (row tap or hand
     // scrub). Distinguishes "parked at 0" from an untouched timer, which
-    // competition mode otherwise treats as "run the countdown first".
+    // competition mode otherwise treats as "ask Ladda? first".
     val parkedBySeek: Boolean = false,
     // The Markera row was tapped (or the VisitationDone dialog confirmed):
     // the timer is parked at the finished end and the "Markera?" dialog
